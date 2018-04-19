@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public class DialogueHandler : MonoBehaviour
 {
-
     //Input Data
     public int desiredLineIndex;
 
@@ -55,7 +54,6 @@ public class DialogueHandler : MonoBehaviour
     //Tells the game to present text and audio, set static data, then clear everything after clip has finished
     void PresentDialogue(int chosenLine)
     {
-
         currentLineIndex = chosenLine;
         currentLineString = dialogueStrings[chosenLine];
 

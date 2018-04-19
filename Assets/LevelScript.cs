@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class LevelScript : MonoBehaviour {
 
+    //Declaring the delegate
+    public delegate void ObjectiveDelegate(string objName, string objDesc, int objType, string objTargetNameBase);
+    public static event ObjectiveDelegate thisObjective;
+
     //Use this to pause and resume the level script
     public bool coroutinePause = true;
 
@@ -15,12 +19,16 @@ public class LevelScript : MonoBehaviour {
     //Script for the level
     IEnumerator MainLevelCoroutine()
     {
-        while(coroutinePause == true)
+        thisObjective("Collecting Time", "Collect 3 white greyboxes", 1, "obj1Targ");
+
+        while (coroutinePause == true)
         {
             yield return null;
         }
+
         
-        print("Reached the target.");
+
+        //print("Reached the target.");
         
         yield return new WaitForSeconds(3f);
         
