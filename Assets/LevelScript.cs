@@ -31,13 +31,11 @@ public class LevelScript : MonoBehaviour {
         ThisDialogue(0);
         yield return new WaitForSeconds(2);
         ThisDialogue(1);
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(4);
         thisObjective("Walking Time", "Walk to the white spot", 3, "obj3Targ");
         
         waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) {
-            yield return null;
-        }
+        while (waitTillObjectiveDone) { yield return null; }
 
         ThisDialogue(2);
         yield return new WaitForSeconds(4);
@@ -47,9 +45,18 @@ public class LevelScript : MonoBehaviour {
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
+        ThisDialogue(3);
+        yield return new WaitForSeconds(5);
+
+        thisObjective("Killing Time", "Kill the bot", 2, "obj2Targ");
+
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
         print("ayy made it");
         yield return new WaitForSeconds(3f);
-        
+
+        ThisDialogue(4);
         print("Level Complete");
     }
 }
