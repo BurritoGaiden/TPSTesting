@@ -8,28 +8,47 @@ public class LevelScript : MonoBehaviour {
     public delegate void ObjectiveDelegate(string objName, string objDesc, int objType, string objTargetNameBase);
     public static event ObjectiveDelegate thisObjective;
 
+    public delegate void DialogueDelegate(int chosenDialogueLine);
+    public static event DialogueDelegate ThisDialogue;
+
     //Use this to pause and resume the level script
-    public bool coroutinePause = true;
+    public static bool coroutinePause = true;
+    public static bool waitTillObjectiveDone;
 
 	// Use this for initialization
 	void Start () {
+        ObjectiveHandler.ObjDone += ObjectiveDoneListener;
         StartCoroutine(MainLevelCoroutine());
 	}
+
+    void ObjectiveDoneListener() {
+        waitTillObjectiveDone = false;
+    }
 
     //Script for the level
     IEnumerator MainLevelCoroutine()
     {
-        thisObjective("Collecting Time", "Collect 3 white greyboxes", 1, "obj1Targ");
-
-        while (coroutinePause == true)
-        {
+        ThisDialogue(0);
+        yield return new WaitForSeconds(2);
+        ThisDialogue(1);
+        yield return new WaitForSeconds(5);
+        thisObjective("Walking Time", "Walk to the white spot", 3, "obj3Targ");
+        
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) {
             yield return null;
         }
 
-        
+        ThisDialogue(2);
+        yield return new WaitForSeconds(4);
 
-        //print("Reached the target.");
+        thisObjective("Collecting Time", "Collect 3 white greyboxes", 1, "obj1Targ");
+
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
         
+        print("ayy made it");
         yield return new WaitForSeconds(3f);
         
         print("Level Complete");

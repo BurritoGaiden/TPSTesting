@@ -21,11 +21,16 @@ public class DialogueHandler : MonoBehaviour
     public AudioSource audioSource;
     public Text textDisplayBox;
 
+    void Start() {
+        LevelScript.ThisDialogue += PresentDialogue;
+    }
+
     // Update is called once per frame
     void Update()
     {
 
-        //Input
+        //Input: Commented out if scripting
+        /*
         if (Input.GetKeyDown(KeyCode.R))
         {
             PresentDialogue(desiredLineIndex);
@@ -38,7 +43,7 @@ public class DialogueHandler : MonoBehaviour
         {
             if (desiredLineIndex >= 1) desiredLineIndex--;
         }
-
+        */
         //Text "stay" check
         if (currentTimeTillTextOff > 0)
         {

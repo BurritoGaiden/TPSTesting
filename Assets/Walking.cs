@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Collecting : MonoBehaviour {
+public class Walking : MonoBehaviour {
 
     //Declare delegates for the player collecting objects, because it's not the player subclasses job to track collection
 
@@ -12,10 +12,10 @@ public class Collecting : MonoBehaviour {
 
     //Sample received delegate string
     public string lookingFor;
-    
+
     //Declaring the delegate
-    public delegate void CollectDelegate(GameObject collectable);
-    public static event CollectDelegate collectThis;
+    public delegate void WalkDelegate(GameObject walkable);
+    public static event WalkDelegate WalkThis;
 
     void Start() {
         ObjectiveHandler.targetName += UpdateLookingFor;
@@ -38,7 +38,7 @@ public class Collecting : MonoBehaviour {
 
             if (stringToCheckAgainst == lookingFor)
             {
-                collectThis(col.gameObject);
+                WalkThis(col.gameObject);
             }
         }
     }

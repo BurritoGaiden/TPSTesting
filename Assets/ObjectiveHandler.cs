@@ -32,9 +32,17 @@ public class ObjectiveHandler : MonoBehaviour {
     public AudioSource objectiveAudio;
     List<Image> objectiveTrackers = new List<Image>();
 
-	// Use this for initialization
-	void Start () {
+    //Declaring the delegate
+    public delegate void TargetNameBaseDelegate(string tBase);
+    public static event TargetNameBaseDelegate targetName;
+
+    public delegate void ObjectiveDelegate();
+    public static event ObjectiveDelegate ObjDone;
+
+    // Use this for initialization
+    void Start () {
         Collecting.collectThis += ObjectiveProgressUpdate;
+        Walking.WalkThis += ObjectiveProgressUpdate;
         LevelScript.thisObjective += AddObjective;
 	}
 	
@@ -42,6 +50,25 @@ public class ObjectiveHandler : MonoBehaviour {
 	void Update () {
         PresentObjective();
         VisuallyTrackObjectives();
+        //CheckIfObjectiveComplete();
+    }
+
+    void LateUpdate() {
+        CheckIfObjectiveComplete();
+    }
+
+
+    void CheckIfObjectiveComplete() {
+        if (objectivesList.Count != 0)
+        {
+            if (objectivesList[0].targetList.Count == 0)
+            {
+                print("removing");
+                objectivesList.Remove(objectivesList[0]);
+                ObjDone();
+                print("removed");
+            }
+        }
     }
 
     //Current objective text in the UI
@@ -111,7 +138,6 @@ public class ObjectiveHandler : MonoBehaviour {
                 Destroy(thatTracker);
             }
         }
-        
     }
 
     //Update progress on an objective
@@ -121,12 +147,10 @@ public class ObjectiveHandler : MonoBehaviour {
                 objectivesList[0].targetList.Remove(objectivesList[0].targetList[i]);
             }
         }
-        if (objectivesList[0].targetList.Count == 0) {
-            objectivesList.Remove(objectivesList[0]);
-        }
     }
 
     void AddObjective(string objName,string objDesc, int objType, string objTargetNameBase) {
         objectivesList.Add(new Objective(objName, objDesc, objType, objTargetNameBase));
+        targetName(objTargetNameBase);
     }
 }
