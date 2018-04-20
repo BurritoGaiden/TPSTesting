@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
 
@@ -16,6 +18,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
         
         private void Start()
         {
+
             // get the transform of the main camera
             if (Camera.main != null)
             {

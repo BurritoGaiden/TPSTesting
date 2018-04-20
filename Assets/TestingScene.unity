@@ -186,6 +186,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lookingFor: 
+--- !u!114 &89601266
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 89601263}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855c1545f7d04b549bbd1fe390aa1555, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &121863213
 Prefab:
   m_ObjectHideFlags: 0

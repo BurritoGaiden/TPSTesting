@@ -47,7 +47,6 @@ public class LevelScript : MonoBehaviour {
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
-        
         print("ayy made it");
         yield return new WaitForSeconds(3f);
         
