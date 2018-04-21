@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour {
 
     public bool takeInput;
+    public float crouchSpeed = 1.5f;
     public float walkSpeed = 2f;
     public float runSpeed = 6f;
     public float gravity = -12f;
@@ -38,6 +39,7 @@ public class PlayerController : MonoBehaviour {
     void Update()
     {
         bool running = false;
+        bool crouching = false;
         Vector2 input = new Vector2(0,0);
         Vector2 inputDir = new Vector2(0,0);
         float animationSpeedPercent = 0;
@@ -49,8 +51,8 @@ public class PlayerController : MonoBehaviour {
             inputDir = input.normalized;
 
             running = Input.GetKey(KeyCode.LeftShift);
-
-            Move(inputDir, running);
+            crouching = Input.GetKey(KeyCode.LeftControl);
+            Move(inputDir, running, crouching);
 
             if (Input.GetKeyDown(KeyCode.Space))
             {
@@ -58,22 +60,23 @@ public class PlayerController : MonoBehaviour {
             }
 
             //Animation comes last
-            animationSpeedPercent = ((running) ? currentSpeed / runSpeed : currentSpeed / walkSpeed * .5f);
+            animationSpeedPercent = ((running) ? currentSpeed / runSpeed : (crouching) ? currentSpeed / crouchSpeed : currentSpeed / walkSpeed * .5f);
         }        
 
         //Animation 
         animator.SetFloat("speedPercent", animationSpeedPercent, speedSmoothTime, Time.deltaTime);
     }
 
-    void Move(Vector2 inputDir, bool running) {
+    void Move(Vector2 inputDir, bool running, bool crouching) {
         //Updating the rotation of the character
         if (inputDir != Vector2.zero)
         {
             float targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + cameraT.eulerAngles.y;
             transform.eulerAngles = Vector3.up * Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref turnSmoothVelocity, GetModifiedSmoothTime(turnSmoothTime));
         }
-        
-        float targetSpeed = ((running) ? runSpeed : walkSpeed) * inputDir.magnitude;
+
+        //If running, the target speed = run speed, else the target speed = walk speed. All in the direction of the character
+        float targetSpeed = ((running) ? runSpeed : (crouching) ? crouchSpeed : walkSpeed) * inputDir.magnitude;
 
         currentSpeed = Mathf.SmoothDamp(currentSpeed, targetSpeed, ref speedSmoothVelocity, GetModifiedSmoothTime(speedSmoothTime));
 

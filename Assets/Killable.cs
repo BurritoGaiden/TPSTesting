@@ -11,13 +11,13 @@ public class Killable : MonoBehaviour {
     public BoxCollider thisBoxCollider;
     public MeshRenderer thisMeshRenderer;
 
-    void Start()
+    void Awake()
     {
         on = true;
         thisBoxCollider = this.GetComponent<BoxCollider>();
         thisMeshRenderer = this.GetComponent<MeshRenderer>();
 
-        Collecting.collectThis += DisableKillable;
+        Killing.killThis += DisableKillable;
     }
 
     //Collectables shouldn't need to check if they're being collided with

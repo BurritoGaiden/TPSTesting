@@ -61,9 +61,6 @@ public class LevelScript : MonoBehaviour {
     //Script for the level
     IEnumerator MainLevelCoroutine()
     {
-        print(ThisDialogue);
-        print(OnClicked);
-        print(DCharInput);
         DCharInput();
         ThisDialogue(0);
         yield return new WaitForSeconds(2);

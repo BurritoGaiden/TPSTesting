@@ -43,6 +43,7 @@ public class ObjectiveHandler : MonoBehaviour {
     void Awake () {
         Collecting.collectThis += ObjectiveProgressUpdate;
         Walking.WalkThis += ObjectiveProgressUpdate;
+        Killing.killThis += ObjectiveProgressUpdate;
         LevelScript.thisObjective += AddObjective;
 	}
 	
@@ -50,7 +51,6 @@ public class ObjectiveHandler : MonoBehaviour {
 	void Update () {
         PresentObjective();
         VisuallyTrackObjectives();
-        //CheckIfObjectiveComplete();
     }
 
     void LateUpdate() {
