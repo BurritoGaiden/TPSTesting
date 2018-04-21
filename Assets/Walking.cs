@@ -26,8 +26,8 @@ public class Walking : MonoBehaviour {
         lookingFor = looking;
     }
 
-    //Check for the collision. Send a delegate out for the collided object
-    void OnCollisionEnter(Collision col)
+    //Check for the collision. Send a delegate out for the collided object, make sure to use OnControllerColliderHit if using CharacterController
+    void OnControllerColliderHit(ControllerColliderHit col)
     {
         //We can assume that objects that are targets will have names long enough than the shortest target name base
         if (col.gameObject.tag == "Target")
