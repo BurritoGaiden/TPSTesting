@@ -39,11 +39,8 @@ public class ObjectiveHandler : MonoBehaviour {
     public delegate void ObjectiveDelegate();
     public static event ObjectiveDelegate ObjDone;
 
-    public delegate void TargetDelegate();
-    public static event TargetDelegate OneTargetAchieved;
-
     // Use this for initialization
-    void Start () {
+    void Awake () {
         Collecting.collectThis += ObjectiveProgressUpdate;
         Walking.WalkThis += ObjectiveProgressUpdate;
         LevelScript.thisObjective += AddObjective;
@@ -148,7 +145,6 @@ public class ObjectiveHandler : MonoBehaviour {
         for (int i = 0; i < objectivesList[0].targetList.Count; i++) {
             if (objectivesList[0].targetList[i].name == refGameObject.name) {
                 objectivesList[0].targetList.Remove(objectivesList[0].targetList[i]);
-                OneTargetAchieved();
             }
         }
     }

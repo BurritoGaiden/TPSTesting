@@ -26,12 +26,12 @@ public class PlayerController : MonoBehaviour {
     CharacterController controller;
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
         animator = GetComponent<Animator>();
         cameraT = Camera.main.transform;
         controller = GetComponent<CharacterController>();
-        LevelScript.disableCharInput += DisableInput;
-        LevelScript.enableCharInput += EnableInput;
+        LevelScript.DCharInput += DisableInput;
+        LevelScript.ECharInput += EnableInput;
 	}
 
     // Update is called once per frame

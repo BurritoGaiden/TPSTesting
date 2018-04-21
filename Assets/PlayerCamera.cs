@@ -24,15 +24,15 @@ public class PlayerCamera : MonoBehaviour {
     public bool aiming;
     public bool running;
     
-    void Start() {
+    void Awake() {
         if (lockCursor) {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
         cam = transform.GetChild(0);
 
-        LevelScript.enableCamInput += EnableCameraInput;
-        LevelScript.disableCamInput += DisableCameraInput;
+        LevelScript.ECamInput += EnableCameraInput;
+        LevelScript.DCamInput += DisableCameraInput;
         LevelScript.SetCharCamTransform += SetCameraTransform;
         LevelScript.ResetCamPositionOnRig += ResetCameraOnRig;
     }
