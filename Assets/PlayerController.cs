@@ -40,6 +40,7 @@ public class PlayerController : MonoBehaviour {
     {
         bool running = false;
         bool crouching = false;
+        //bool looking = false;
         Vector2 input = new Vector2(0,0);
         Vector2 inputDir = new Vector2(0,0);
         float animationSpeedPercent = 0;
@@ -52,6 +53,7 @@ public class PlayerController : MonoBehaviour {
 
             running = Input.GetKey(KeyCode.LeftShift);
             crouching = Input.GetKey(KeyCode.LeftControl);
+            
             Move(inputDir, running, crouching);
 
             if (Input.GetKeyDown(KeyCode.Space))

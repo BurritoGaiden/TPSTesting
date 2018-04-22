@@ -12,10 +12,6 @@ public class LevelScript : MonoBehaviour {
     public delegate void DialogueDelegate(int chosenDialogueLine);
     public static event DialogueDelegate ThisDialogue;
 
-    public delegate void ClickAction();
-    public static event ClickAction OnClicked;
-
-
     public delegate void CharDisableDelegate();
     public static event CharDisableDelegate DCharInput;
 
@@ -34,15 +30,18 @@ public class LevelScript : MonoBehaviour {
     public delegate void CameraTransformDelegate(Vector3 pos,Vector3 rot);
     public static event CameraTransformDelegate SetCharCamTransform;
 
+    public delegate void InterestDelegate(String thisOne);
+    public static event InterestDelegate enableInterestTrigger;
+    public static event InterestDelegate disableInterestTrigger;
+
     //Use this to pause and resume the level script
     public bool runScript;
     public static bool coroutinePause = true;
     public static bool waitTillObjectiveDone;
-    public bool catchBool;
 
     //Testing public vars
-    public Vector3 tempCamPos;
-    public Vector3 tempCamRot;
+    public Vector3[] tempCamPos;
+    public Vector3[] tempCamRot;
 
     // Use this for initialization
     void Awake() {
@@ -62,23 +61,34 @@ public class LevelScript : MonoBehaviour {
     IEnumerator MainLevelCoroutine()
     {
         DCharInput();
+        SetCharCamTransform(tempCamPos[0], tempCamRot[0]);
         ThisDialogue(0);
         yield return new WaitForSeconds(2);
         ThisDialogue(1);
-        yield return new WaitForSeconds(4);
+        yield return new WaitForSeconds(2);
+        SetCharCamTransform(tempCamPos[1], tempCamRot[1]);
+        yield return new WaitForSeconds(2);
+        //print(thisObjective("Walking Time", "Walk to the white spot", 3, "obj3Targ"));
         thisObjective("Walking Time", "Walk to the white spot", 3, "obj3Targ");
+        print(ECharInput);
         ECharInput();
+        print(ECamInput);
         ECamInput();
+        print(ResetCamPositionOnRig);
         ResetCamPositionOnRig();
+        print(enableInterestTrigger);
+        enableInterestTrigger("Int1");
 
         //Wait till the player has finished this objective
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
+        //disableInterestTrigger("Int1");
+
         ThisDialogue(2);
         DCamInput();
         DCharInput();
-        SetCharCamTransform(tempCamPos, tempCamRot);
+        SetCharCamTransform(tempCamPos[2], tempCamRot[2]);
         yield return new WaitForSeconds(4);
         ResetCamPositionOnRig();
         ECamInput();

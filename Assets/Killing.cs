@@ -16,16 +16,24 @@ public class Killing : MonoBehaviour {
     public delegate void KillDelegate(GameObject killable);
     public static event KillDelegate killThis;
 
+    public bool canShoot;
+
     // Use this for initialization
     void Awake () {
         cam = Camera.main;
         ObjectiveHandler.targetName += UpdateLookingFor;
+        LevelScript.ECharInput += EnableShoot;
+        LevelScript.DCharInput += DisableShoot;
     }
 	
 	// Update is called once per frame
 	void Update () {
-        if (Input.GetKeyDown(KeyCode.Mouse0)) {
-            Shoot();
+        if (canShoot)
+        {
+            if (Input.GetKeyDown(KeyCode.Mouse0))
+            {
+                Shoot();
+            }
         }
 	}
 
@@ -46,5 +54,13 @@ public class Killing : MonoBehaviour {
     void UpdateLookingFor(string looking)
     {
         lookingFor = looking;
+    }
+
+    void EnableShoot() {
+        canShoot = true;
+    }
+
+    void DisableShoot() {
+        canShoot = false;
     }
 }

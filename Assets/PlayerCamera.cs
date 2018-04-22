@@ -20,16 +20,32 @@ public class PlayerCamera : MonoBehaviour {
     float yaw;
     float pitch;
 
+    //testing
+    public Vector2 testYP;
+    public Transform camTar;
+
     //vars that are from other scripts not made yet
     public bool aiming;
     public bool running;
-    
+    public bool looking;
+
+    enum camStates {
+        STATE_PLAYERORBIT,
+        STATE_POIFOCUS
+    };
+    camStates cameraState;
+
+    //Sample received delegate string
+    public string lookingFor;
+
     void Awake() {
         if (lockCursor) {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
         cam = transform.GetChild(0);
+
+        cameraState = camStates.STATE_PLAYERORBIT;
 
         LevelScript.ECamInput += EnableCameraInput;
         LevelScript.DCamInput += DisableCameraInput;
@@ -38,36 +54,79 @@ public class PlayerCamera : MonoBehaviour {
     }
 
     void Update() {
+        CheckInputs();
+    }
+
+    void CheckInputs() {
         running = Input.GetKey(KeyCode.LeftShift);
         aiming = Input.GetKey(KeyCode.Mouse1);
+        if(Interesting.canLook)looking = Input.GetKey(KeyCode.E);
     }
-
-
+    
 	void LateUpdate () {
-        OrbitingBehavior();
+        if (looking)
+        {
+            cameraState = camStates.STATE_POIFOCUS;
+        }
+        else {
+            cameraState = camStates.STATE_PLAYERORBIT;
+        }
+
+        switch (cameraState)
+        {
+            case camStates.STATE_PLAYERORBIT:
+                if (camInput) OrbitingBehavior();
+                return;
+            case camStates.STATE_POIFOCUS:
+                FocusBehavior();
+                return;
+        }
 	}
 
-    //How the Rig should orbit the target
     void OrbitingBehavior() {
-        if (camInput) { 
-            //Mouse control of pitch and yaw
-            yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
-            pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
-            pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
-        
-            //Applying control to camera rotation in a smoothed fashion
-            currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
-            transform.eulerAngles = currentRotation;
+ 
+        //Mouse control of pitch and yaw
+        yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+        pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
-            //Applying rotation around a character, making it orbit an object, applying transform
-            //TODO, CHANGE UP CAMERA RIG DIST FROM TARGET BASED ON PITCH
-            //transform.position = target.position - transform.forward * dstFromTarget;
-            transform.position = target.position - transform.forward * CameraDSTFromTarget();
+        //Applying control to camera rotation in a smoothed fashion
+        currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        transform.eulerAngles = currentRotation;
 
-            CameraOffset();
-        }
+        transform.position = target.position - transform.forward * CameraDSTFromTarget();
+
+        CameraOffset();
     }
 
+    void FocusBehavior()
+    {
+        yaw = GetAngleBetween3PointsHor(this.transform.position, camTar.position);
+        pitch = GetAngleBetween3PointsVer(this.transform.position, camTar.position);
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+        currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        transform.eulerAngles = currentRotation;
+
+        transform.position = target.position - transform.forward * CameraDSTFromTarget();
+
+        CameraOffset();
+    }
+
+    float GetAngleBetween3PointsHor(Vector3 a, Vector3 b)
+    {
+        float theta = Mathf.Atan2(b.x - a.x, b.z - a.z);
+        float angle = theta * 180 / Mathf.PI;
+        return angle;
+    }
+
+    float GetAngleBetween3PointsVer(Vector3 a, Vector3 b)
+    {
+        float theta = Mathf.Atan2(b.y - a.y, b.z - a.z);
+        float angle = theta * -180 / Mathf.PI;
+        return angle;
+    }
+   
     void CameraOffset() {
         //Adding Camera offset
         float regularWalkOffset = .64f;
@@ -96,18 +155,10 @@ public class PlayerCamera : MonoBehaviour {
         return DST;
     }
 
-    void CCTVBehavior() {
-        yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
-        pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
-
-        Vector3 targetRotation = new Vector3(pitch, yaw);
-        transform.eulerAngles = targetRotation;
-    }
-
     void SetCameraTransform(Vector3 position, Vector3 rotation)
     {
-        Camera.main.transform.position = position;
-        Camera.main.transform.rotation = Quaternion.Euler(rotation);
+        Camera.main.transform.localPosition = position;
+        Camera.main.transform.localRotation = Quaternion.Euler(rotation);
     }
 
     void EnableCameraInput() {
@@ -121,5 +172,5 @@ public class PlayerCamera : MonoBehaviour {
     void ResetCameraOnRig() {
         Camera.main.transform.position = this.transform.position;
         Camera.main.transform.rotation = this.transform.rotation;
-    }
+    }  
 }
