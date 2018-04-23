@@ -602,6 +602,7 @@ GameObject:
   m_Component:
   - component: {fileID: 48938318}
   - component: {fileID: 48938319}
+  - component: {fileID: 48938320}
   m_Layer: 0
   m_Name: CameraRig
   m_TagString: Untagged
@@ -647,6 +648,32 @@ MonoBehaviour:
   aiming: 0
   running: 0
   looking: 0
+  lookingFor: 
+--- !u!114 &48938320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 48938317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77e51ee1fb9545e4ca95d7e63458bbfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cam: {fileID: 0}
+  camInput: 0
+  lockCursor: 0
+  mouseSensitivity: 10
+  target: {fileID: 0}
+  dstFromTarget: 2
+  pitchMinMax: {x: -30, y: 60}
+  rotationSmoothTime: 0.12
+  testYP: {x: 0, y: 0}
+  camTar: {fileID: 0}
+  aimInput: 0
+  runInput: 0
+  lookInput: 0
+  coverInput: 0
   lookingFor: 
 --- !u!1 &84000406
 GameObject:
@@ -12110,7 +12137,7 @@ Mesh:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: pb_Mesh12566
+  m_Name: pb_Mesh68598
   serializedVersion: 8
   m_SubMeshes:
   - serializedVersion: 2
