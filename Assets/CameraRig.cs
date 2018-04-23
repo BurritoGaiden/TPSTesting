@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CameraRig : MonoBehaviour
 {
-
+    /*
     //NOTE: THIS SCRIPT IS ON THE CAMERA RIG AT THIS TIME
     public Transform cam;
     public bool camInput;
@@ -250,5 +250,5 @@ public class CameraRig : MonoBehaviour
         Camera.main.transform.rotation = this.transform.rotation;
     }
     #endregion
-
+    */
 }

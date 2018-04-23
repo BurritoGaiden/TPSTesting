@@ -4,17 +4,12 @@ using UnityEngine;
 
 public class Interesting : MonoBehaviour {
 
-    public static bool canLook;
+    public static bool looking;
 
-	// Update is called once per frame
-	void Update () {
-        if (canLook) print("can look");
-	}
-
-    void OnTriggerStay(Collider hit)
+	void OnTriggerStay(Collider hit)
     {
         if (hit.transform.GetComponent<Interestable>()) {
-            canLook = true;
+            looking = Input.GetKey(KeyCode.E);
         }
     }
     /*

@@ -16,7 +16,8 @@ public class Killing : MonoBehaviour {
     public delegate void KillDelegate(GameObject killable);
     public static event KillDelegate killThis;
 
-    public bool canShoot;
+    public static bool canShoot;
+    public static bool aiming;
 
     // Use this for initialization
     void Awake () {
@@ -30,6 +31,7 @@ public class Killing : MonoBehaviour {
 	void Update () {
         if (canShoot)
         {
+            aiming = Input.GetKey(KeyCode.Mouse1);
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
                 Shoot();
@@ -49,6 +51,8 @@ public class Killing : MonoBehaviour {
             }
         }
     }
+
+    void Aim() { }
 
     //Declaring the delegate
     void UpdateLookingFor(string looking)

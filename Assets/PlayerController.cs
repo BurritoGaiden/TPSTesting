@@ -26,9 +26,12 @@ public class PlayerController : MonoBehaviour {
     Transform cameraT;
     CharacterController controller;
 
-    public bool inCover;
+    public static bool running;
+    public static bool crouching;
+    public static bool inCover;
     public float testForwardRot;
     public GameObject currentCover;
+    float coverCooldown = 0;
 
     enum MoveState {
         STATE_REGULAR,
@@ -52,12 +55,13 @@ public class PlayerController : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
-        bool running = false;
-        bool crouching = false;
-        //bool looking = false;
         Vector2 input = new Vector2(0,0);
         Vector2 inputDir = new Vector2(0,0);
         float animationSpeedPercent = 0;
+
+        if (coverCooldown > 0) {
+            coverCooldown -= Time.deltaTime;
+        }
 
         if (takeInput)
         {
@@ -67,12 +71,7 @@ public class PlayerController : MonoBehaviour {
 
             running = Input.GetKey(KeyCode.LeftShift);
             crouching = Input.GetKey(KeyCode.LeftControl);
-            
-            //When the player checks for cover, they will need to get the piece of cover they're colliding with, and then get that piece of cover's forward direction in relation to the Player
-            if (Input.GetKeyDown(KeyCode.K)) {
-                //inCover = !inCover;
-            }
-            
+
             if (inCover)
             {
                 thisMoveState = MoveState.STATE_COVER;
@@ -100,7 +99,7 @@ public class PlayerController : MonoBehaviour {
             //Animation comes last
             animationSpeedPercent = ((running) ? currentSpeed / runSpeed : (crouching) ? currentSpeed / crouchSpeed : currentSpeed / walkSpeed * .5f);
         }
-
+        /*
         Debug.DrawLine(transform.localPosition, transform.forward + transform.localPosition);
         if (currentCover != null)
         {
@@ -115,6 +114,7 @@ public class PlayerController : MonoBehaviour {
             Debug.DrawLine(transform.localPosition, currentCover.transform.position - transform.localPosition);
             Debug.DrawLine(transform.localPosition, currentCover.transform.position - transform.position);
         }
+        */
         //Animation 
         animator.SetFloat("speedPercent", animationSpeedPercent, speedSmoothTime, Time.deltaTime);
     }
@@ -122,11 +122,10 @@ public class PlayerController : MonoBehaviour {
     void OnTriggerStay(Collider col) {
         if (col.transform.tag == "Cover")
         {
-            if (Input.GetKey(KeyCode.K))
+            if (Input.GetKey(KeyCode.K) && coverCooldown <= 0)
             {
+                coverCooldown = 1.2f;
                 //Get the angle between the player and the cover
-                //float tester = Vector3.Angle(transform.forward, col.transform.position - transform.position);
-                //print("Angle between: " + tester);
                 if (!inCover)
                 {
                     currentCover = col.transform.gameObject;
@@ -182,12 +181,12 @@ public class PlayerController : MonoBehaviour {
 
         var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
         var coverPoint = cover.GetComponent<Collider>().ClosestPointOnBounds(playerPos);
-        Debug.Log(playerPos + ":" + coverPoint);
-        Debug.DrawLine(playerPos, coverPoint, Color.red);
+        //Debug.Log(playerPos + ":" + coverPoint);
+        //Debug.DrawLine(playerPos, coverPoint, Color.red);
 
         var normal = GetNormal(playerPos, coverPoint, playerPos + new Vector3(0, 1, 0));
-        Debug.Log(normal);
-        Debug.DrawLine(playerPos, playerPos + (normal * 10), Color.blue);
+        //Debug.Log(normal);
+        //Debug.DrawLine(playerPos, playerPos + (normal * 10), Color.blue);
 
         if (inputDir != Vector2.zero)
         {

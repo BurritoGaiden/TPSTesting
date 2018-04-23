@@ -24,11 +24,6 @@ public class PlayerCamera : MonoBehaviour {
     public Vector2 testYP;
     public Transform camTar;
 
-    //vars that are from other scripts not made yet
-    public bool aiming;
-    public bool running;
-    public bool looking;
-
     enum camStates {
         STATE_PLAYERORBIT,
         STATE_POIFOCUS
@@ -52,19 +47,9 @@ public class PlayerCamera : MonoBehaviour {
         LevelScript.SetCharCamTransform += SetCameraTransform;
         LevelScript.ResetCamPositionOnRig += ResetCameraOnRig;
     }
-
-    void Update() {
-        CheckInputs();
-    }
-
-    void CheckInputs() {
-        running = Input.GetKey(KeyCode.LeftShift);
-        aiming = Input.GetKey(KeyCode.Mouse1);
-        if(Interesting.canLook)looking = Input.GetKey(KeyCode.E);
-    }
-    
+   
 	void LateUpdate () {
-        if (looking)
+        if (Interesting.looking)
         {
             cameraState = camStates.STATE_POIFOCUS;
         }
@@ -119,14 +104,6 @@ public class PlayerCamera : MonoBehaviour {
         float angle = theta * 180 / Mathf.PI;
         return angle;
     }
-    /*
-    float GetAngleBetween3PointsVer(Vector3 a, Vector3 b)
-    {
-        float theta = Mathf.Atan2(b.y - a.y, b.z - a.z);
-        float angle = theta * -180 / Mathf.PI;
-        return angle;
-    }
-    */
 
     float GetAngleBetween3PointsVer(Vector3 a, Vector3 b)
     {
@@ -140,16 +117,19 @@ public class PlayerCamera : MonoBehaviour {
 
     void CameraOffset() {
         //Adding Camera offset
-        float regularWalkOffset = .64f;
-        float aimOffset = 0f;
-        if (aiming) {
-            aimOffset += 1f;
+        float horizontalOffset = .64f;
+        float forwardOffset = 0f;
+        float verticalOffset = 0f;
+        if (Killing.aiming) {
+            forwardOffset += 1f;
         }
-        if (running) {
-            aimOffset -= 1f;
+        if (PlayerController.running) {
+            forwardOffset -= 1f;
         }
-
-        Vector3 camOffset = new Vector3(regularWalkOffset, 0, aimOffset);
+        if (PlayerController.inCover) {
+            verticalOffset -= .5f;
+        }
+        Vector3 camOffset = new Vector3(horizontalOffset, verticalOffset, forwardOffset);
         cam.transform.localPosition = camOffset;
     }
 
