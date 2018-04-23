@@ -1,0 +1,3 @@
+Implement cover system
+Implement AI that move forward or idle or point
+Implement Movable interactables that work off of cover system constraints
