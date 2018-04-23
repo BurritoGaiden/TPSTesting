@@ -70,7 +70,6 @@ public class PlayerController : MonoBehaviour {
             
             //When the player checks for cover, they will need to get the piece of cover they're colliding with, and then get that piece of cover's forward direction in relation to the Player
             if (Input.GetKeyDown(KeyCode.K)) {
-                
                 //inCover = !inCover;
             }
             
@@ -100,8 +99,22 @@ public class PlayerController : MonoBehaviour {
             
             //Animation comes last
             animationSpeedPercent = ((running) ? currentSpeed / runSpeed : (crouching) ? currentSpeed / crouchSpeed : currentSpeed / walkSpeed * .5f);
-        }        
+        }
 
+        Debug.DrawLine(transform.localPosition, transform.forward + transform.localPosition);
+        if (currentCover != null)
+        {
+            Debug.DrawLine(transform.localPosition, currentCover.transform.localPosition - transform.localPosition);
+            Debug.DrawLine(transform.localPosition, currentCover.transform.localPosition + transform.localPosition);
+            Debug.DrawLine(transform.localPosition, currentCover.transform.localPosition + transform.position);
+            Debug.DrawLine(transform.localPosition, currentCover.transform.localPosition - transform.position);
+            Debug.DrawLine(transform.localPosition, currentCover.transform.localPosition);
+            Debug.DrawLine(transform.localPosition, currentCover.transform.position);
+            Debug.DrawLine(transform.localPosition, currentCover.transform.position + transform.localPosition);
+            Debug.DrawLine(transform.localPosition, currentCover.transform.position + transform.position);
+            Debug.DrawLine(transform.localPosition, currentCover.transform.position - transform.localPosition);
+            Debug.DrawLine(transform.localPosition, currentCover.transform.position - transform.position);
+        }
         //Animation 
         animator.SetFloat("speedPercent", animationSpeedPercent, speedSmoothTime, Time.deltaTime);
     }
@@ -166,40 +179,49 @@ public class PlayerController : MonoBehaviour {
 
     void CoverMove(Vector2 inputDir, GameObject cover)
     {
-        float targetRotation = 0;
 
-        //Updating the rotation of the character
+        var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
+        var coverPoint = cover.GetComponent<Collider>().ClosestPointOnBounds(playerPos);
+        Debug.Log(playerPos + ":" + coverPoint);
+        Debug.DrawLine(playerPos, coverPoint, Color.red);
+
+        var normal = GetNormal(playerPos, coverPoint, playerPos + new Vector3(0, 1, 0));
+        Debug.Log(normal);
+        Debug.DrawLine(playerPos, playerPos + (normal * 10), Color.blue);
+
         if (inputDir != Vector2.zero)
         {
-            //Get input to determine desired rotation
-            targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + testForwardRot;
-            print("The angle of input away from the camera: " + Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + cameraT.eulerAngles.y) ;
-            print("The angle of the character forward away from the cover: " + Vector3.Angle(this.transform.forward, cover.transform.position));
-            
-
-            //Check if desired rotation is perpendicular, if so, let the pc be in that rotation
-            if (targetRotation == testForwardRot - 90 || targetRotation == testForwardRot + 90)
+            float targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + cameraT.eulerAngles.y;
+            print("Regular Movement Target Rot: " + targetRotation);
             transform.eulerAngles = Vector3.up * targetRotation;
         }
 
         //If running, the target speed = run speed, else the target speed = walk speed. All in the direction of the character
         float targetSpeed = crouchSpeed * inputDir.magnitude;
 
-        currentSpeed = Mathf.SmoothDamp(currentSpeed, targetSpeed, ref speedSmoothVelocity, GetModifiedSmoothTime(speedSmoothTime));
+        currentSpeed = targetSpeed;
 
         velocityY += Time.deltaTime * gravity;
 
         Vector3 velocity = transform.forward * currentSpeed + Vector3.up * velocityY;
-
-        //If the rotation is solid, let them move
-        if (!(targetRotation == testForwardRot - 90 || targetRotation == testForwardRot + 90))
-            velocity = Vector2.zero;
+        velocity = Vector3.Project(velocity, normal);
+        //transform.Translate(transform.forward * currentSpeed * Time.deltaTime, Space.World);
         controller.Move(velocity * Time.deltaTime);
         currentSpeed = new Vector2(controller.velocity.x, controller.velocity.z).magnitude;
 
-        velocityY = 0;
+        if (controller.isGrounded)
+        {
+            velocityY = 0;
+        }
     }
 
+    Vector3 GetNormal(Vector3 a, Vector3 b, Vector3 c)
+    {
+        Vector3 side1 = b - a;
+        Vector3 side2 = c - a;
+        return Vector3.Cross(side1, side2).normalized;
+    }
+    
     void Jump() {
         if (controller.isGrounded) {
             float jumpVelocity = Mathf.Sqrt(-2 * gravity * jumpHeight);
