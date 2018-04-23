@@ -2,12 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PickupArea : MonoBehaviour {
-
-    public GameObject pickable;
-    public string areaType;
-    public Vector3 setPosition;
-    public Quaternion setRotation;
+public class Covering : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
