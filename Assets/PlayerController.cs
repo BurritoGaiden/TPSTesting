@@ -28,6 +28,7 @@ public class PlayerController : MonoBehaviour {
 
     public bool inCover;
     public float testForwardRot;
+    public GameObject currentCover;
 
     enum MoveState {
         STATE_REGULAR,
@@ -67,8 +68,10 @@ public class PlayerController : MonoBehaviour {
             running = Input.GetKey(KeyCode.LeftShift);
             crouching = Input.GetKey(KeyCode.LeftControl);
             
+            //When the player checks for cover, they will need to get the piece of cover they're colliding with, and then get that piece of cover's forward direction in relation to the Player
             if (Input.GetKeyDown(KeyCode.K)) {
-                inCover = !inCover;
+                
+                //inCover = !inCover;
             }
             
             if (inCover)
@@ -81,6 +84,7 @@ public class PlayerController : MonoBehaviour {
 
             switch (thisMoveState) {
                 case MoveState.STATE_REGULAR:
+                    //GetAngleBetween3PointsHor(transform.position, );
                     Move(inputDir, running, crouching);
 
                     if (Input.GetKeyDown(KeyCode.Space))
@@ -89,7 +93,7 @@ public class PlayerController : MonoBehaviour {
                     }
                     break;
                 case MoveState.STATE_COVER:
-                    CoverMove(inputDir);
+                    CoverMove(inputDir, currentCover);
                     break;
 
             }
@@ -102,11 +106,43 @@ public class PlayerController : MonoBehaviour {
         animator.SetFloat("speedPercent", animationSpeedPercent, speedSmoothTime, Time.deltaTime);
     }
 
+    void OnTriggerStay(Collider col) {
+        if (col.transform.tag == "Cover")
+        {
+            if (Input.GetKey(KeyCode.K))
+            {
+                //Get the angle between the player and the cover
+                //float tester = Vector3.Angle(transform.forward, col.transform.position - transform.position);
+                //print("Angle between: " + tester);
+                if (!inCover)
+                {
+                    currentCover = col.transform.gameObject;
+                    print("entered cover");
+                    inCover = true;
+                }
+                else
+                {
+                    currentCover = null;
+                    print("exited cover");
+                    inCover = false;
+                }
+            }
+        }
+    }
+
+    float GetAngleBetween3PointsHor(Vector3 a, Vector3 b)
+    {
+        float theta = Mathf.Atan2(b.x - a.x, b.z - a.z);
+        float angle = theta * 180 / Mathf.PI;
+        return angle;
+    }
+
     void Move(Vector2 inputDir, bool running, bool crouching) {
         //Updating the rotation of the character
         if (inputDir != Vector2.zero)
         {
             float targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + cameraT.eulerAngles.y;
+            //print("Regular Movement Target Rot: " + targetRotation);
             transform.eulerAngles = Vector3.up * Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref turnSmoothVelocity, GetModifiedSmoothTime(turnSmoothTime));
         }
 
@@ -128,7 +164,7 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    void CoverMove(Vector2 inputDir)
+    void CoverMove(Vector2 inputDir, GameObject cover)
     {
         float targetRotation = 0;
 
@@ -137,9 +173,12 @@ public class PlayerController : MonoBehaviour {
         {
             //Get input to determine desired rotation
             targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + testForwardRot;
-            //print("Target rotation: " + targetRotation + " Forward Rot: " + testForwardRot);
+            print("The angle of input away from the camera: " + Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + cameraT.eulerAngles.y) ;
+            print("The angle of the character forward away from the cover: " + Vector3.Angle(this.transform.forward, cover.transform.position));
+            
+
             //Check if desired rotation is perpendicular, if so, let the pc be in that rotation
-            if(targetRotation == testForwardRot - 90 || targetRotation == testForwardRot + 90)
+            if (targetRotation == testForwardRot - 90 || targetRotation == testForwardRot + 90)
             transform.eulerAngles = Vector3.up * targetRotation;
         }
 
@@ -151,7 +190,7 @@ public class PlayerController : MonoBehaviour {
         velocityY += Time.deltaTime * gravity;
 
         Vector3 velocity = transform.forward * currentSpeed + Vector3.up * velocityY;
-        //print(velocity);
+
         //If the rotation is solid, let them move
         if (!(targetRotation == testForwardRot - 90 || targetRotation == testForwardRot + 90))
             velocity = Vector2.zero;
@@ -185,11 +224,5 @@ public class PlayerController : MonoBehaviour {
 
     void DisableInput() {
         takeInput = false;
-    }
-
-    //Unused right now
-    bool canEnterCover() {
-
-        return false;
     }
 }
