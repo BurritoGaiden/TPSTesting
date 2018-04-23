@@ -26,6 +26,15 @@ public class PlayerController : MonoBehaviour {
     Transform cameraT;
     CharacterController controller;
 
+    public bool inCover;
+    public float testForwardRot;
+
+    enum MoveState {
+        STATE_REGULAR,
+        STATE_COVER
+    };
+    MoveState thisMoveState;
+
 	// Use this for initialization
 	void Awake () {
         animator = GetComponent<Animator>();
@@ -34,6 +43,10 @@ public class PlayerController : MonoBehaviour {
         LevelScript.DCharInput += DisableInput;
         LevelScript.ECharInput += EnableInput;
 	}
+
+    void Start() {
+        thisMoveState = MoveState.STATE_REGULAR;
+    }
 
     // Update is called once per frame
     void Update()
@@ -54,13 +67,33 @@ public class PlayerController : MonoBehaviour {
             running = Input.GetKey(KeyCode.LeftShift);
             crouching = Input.GetKey(KeyCode.LeftControl);
             
-            Move(inputDir, running, crouching);
-
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (Input.GetKeyDown(KeyCode.K)) {
+                inCover = !inCover;
+            }
+            
+            if (inCover)
             {
-                Jump();
+                thisMoveState = MoveState.STATE_COVER;
+            }
+            else if (!inCover) {
+                thisMoveState = MoveState.STATE_REGULAR;
             }
 
+            switch (thisMoveState) {
+                case MoveState.STATE_REGULAR:
+                    Move(inputDir, running, crouching);
+
+                    if (Input.GetKeyDown(KeyCode.Space))
+                    {
+                        Jump();
+                    }
+                    break;
+                case MoveState.STATE_COVER:
+                    CoverMove(inputDir);
+                    break;
+
+            }
+            
             //Animation comes last
             animationSpeedPercent = ((running) ? currentSpeed / runSpeed : (crouching) ? currentSpeed / crouchSpeed : currentSpeed / walkSpeed * .5f);
         }        
@@ -95,6 +128,39 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
+    void CoverMove(Vector2 inputDir)
+    {
+        float targetRotation = 0;
+
+        //Updating the rotation of the character
+        if (inputDir != Vector2.zero)
+        {
+            //Get input to determine desired rotation
+            targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + testForwardRot;
+            //print("Target rotation: " + targetRotation + " Forward Rot: " + testForwardRot);
+            //Check if desired rotation is perpendicular, if so, let the pc be in that rotation
+            if(targetRotation == testForwardRot - 90 || targetRotation == testForwardRot + 90)
+            transform.eulerAngles = Vector3.up * targetRotation;
+        }
+
+        //If running, the target speed = run speed, else the target speed = walk speed. All in the direction of the character
+        float targetSpeed = crouchSpeed * inputDir.magnitude;
+
+        currentSpeed = Mathf.SmoothDamp(currentSpeed, targetSpeed, ref speedSmoothVelocity, GetModifiedSmoothTime(speedSmoothTime));
+
+        velocityY += Time.deltaTime * gravity;
+
+        Vector3 velocity = transform.forward * currentSpeed + Vector3.up * velocityY;
+        //print(velocity);
+        //If the rotation is solid, let them move
+        if (!(targetRotation == testForwardRot - 90 || targetRotation == testForwardRot + 90))
+            velocity = Vector2.zero;
+        controller.Move(velocity * Time.deltaTime);
+        currentSpeed = new Vector2(controller.velocity.x, controller.velocity.z).magnitude;
+
+        velocityY = 0;
+    }
+
     void Jump() {
         if (controller.isGrounded) {
             float jumpVelocity = Mathf.Sqrt(-2 * gravity * jumpHeight);
@@ -119,5 +185,11 @@ public class PlayerController : MonoBehaviour {
 
     void DisableInput() {
         takeInput = false;
+    }
+
+    //Unused right now
+    bool canEnterCover() {
+
+        return false;
     }
 }
