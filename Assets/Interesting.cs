@@ -11,8 +11,17 @@ public class Interesting : MonoBehaviour {
         if (canLook) print("can look");
 	}
 
-    void OnTriggerEnter(Collider hit)
+    void OnTriggerStay(Collider hit)
     {
-        canLook = (hit.transform.GetComponent<Interestable>());
+        if (hit.transform.GetComponent<Interestable>()) {
+            canLook = true;
+        }
     }
+    /*
+    void OnTriggerExit(Collider hit) {
+        if (hit.transform.GetComponent<Interestable>()) {
+            canLook = false;
+        }
+    }
+    */
 }

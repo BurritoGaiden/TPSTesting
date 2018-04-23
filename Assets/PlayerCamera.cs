@@ -119,14 +119,25 @@ public class PlayerCamera : MonoBehaviour {
         float angle = theta * 180 / Mathf.PI;
         return angle;
     }
-
+    /*
     float GetAngleBetween3PointsVer(Vector3 a, Vector3 b)
     {
         float theta = Mathf.Atan2(b.y - a.y, b.z - a.z);
         float angle = theta * -180 / Mathf.PI;
         return angle;
     }
-   
+    */
+
+    float GetAngleBetween3PointsVer(Vector3 a, Vector3 b)
+    {
+        var dist = Vector2.Distance(new Vector2(a.x, a.z), new Vector2(b.x, b.z));
+
+        float theta = Mathf.Atan2(b.y - a.y, dist);
+        float angle = theta * -180 / Mathf.PI;
+        return angle;
+    }
+
+
     void CameraOffset() {
         //Adding Camera offset
         float regularWalkOffset = .64f;
