@@ -70,13 +70,9 @@ public class LevelScript : MonoBehaviour {
         yield return new WaitForSeconds(2);
         //print(thisObjective("Walking Time", "Walk to the white spot", 3, "obj3Targ"));
         thisObjective("Walking Time", "Walk to the white spot", 3, "obj3Targ");
-        print(ECharInput);
         ECharInput();
-        print(ECamInput);
         ECamInput();
-        print(ResetCamPositionOnRig);
         ResetCamPositionOnRig();
-        print(enableInterestTrigger);
         enableInterestTrigger("Int1");
 
         //Wait till the player has finished this objective

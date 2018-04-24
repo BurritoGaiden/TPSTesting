@@ -24,11 +24,8 @@ public class PlayerCamera : MonoBehaviour {
     public Vector2 testYP;
     public Transform camTar;
 
-    enum camStates {
-        STATE_PLAYERORBIT,
-        STATE_POIFOCUS
-    };
-    camStates cameraState;
+
+    public static camStates cameraState = camStates.STATE_NULL;
 
     //Sample received delegate string
     public string lookingFor;
@@ -40,8 +37,6 @@ public class PlayerCamera : MonoBehaviour {
         }
         cam = Camera.main.transform;
 
-        cameraState = camStates.STATE_PLAYERORBIT;
-
         LevelScript.ECamInput += EnableCameraInput;
         LevelScript.DCamInput += DisableCameraInput;
         LevelScript.SetCharCamTransform += SetCameraTransform;
@@ -49,27 +44,38 @@ public class PlayerCamera : MonoBehaviour {
     }
    
 	void LateUpdate () {
-        if (Interesting.looking)
-        {
-            cameraState = camStates.STATE_POIFOCUS;
-        }
-        else {
-            cameraState = camStates.STATE_PLAYERORBIT;
-        }
 
         switch (cameraState)
         {
+            //State Case
             case camStates.STATE_PLAYERORBIT:
-                if (camInput) OrbitingBehavior();
-                return;
+                //State Behavior
+                OrbitingBehavior();
+                CameraOffset();
+                //State Transitions
+                if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
+                else if (Killing.aiming) cameraState = camStates.STATE_PLAYERAIM;
+                break;
+
             case camStates.STATE_POIFOCUS:
                 FocusBehavior();
-                return;
+                CameraOffset();
+                if (!Interesting.looking) cameraState = camStates.STATE_PLAYERORBIT;
+                break;
+
+            case camStates.STATE_NULL:
+                if (camInput) cameraState = camStates.STATE_PLAYERORBIT;
+                break;
+
+            case camStates.STATE_PLAYERAIM:
+                AimingBehavior();
+
+                if (!Killing.aiming) cameraState = camStates.STATE_PLAYERORBIT;
+                break;
         }
 	}
 
     void OrbitingBehavior() {
- 
         //Mouse control of pitch and yaw
         yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
         pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
@@ -79,9 +85,21 @@ public class PlayerCamera : MonoBehaviour {
         currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
         transform.eulerAngles = currentRotation;
 
-        transform.position = target.position - transform.forward * CameraDSTFromTarget();
+        transform.position = target.position - transform.forward * CameraDSTFromTarget();  
+    }
 
-        CameraOffset();
+    void AimingBehavior()
+    {
+        //Mouse control of pitch and yaw
+        yaw += Input.GetAxis("Mouse X") * mouseSensitivity / 3;
+        pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity / 3;
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+        //Applying control to camera rotation in a smoothed fashion
+        currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        transform.eulerAngles = currentRotation;
+
+        transform.position = target.position - transform.forward * dstFromTarget;
     }
 
     void FocusBehavior()
@@ -93,9 +111,7 @@ public class PlayerCamera : MonoBehaviour {
         currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
         transform.eulerAngles = currentRotation;
 
-        transform.position = target.position - transform.forward * CameraDSTFromTarget();
-
-        CameraOffset();
+        transform.position = target.position - transform.forward * dstFromTarget;        
     }
 
     float GetAngleBetween3PointsHor(Vector3 a, Vector3 b)
@@ -123,10 +139,10 @@ public class PlayerCamera : MonoBehaviour {
         if (Killing.aiming) {
             forwardOffset += 1f;
         }
-        if (PlayerController.running) {
-            forwardOffset -= 1f;
+        if (PlayerController.thisMoveState == MoveState.STATE_REGULAR) {
+            forwardOffset -= PlayerController.currentSpeed / 3;
         }
-        if (PlayerController.inCover) {
+        if (PlayerController.thisMoveState == MoveState.STATE_COVER) {
             verticalOffset -= .5f;
         }
         Vector3 camOffset = new Vector3(horizontalOffset, verticalOffset, forwardOffset);
@@ -165,3 +181,12 @@ public class PlayerCamera : MonoBehaviour {
         Camera.main.transform.rotation = this.transform.rotation;
     }  
 }
+
+public enum camStates
+{
+    STATE_PLAYERORBIT,
+    STATE_POIFOCUS,
+    STATE_NULL,
+    STATE_COVER,
+    STATE_PLAYERAIM
+};
