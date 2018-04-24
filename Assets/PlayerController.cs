@@ -181,12 +181,8 @@ public class PlayerController : MonoBehaviour {
 
         var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
         var coverPoint = cover.GetComponent<Collider>().ClosestPointOnBounds(playerPos);
-        //Debug.Log(playerPos + ":" + coverPoint);
-        //Debug.DrawLine(playerPos, coverPoint, Color.red);
 
         var normal = GetNormal(playerPos, coverPoint, playerPos + new Vector3(0, 1, 0));
-        //Debug.Log(normal);
-        //Debug.DrawLine(playerPos, playerPos + (normal * 10), Color.blue);
 
         if (inputDir != Vector2.zero)
         {

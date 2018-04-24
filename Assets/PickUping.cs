@@ -21,7 +21,6 @@ public class PickUping : MonoBehaviour {
         if (pickCooldown > 0) {
             pickCooldown -= Time.deltaTime;
         }
-        //hasObject = pickable;
 	}
 
     void OnTriggerStay(Collider col) {
