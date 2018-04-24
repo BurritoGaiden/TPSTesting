@@ -38,7 +38,7 @@ public class PlayerCamera : MonoBehaviour {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
-        cam = transform.GetChild(0);
+        cam = Camera.main.transform;
 
         cameraState = camStates.STATE_PLAYERORBIT;
 

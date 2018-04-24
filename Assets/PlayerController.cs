@@ -30,11 +30,13 @@ public class PlayerController : MonoBehaviour {
     public static bool crouching;
     public static bool inCover;
     public float testForwardRot;
+    public GameObject coverCollidingWith;
     public GameObject currentCover;
     float coverCooldown = 0;
 
     enum MoveState {
         STATE_REGULAR,
+        STATE_CROUCH,
         STATE_COVER
     };
     MoveState thisMoveState;
@@ -46,11 +48,9 @@ public class PlayerController : MonoBehaviour {
         controller = GetComponent<CharacterController>();
         LevelScript.DCharInput += DisableInput;
         LevelScript.ECharInput += EnableInput;
-	}
 
-    void Start() {
         thisMoveState = MoveState.STATE_REGULAR;
-    }
+	}
 
     // Update is called once per frame
     void Update()
@@ -71,50 +71,49 @@ public class PlayerController : MonoBehaviour {
 
             running = Input.GetKey(KeyCode.LeftShift);
             crouching = Input.GetKey(KeyCode.LeftControl);
+            bool jumped = Input.GetKeyDown(KeyCode.Space);
 
-            if (inCover)
+            if (coverCollidingWith && coverCooldown <= 0)
             {
-                thisMoveState = MoveState.STATE_COVER;
+                //New
+                bool triedforCover = Input.GetKeyDown(KeyCode.K);
+
+                if (triedforCover)
+                {
+                    //Old
+                    coverCooldown = 1.2f;
+                    if (!inCover)
+                    {
+                        currentCover = coverCollidingWith;
+                        print("entered cover");
+                        inCover = true;
+                    }
+                    else
+                    {
+                        currentCover = null;
+                        print("exited cover");
+                        inCover = false;
+                    }
+                }
             }
-            else if (!inCover) {
-                thisMoveState = MoveState.STATE_REGULAR;
-            }
+
+            if (inCover) thisMoveState = MoveState.STATE_COVER;
+            else if (!inCover) thisMoveState = MoveState.STATE_REGULAR;
 
             switch (thisMoveState) {
                 case MoveState.STATE_REGULAR:
-                    //GetAngleBetween3PointsHor(transform.position, );
-                    Move(inputDir, running, crouching);
-
-                    if (Input.GetKeyDown(KeyCode.Space))
-                    {
-                        Jump();
-                    }
+                    Move(inputDir, running, crouching, jumped);
                     break;
                 case MoveState.STATE_COVER:
                     CoverMove(inputDir, currentCover);
                     break;
-
             }
             
-            //Animation comes last
+            //Animation the movement
             animationSpeedPercent = ((running) ? currentSpeed / runSpeed : (crouching) ? currentSpeed / crouchSpeed : currentSpeed / walkSpeed * .5f);
         }
-        /*
-        Debug.DrawLine(transform.localPosition, transform.forward + transform.localPosition);
-        if (currentCover != null)
-        {
-            Debug.DrawLine(transform.localPosition, currentCover.transform.localPosition - transform.localPosition);
-            Debug.DrawLine(transform.localPosition, currentCover.transform.localPosition + transform.localPosition);
-            Debug.DrawLine(transform.localPosition, currentCover.transform.localPosition + transform.position);
-            Debug.DrawLine(transform.localPosition, currentCover.transform.localPosition - transform.position);
-            Debug.DrawLine(transform.localPosition, currentCover.transform.localPosition);
-            Debug.DrawLine(transform.localPosition, currentCover.transform.position);
-            Debug.DrawLine(transform.localPosition, currentCover.transform.position + transform.localPosition);
-            Debug.DrawLine(transform.localPosition, currentCover.transform.position + transform.position);
-            Debug.DrawLine(transform.localPosition, currentCover.transform.position - transform.localPosition);
-            Debug.DrawLine(transform.localPosition, currentCover.transform.position - transform.position);
-        }
-        */
+        //Debug.DrawLine(transform.localPosition, transform.forward + transform.localPosition);
+        
         //Animation 
         animator.SetFloat("speedPercent", animationSpeedPercent, speedSmoothTime, Time.deltaTime);
     }
@@ -122,23 +121,13 @@ public class PlayerController : MonoBehaviour {
     void OnTriggerStay(Collider col) {
         if (col.transform.tag == "Cover")
         {
-            if (Input.GetKey(KeyCode.K) && coverCooldown <= 0)
-            {
-                coverCooldown = 1.2f;
-                //Get the angle between the player and the cover
-                if (!inCover)
-                {
-                    currentCover = col.transform.gameObject;
-                    print("entered cover");
-                    inCover = true;
-                }
-                else
-                {
-                    currentCover = null;
-                    print("exited cover");
-                    inCover = false;
-                }
-            }
+            coverCollidingWith = col.gameObject;
+        }
+    }
+
+    void OnTriggerExit(Collider col) {
+        if (coverCollidingWith == col) {
+            coverCollidingWith = null;
         }
     }
 
@@ -149,7 +138,7 @@ public class PlayerController : MonoBehaviour {
         return angle;
     }
 
-    void Move(Vector2 inputDir, bool running, bool crouching) {
+    void Move(Vector2 inputDir, bool running, bool crouching, bool jumped) {
         //Updating the rotation of the character
         if (inputDir != Vector2.zero)
         {
@@ -174,6 +163,8 @@ public class PlayerController : MonoBehaviour {
         {
             velocityY = 0;
         }
+
+        if (jumped) Jump();
     }
 
     void CoverMove(Vector2 inputDir, GameObject cover)

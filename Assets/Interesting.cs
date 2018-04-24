@@ -29,5 +29,4 @@ public class Interesting : MonoBehaviour {
             intImage.enabled = !looking;
         }
     }
-    
 }
