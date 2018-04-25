@@ -1,33 +1,53 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PickUping : MonoBehaviour {
 
-    public float pickCooldown;
+    float pickCooldown;
     public GameObject pickable;
-	
-	// Update is called once per frame
-	void Update () {
+    public Image pickImage;
+
+    void Start()
+    {
+        pickImage.enabled = false;
+    }
+
+    // Update is called once per frame
+    void Update () {
         if (pickCooldown > 0) {
             pickCooldown -= Time.deltaTime;
         }
 	}
 
     void OnTriggerStay(Collider col) {
-        if (col.GetComponent<PickupArea>()) {
-            if (Input.GetKeyDown(KeyCode.Q)) {
-                if (pickCooldown <= 0) {
-                    if (pickable) Putdown(col.gameObject);
-                    else
-                    {
-                        if (col.GetComponent<PickupArea>().pickable)
-                        {
-                            Pickup(col.gameObject);  
-                        }
-                    }
-                }
+        //Visual
+        if (col.GetComponent<PickupArea>())
+        {
+            if (col.GetComponent<PickupArea>().pickable)
+            {
+                pickImage.enabled = true;
+                pickImage.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1f, col.transform.position.z);
             }
+        }
+        else return;
+
+        if (Input.GetKeyDown(KeyCode.Q) && pickCooldown <= 0)
+        {
+            //If the Player has an object and the pickup area is empty
+            if (pickable && !col.GetComponent<PickupArea>().pickable) Putdown(col.gameObject);
+            //If the Player doesn't have an object and the area does
+            else if (!pickable && col.GetComponent<PickupArea>().pickable) Pickup(col.gameObject);
+        }
+        
+    }
+
+    void OnTriggerExit(Collider hit)
+    {
+        if (hit.GetComponent<PickupArea>())
+        {
+            pickImage.enabled = false;
         }
     }
 

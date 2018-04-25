@@ -31,6 +31,8 @@ public class PlayerController : MonoBehaviour {
     bool jumpInput;
     bool coverInput;
 
+    GameObject pushableCollidingWith;
+    GameObject currentPush;
     GameObject coverCollidingWith;
     GameObject currentCover;
     float coverCooldown = 0;
@@ -79,13 +81,14 @@ public class PlayerController : MonoBehaviour {
                         thisMoveState = MoveState.STATE_COVER;
                         print("entered cover");                            
                     }
-                    /*else if (coverInput && pushableCollidingWith && coverCooldown <= 0)
+                    //MAKE SURE THIS STATE TRANSITION WORKS
+                    else if (coverInput && pushableCollidingWith && coverCooldown <= 0)
                     {
                         coverCooldown = 1.2f;
-                        currentCover = coverCollidingWith;
-                        thisMoveState = MoveState.STATE_COVER;
-                        print("entered cover");
-                    }*/
+                        currentPush = pushableCollidingWith;
+                        thisMoveState = MoveState.STATE_PUSHING;
+                        print("entered pushing");
+                    }
                     break;
 
                 case MoveState.STATE_COVER:
@@ -100,13 +103,15 @@ public class PlayerController : MonoBehaviour {
                     }
                     break;
 
+                    //MAKE SURE PUSHING STATE WORKS
+                    //MAKE SURE PUSHING STATE CAN BE EXITED
                 case MoveState.STATE_PUSHING:
-                    ObjectMove(inputDir, currentCover);
+                    ObjectMove(inputDir, currentPush);
 
                     if (coverInput && coverCooldown <= 0)
                     {
                         coverCooldown = 1.2f;
-                        currentCover = null;
+                        currentPush = null;
                         thisMoveState = MoveState.STATE_REGULAR;
                         print("exited cover");
                     }
@@ -125,11 +130,17 @@ public class PlayerController : MonoBehaviour {
         {
             coverCollidingWith = col.gameObject;
         }
+        if (col.transform.tag == "Pushable") {
+            pushableCollidingWith = col.gameObject;
+        }
     }
 
     void OnTriggerExit(Collider col) {
         if (coverCollidingWith == col) {
             coverCollidingWith = null;
+        }
+        if (pushableCollidingWith == col) {
+            pushableCollidingWith = null;
         }
     }
 
