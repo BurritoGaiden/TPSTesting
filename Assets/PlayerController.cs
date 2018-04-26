@@ -93,8 +93,10 @@ public class PlayerController : MonoBehaviour {
 
                 case MoveState.STATE_COVER:
                     CoverMove(inputDir, currentCover);
-
-                    if (coverInput && coverCooldown <= 0)
+                    if (Killing.aiming) {
+                        thisMoveState = MoveState.STATE_COVERAIM;
+                    }
+                    else if (coverInput && coverCooldown <= 0)
                     {
                         coverCooldown = 1.2f;
                         currentCover = null;
@@ -103,8 +105,23 @@ public class PlayerController : MonoBehaviour {
                     }
                     break;
 
-                    //MAKE SURE PUSHING STATE WORKS
-                    //MAKE SURE PUSHING STATE CAN BE EXITED
+                case MoveState.STATE_COVERAIM:
+                    CoverMoveAim(inputDir, currentCover);
+                    if (!Killing.aiming)
+                    {
+                        thisMoveState = MoveState.STATE_COVER;
+                    }
+                    else if (coverInput && coverCooldown <= 0)
+                    {
+                        coverCooldown = 1.2f;
+                        currentCover = null;
+                        thisMoveState = MoveState.STATE_REGULAR;
+                        print("exited cover");
+                    }
+                    break;
+
+                //MAKE SURE PUSHING STATE WORKS
+                //MAKE SURE PUSHING STATE CAN BE EXITED
                 case MoveState.STATE_PUSHING:
                     ObjectMove(inputDir, currentPush);
 
@@ -180,6 +197,88 @@ public class PlayerController : MonoBehaviour {
         if (jumped) Jump();
     }
 
+    void CoverMoveAim(Vector2 inputDir, GameObject cover)
+    {
+
+        // The position on the players legs, don't actually have to be at the legs level, but did it so that it's easier to see
+        var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
+
+        // Get the closest point on the bounds of the cover collider        
+        var coverPoint = cover.GetComponent<Collider>().ClosestPointOnBounds(playerPos);
+
+        // Use these 2 positions, (plus 1 on the y axis for the third variable in the normal function) to get a normal, this is the vector we can move along
+        var normal = GetNormal(playerPos, coverPoint, playerPos + new Vector3(0, 1, 0));
+
+        // Origins of the rays, one on each side of the player in relation to the cover
+        var rayOrigin1 = playerPos + (normal * 0.2f);
+        var rayOrigin2 = playerPos - (normal * 0.2f);
+
+        Vector3 dir = coverPoint - new Vector3(playerPos.x, coverPoint.y, playerPos.z);
+        dir.Normalize();
+
+        // We use this plane to see which direction were running along the cover
+        var plane = new Plane(normal, Vector3.zero);
+
+        // Cast 2 rays on each side of the player, if one of these are off we restrict movement on that side of the plane
+        bool canMoveRight = false;
+        if (Physics.Raycast(rayOrigin1, dir, 1))
+        {
+            Debug.DrawLine(rayOrigin1, rayOrigin1 + (dir * 1), Color.green);
+            canMoveRight = true;
+        }
+        else
+        {
+            Debug.DrawLine(rayOrigin1, rayOrigin1 + (dir * 1), Color.red);
+        }
+
+        bool canMoveLeft = false;
+        if (Physics.Raycast(rayOrigin2, dir, 1))
+        {
+            Debug.DrawLine(rayOrigin2, rayOrigin2 + (dir * 1), Color.green);
+            canMoveLeft = true;
+        }
+        else
+        {
+            Debug.DrawLine(rayOrigin2, rayOrigin2 + (dir * 1), Color.red);
+        }
+
+        if (inputDir != Vector2.zero)
+        {
+            float targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + cameraT.eulerAngles.y;
+            print("Regular Movement Target Rot: " + targetRotation);
+            transform.eulerAngles = Vector3.up * targetRotation;
+        }
+
+        //If running, the target speed = run speed, else the target speed = walk speed. All in the direction of the character
+        float targetSpeed = crouchSpeed * inputDir.magnitude;
+
+        currentSpeed = targetSpeed;
+
+        velocityY += Time.deltaTime * gravity;
+
+        Vector3 velocity = transform.forward * currentSpeed + Vector3.up * velocityY;
+        velocity = Vector3.Project(velocity, normal);
+
+        // Restrict the movement if one of the rays missed
+        // We do this by checking which direction were running along the normal
+        if (!canMoveRight && plane.GetSide(velocity))
+            velocity = Vector3.zero;
+
+        if (!canMoveLeft && !plane.GetSide(velocity))
+            velocity = Vector3.zero;
+
+
+        //transform.Translate(transform.forward * currentSpeed * Time.deltaTime, Space.World);
+        controller.Move(velocity * Time.deltaTime);
+        currentSpeed = new Vector2(controller.velocity.x, controller.velocity.z).magnitude;
+
+        if (controller.isGrounded)
+        {
+            velocityY = 0;
+        }
+    }
+
+    
     void CoverMove(Vector2 inputDir, GameObject cover)
     {
         var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
@@ -212,6 +311,7 @@ public class PlayerController : MonoBehaviour {
             velocityY = 0;
         }
     }
+    
 
     void ObjectMove(Vector2 inputDir, GameObject cover)
     {
@@ -289,6 +389,7 @@ public enum MoveState
     STATE_REGULAR,
     STATE_CROUCH,
     STATE_COVER,
+    STATE_COVERAIM,
     STATE_CLIMBING,
     STATE_PUSHING,
     STATE_NULL
