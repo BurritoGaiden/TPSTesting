@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
 
+    //TODO: Add behavior for expanding collision check on push to include pushed object, fix shooting
+
     public bool takeInput;
     public float crouchSpeed = 1.5f;
     public float walkSpeed = 2f;
@@ -31,9 +33,9 @@ public class PlayerController : MonoBehaviour {
     bool jumpInput;
     bool coverInput;
 
-    GameObject pushableCollidingWith;
+    public GameObject pushableCollidingWith;
     GameObject currentPush;
-    GameObject coverCollidingWith;
+    public GameObject coverCollidingWith;
     GameObject currentCover;
     float coverCooldown = 0;
 
@@ -67,13 +69,16 @@ public class PlayerController : MonoBehaviour {
             runInput = Input.GetKey(KeyCode.LeftShift);
             crouchInput = Input.GetKey(KeyCode.LeftControl);
             jumpInput = Input.GetKeyDown(KeyCode.Space);
-            coverInput = Input.GetKeyDown(KeyCode.K);
+            coverInput = Input.GetKeyDown(KeyCode.Q);
 
             switch (thisMoveState) {
 
                 case MoveState.STATE_REGULAR:
                     Move(inputDir, runInput, crouchInput, jumpInput);
 
+                    if (Interesting.looking) {
+                        thisMoveState = MoveState.STATE_FOCUS;
+                    }
                     if (coverInput && coverCollidingWith && coverCooldown <= 0)
                     {
                         coverCooldown = 1.2f;
@@ -88,6 +93,16 @@ public class PlayerController : MonoBehaviour {
                         currentPush = pushableCollidingWith;
                         thisMoveState = MoveState.STATE_PUSHING;
                         print("entered pushing");
+                    }
+                    break;
+
+                case MoveState.STATE_FOCUS:
+                    Move(inputDir, false, crouchInput, false);
+
+                    //Transition
+                    if (!Interesting.looking)
+                    {
+                        thisMoveState = MoveState.STATE_REGULAR;
                     }
                     break;
 
@@ -153,10 +168,10 @@ public class PlayerController : MonoBehaviour {
     }
 
     void OnTriggerExit(Collider col) {
-        if (coverCollidingWith == col) {
+        if (col.transform.tag == "Cover") {
             coverCollidingWith = null;
         }
-        if (pushableCollidingWith == col) {
+        if (col.transform.tag == "Pushable") {
             pushableCollidingWith = null;
         }
     }
@@ -387,6 +402,7 @@ public class PlayerController : MonoBehaviour {
 public enum MoveState
 {
     STATE_REGULAR,
+    STATE_FOCUS,
     STATE_CROUCH,
     STATE_COVER,
     STATE_COVERAIM,

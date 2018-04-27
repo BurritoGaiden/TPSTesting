@@ -25,7 +25,7 @@ public class Interesting : MonoBehaviour {
     {
         if (hit.transform.GetComponent<Interestable>())
         {
-            looking = Input.GetKey(KeyCode.E);
+            looking = Input.GetKey(KeyCode.Mouse1);
             intImage.enabled = !looking;
         }
     }

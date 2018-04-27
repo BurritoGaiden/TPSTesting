@@ -30,10 +30,18 @@ public class PickUping : MonoBehaviour {
                 pickImage.enabled = true;
                 pickImage.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1f, col.transform.position.z);
             }
+            else if (!col.GetComponent<PickupArea>().pickable && pickable)
+            {
+                pickImage.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1f, col.transform.position.z);
+                pickImage.enabled = true;
+            }
+            else if (!col.GetComponent<PickupArea>().pickable && !pickable) {
+                pickImage.enabled = false;
+            }
         }
         else return;
 
-        if (Input.GetKeyDown(KeyCode.Q) && pickCooldown <= 0)
+        if (Input.GetKeyDown(KeyCode.E) && pickCooldown <= 0)
         {
             //If the Player has an object and the pickup area is empty
             if (pickable && !col.GetComponent<PickupArea>().pickable) Putdown(col.gameObject);
@@ -67,7 +75,7 @@ public class PickUping : MonoBehaviour {
         pickable.transform.position = pickupArea.GetComponent<PickupArea>().pickablePlacementPlaceholder.transform.position;
         pickable.transform.rotation = pickupArea.GetComponent<PickupArea>().pickablePlacementPlaceholder.transform.rotation;
 
-        if (!pickable.GetComponent<Pickupable>().destinationArea == pickupArea)
+        if (pickable.GetComponent<Pickupable>().destinationArea != pickupArea)
         {
             pickupArea.GetComponent<PickupArea>().pickable = pickable;
         }
