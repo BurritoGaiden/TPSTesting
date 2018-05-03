@@ -43,14 +43,18 @@ public class LevelScript : MonoBehaviour {
     public Vector3[] tempCamPos;
     public Vector3[] tempCamRot;
 
+    public GameObject truck;
+    public Transform[] truckPositions;
+
     // Use this for initialization
     void Awake() {
         ObjectiveHandler.ObjDone += ObjectiveDoneListener;
     }
        
 	void Start () {
-        if(runScript == true)
-        StartCoroutine(MainLevelCoroutine());
+        if (runScript == true)
+            //StartCoroutine(MainLevelCoroutine());
+            StartCoroutine(TruckLevelCoroutine());
 	}
 
     void ObjectiveDoneListener() {
@@ -107,6 +111,49 @@ public class LevelScript : MonoBehaviour {
 
         ThisDialogue(4);
         print("Level Complete");
+    }
+
+    //Script for the level
+    IEnumerator TruckLevelCoroutine()
+    {
+        truck.SetActive(false);
+        DCharInput();
+        ThisDialogue(0);
+        yield return new WaitForSeconds(2);
+        ThisDialogue(1);
+        yield return new WaitForSeconds(2);
+        SetCharCamTransform(tempCamPos[1], tempCamRot[1]);
+        yield return new WaitForSeconds(2);
+        thisObjective("Walk Thing 1", "Walk to the white spot", 3, "truckTrig1");
+        ECharInput();
+        ECamInput();
+        ResetCamPositionOnRig();
+        enableInterestTrigger("Int1");
+
+        //Wait till the player has finished this objective
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        truck.SetActive(true);
+        truck.transform.position = truckPositions[0].position;
+
+        thisObjective("Walk Thing 2", "Walk to the white spot", 3, "truckTrig2");
+
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        truck.transform.position = truckPositions[1].position;
+
+        thisObjective("Walk Thing 3", "Walk to the white spot", 3, "truckTrig3");
+
+        truck.transform.position = truckPositions[2].position;
+
+        print("ey");
+        
+    }
+
+    void EnablePlayer() {
+
     }
 
     //TODO: program a delegate that allows calls for specific targets on an objective being completed

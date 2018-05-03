@@ -38,6 +38,7 @@ public class Collecting : MonoBehaviour {
 
             if (stringToCheckAgainst == lookingFor)
             {
+                if(col != null)
                 collectThis(col.gameObject);
             }
         }

@@ -219,7 +219,7 @@ public class PlayerController : MonoBehaviour {
         var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
 
         // Get the closest point on the bounds of the cover collider        
-        var coverPoint = cover.GetComponent<Collider>().ClosestPointOnBounds(playerPos);
+        var coverPoint = cover.GetComponent<Collider>().ClosestPoint(playerPos);
 
         // Use these 2 positions, (plus 1 on the y axis for the third variable in the normal function) to get a normal, this is the vector we can move along
         var normal = GetNormal(playerPos, coverPoint, playerPos + new Vector3(0, 1, 0));
@@ -297,7 +297,7 @@ public class PlayerController : MonoBehaviour {
     void CoverMove(Vector2 inputDir, GameObject cover)
     {
         var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
-        var coverPoint = cover.GetComponent<Collider>().ClosestPointOnBounds(playerPos);
+        var coverPoint = cover.GetComponent<Collider>().ClosestPoint(playerPos);
 
         var normal = GetNormal(playerPos, coverPoint, playerPos + new Vector3(0, 1, 0));
 
@@ -331,7 +331,7 @@ public class PlayerController : MonoBehaviour {
     void ObjectMove(Vector2 inputDir, GameObject cover)
     {
         var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
-        var coverPoint = cover.GetComponent<Collider>().ClosestPointOnBounds(playerPos);
+        var coverPoint = cover.GetComponent<Collider>().ClosestPoint(playerPos);
 
         // New normal calculation, simpler
         coverPoint.y = playerPos.y;
