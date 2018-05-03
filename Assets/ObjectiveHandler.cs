@@ -142,9 +142,14 @@ public class ObjectiveHandler : MonoBehaviour {
 
     //Update progress on an objective
     void ObjectiveProgressUpdate(GameObject refGameObject) {
-        for (int i = 0; i < objectivesList[0].targetList.Count; i++) {
-            if (objectivesList[0].targetList[i].name == refGameObject.name) {
-                objectivesList[0].targetList.Remove(objectivesList[0].targetList[i]);
+        if (objectivesList.Count != 0)
+        {
+            for (int i = 0; i < objectivesList[0].targetList.Count; i++)
+            {
+                if (objectivesList[0].targetList[i].name == refGameObject.name)
+                {
+                    objectivesList[0].targetList.Remove(objectivesList[0].targetList[i]);
+                }
             }
         }
     }

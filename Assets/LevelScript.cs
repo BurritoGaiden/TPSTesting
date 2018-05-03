@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class LevelScript : MonoBehaviour {
 
@@ -43,8 +44,16 @@ public class LevelScript : MonoBehaviour {
     public Vector3[] tempCamPos;
     public Vector3[] tempCamRot;
 
+    public GameObject player;
     public GameObject truck;
     public Transform[] truckPositions;
+
+    public AudioMixer thisMixer;
+    public AudioMixerSnapshot[] theseSnapshots;
+
+    //This is more of a game manager thing
+    public static GamePlayState thisGameplayState = GamePlayState.Regular;
+    
 
     // Use this for initialization
     void Awake() {
@@ -59,6 +68,21 @@ public class LevelScript : MonoBehaviour {
 
     void ObjectiveDoneListener() {
         waitTillObjectiveDone = false;
+    }
+
+    //Only used for game manager/game state editing
+    void AudioMixCheck() {
+        switch (thisGameplayState) {
+            case GamePlayState.Regular:
+                theseSnapshots[0].TransitionTo(3f);
+                break;
+            case GamePlayState.Combat:
+                theseSnapshots[1].TransitionTo(1f);
+                break;
+            case GamePlayState.Finale:
+                theseSnapshots[2].TransitionTo(5f);
+                break;
+        }
     }
 
     //Script for the level
@@ -117,6 +141,7 @@ public class LevelScript : MonoBehaviour {
     IEnumerator TruckLevelCoroutine()
     {
         truck.SetActive(false);
+        theseSnapshots[0].TransitionTo(3f);
         DCharInput();
         ThisDialogue(0);
         yield return new WaitForSeconds(2);
@@ -134,19 +159,51 @@ public class LevelScript : MonoBehaviour {
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
+        theseSnapshots[1].TransitionTo(3f);
         truck.SetActive(true);
         truck.transform.position = truckPositions[0].position;
+
+        thisObjective("Walk Thing 4", "Walk to the white spot", 3, "truckTrig4");
+
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        truck.SetActive(false);
+        theseSnapshots[0].TransitionTo(4f);
+
+        
 
         thisObjective("Walk Thing 2", "Walk to the white spot", 3, "truckTrig2");
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
-        truck.transform.position = truckPositions[1].position;
+        truck.SetActive(true);
+        theseSnapshots[1].TransitionTo(.5f);
+        truck.transform.position = truckPositions[2].position;
+        PlayerCamera.cameraState = camStates.STATE_DIRFOCUS;
+        DCharInput();
+        PlayerCamera.camTar = truck.transform;
+
+        yield return new WaitForSeconds(2);
+        PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
+        ECharInput();
 
         thisObjective("Walk Thing 3", "Walk to the white spot", 3, "truckTrig3");
 
-        truck.transform.position = truckPositions[2].position;
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone)
+        {
+            if (PlayerController.triggerCollidingWith) {
+                if (PlayerController.triggerCollidingWith.tag == "Trigger") {
+                    truck.transform.position = new Vector3(player.transform.position.x, truck.transform.position.y, truck.transform.position.z);
+                }
+            }
+
+            yield return null;
+        }
+        truck.transform.position = truckPositions[1].position;
+        theseSnapshots[2].TransitionTo(3f);
 
         print("ey");
         
@@ -157,4 +214,10 @@ public class LevelScript : MonoBehaviour {
     }
 
     //TODO: program a delegate that allows calls for specific targets on an objective being completed
+}
+
+public enum GamePlayState {
+    Regular,
+    Combat,
+    Finale
 }

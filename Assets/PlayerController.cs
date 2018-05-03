@@ -33,6 +33,7 @@ public class PlayerController : MonoBehaviour {
     bool jumpInput;
     bool coverInput;
 
+    public static GameObject triggerCollidingWith;
     public GameObject pushableCollidingWith;
     GameObject currentPush;
     public GameObject coverCollidingWith;
@@ -162,6 +163,10 @@ public class PlayerController : MonoBehaviour {
         {
             coverCollidingWith = col.gameObject;
         }
+        if (col.transform.tag == "Trigger")
+        {
+            triggerCollidingWith = col.gameObject;
+        }
         if (col.transform.tag == "Pushable") {
             pushableCollidingWith = col.gameObject;
         }
@@ -173,6 +178,10 @@ public class PlayerController : MonoBehaviour {
         }
         if (col.transform.tag == "Pushable") {
             pushableCollidingWith = null;
+        }
+        if (col.transform.tag == "Trigger")
+        {
+            triggerCollidingWith = null;
         }
     }
 

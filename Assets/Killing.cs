@@ -43,6 +43,7 @@ public class Killing : MonoBehaviour {
         RaycastHit hit;
         if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, range)) {
             string stringToCheckAgainst = hit.transform.gameObject.name;
+            if (lookingFor.Length > stringToCheckAgainst.Length) return;
             stringToCheckAgainst = stringToCheckAgainst.Substring(0, lookingFor.Length);
 
             if (stringToCheckAgainst == lookingFor)

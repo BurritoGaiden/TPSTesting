@@ -22,7 +22,7 @@ public class PlayerCamera : MonoBehaviour {
 
     //testing
     public Vector2 testYP;
-    public Transform camTar;
+    public static Transform camTar;
 
 
     public static camStates cameraState = camStates.STATE_NULL;
@@ -59,6 +59,12 @@ public class PlayerCamera : MonoBehaviour {
                 if (!camInput) cameraState = camStates.STATE_NULL;
                 else if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
                 else if (Killing.aiming) cameraState = camStates.STATE_PLAYERAIM;
+                break;
+
+                //Developer driven state. Can only be switched into and out of from the level script
+            case camStates.STATE_DIRFOCUS:
+                FocusBehavior();
+                CameraOffset();
                 break;
 
             case camStates.STATE_POIFOCUS:
@@ -189,6 +195,7 @@ public class PlayerCamera : MonoBehaviour {
 public enum camStates
 {
     STATE_PLAYERORBIT,
+    STATE_DIRFOCUS,
     STATE_POIFOCUS,
     STATE_NULL,
     STATE_COVER,

@@ -33,7 +33,7 @@ public class Collecting : MonoBehaviour {
         if (col.gameObject.tag == "Target")
         {
             string stringToCheckAgainst = col.gameObject.name;
-
+            if (lookingFor.Length > stringToCheckAgainst.Length) return;
             stringToCheckAgainst = stringToCheckAgainst.Substring(0, lookingFor.Length);
 
             if (stringToCheckAgainst == lookingFor)
