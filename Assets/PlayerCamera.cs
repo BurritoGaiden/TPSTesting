@@ -30,6 +30,9 @@ public class PlayerCamera : MonoBehaviour {
     //Sample received delegate string
     public string lookingFor;
 
+    //FOR DEBUGGING PURPOSES
+    public string currentStateString;
+
     void Awake() {
         if (lockCursor) {
             Cursor.lockState = CursorLockMode.Locked;
@@ -53,7 +56,8 @@ public class PlayerCamera : MonoBehaviour {
                 OrbitingBehavior();
                 CameraOffset();
                 //State Transitions
-                if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
+                if (!camInput) cameraState = camStates.STATE_NULL;
+                else if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
                 else if (Killing.aiming) cameraState = camStates.STATE_PLAYERAIM;
                 break;
 

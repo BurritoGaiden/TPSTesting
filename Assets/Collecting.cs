@@ -27,7 +27,7 @@ public class Collecting : MonoBehaviour {
     }
 
     //Check for the collision. Send a delegate out for the collided object
-    void OnControllerColliderHit(ControllerColliderHit col)
+    void OnTriggerEnter(Collider col)
     {
         //We can assume that objects that are targets will have names long enough than the shortest target name base
         if (col.gameObject.tag == "Target")
