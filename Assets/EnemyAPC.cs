@@ -21,7 +21,7 @@ public class EnemyAPC : MonoBehaviour {
 
         if (Physics.Linecast(turret.transform.position, player.transform.position, out hit)) {
             if (hit.transform.tag == "Player") {
-                print("hit em");
+                //print("hit em");
             }
         }
         /*

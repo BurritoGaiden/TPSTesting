@@ -57,6 +57,7 @@ public class PlayerCamera : MonoBehaviour {
                 CameraOffset();
                 //State Transitions
                 if (!camInput) cameraState = camStates.STATE_NULL;
+                else if (PlayerController.thisMoveState == MoveState.STATE_COVER) cameraState = camStates.STATE_COVER;
                 else if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
                 else if (Killing.aiming) cameraState = camStates.STATE_PLAYERAIM;
                 break;
@@ -66,7 +67,11 @@ public class PlayerCamera : MonoBehaviour {
                 FocusBehavior();
                 CameraOffset();
                 break;
-
+            case camStates.STATE_COVER:
+                OrbitingBehavior();
+                CameraOffset();
+                if (PlayerController.thisMoveState != MoveState.STATE_COVER) cameraState = camStates.STATE_PLAYERORBIT;
+                break;
             case camStates.STATE_POIFOCUS:
                 FocusBehavior();
                 CameraOffset();
@@ -153,7 +158,9 @@ public class PlayerCamera : MonoBehaviour {
             forwardOffset -= PlayerController.currentSpeed / 3;
         }
         if (PlayerController.thisMoveState == MoveState.STATE_COVER) {
-            verticalOffset -= .5f;
+            verticalOffset += .5f;
+            forwardOffset += .5f;
+            horizontalOffset = 0f;
         }
         Vector3 camOffset = new Vector3(horizontalOffset, verticalOffset, forwardOffset);
         cam.transform.localPosition = camOffset;
@@ -199,5 +206,6 @@ public enum camStates
     STATE_POIFOCUS,
     STATE_NULL,
     STATE_COVER,
+    STATE_COVERAIM,
     STATE_PLAYERAIM
 };

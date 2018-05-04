@@ -53,6 +53,7 @@ public class LevelScript : MonoBehaviour {
 
     //This is more of a game manager thing
     public static GamePlayState thisGameplayState = GamePlayState.Regular;
+    public Playmode thisPlayMode = Playmode.Linear;
     
 
     // Use this for initialization
@@ -69,22 +70,7 @@ public class LevelScript : MonoBehaviour {
     void ObjectiveDoneListener() {
         waitTillObjectiveDone = false;
     }
-
-    //Only used for game manager/game state editing
-    void AudioMixCheck() {
-        switch (thisGameplayState) {
-            case GamePlayState.Regular:
-                theseSnapshots[0].TransitionTo(3f);
-                break;
-            case GamePlayState.Combat:
-                theseSnapshots[1].TransitionTo(1f);
-                break;
-            case GamePlayState.Finale:
-                theseSnapshots[2].TransitionTo(5f);
-                break;
-        }
-    }
-
+    
     //Script for the level
     IEnumerator MainLevelCoroutine()
     {
@@ -171,7 +157,7 @@ public class LevelScript : MonoBehaviour {
         truck.SetActive(false);
         theseSnapshots[0].TransitionTo(4f);
 
-        
+
 
         thisObjective("Walk Thing 2", "Walk to the white spot", 3, "truckTrig2");
 
@@ -185,7 +171,14 @@ public class LevelScript : MonoBehaviour {
         DCharInput();
         PlayerCamera.camTar = truck.transform;
 
-        yield return new WaitForSeconds(2);
+        float counter = 0;
+        while (counter < 4) {
+            counter += Time.deltaTime;
+            Debug.Log("Have waited" + counter + " seconds");
+            RailPlayer();
+            yield return null;
+        }
+
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
         ECharInput();
 
@@ -209,8 +202,40 @@ public class LevelScript : MonoBehaviour {
         
     }
 
-    void EnablePlayer() {
+    //TRUCK MOVERS
 
+    public Rail rail;
+
+    private int currentSeg;
+    private float transition;
+    private bool isCompleted;
+
+    void Update() {
+
+    }
+    void RailPlayer()
+    {
+        if (!rail)
+            return;
+
+        if (!isCompleted)
+            PlayRail();
+    }
+
+    void PlayRail() {
+        transition += Time.deltaTime * 1 / 1.2f;
+        if (transition > 1)
+        {
+            transition = 0;
+            currentSeg++;
+        }
+        else if (transition < 0) {
+            transition = 1;
+            currentSeg--;
+        }
+
+        truck.transform.position = rail.PositionOnRail(currentSeg, transition, thisPlayMode);
+        truck.transform.rotation = rail.Orientation(currentSeg, transition);
     }
 
     //TODO: program a delegate that allows calls for specific targets on an objective being completed
