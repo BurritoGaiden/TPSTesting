@@ -33,6 +33,10 @@ public class PlayerCamera : MonoBehaviour {
     //FOR DEBUGGING PURPOSES
     public string currentStateString;
 
+    public float horizontalOffset = .64f;
+    public float forwardOffset = 0f;
+    public float verticalOffset = 0f;
+
     void Awake() {
         if (lockCursor) {
             Cursor.lockState = CursorLockMode.Locked;
@@ -100,7 +104,7 @@ public class PlayerCamera : MonoBehaviour {
         currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
         transform.eulerAngles = currentRotation;
 
-        transform.position = target.position - transform.forward * CameraDSTFromTarget();  
+        transform.position = target.position - transform.forward * dstFromTarget;  
     }
 
     void AimingBehavior()
@@ -148,18 +152,24 @@ public class PlayerCamera : MonoBehaviour {
 
     void CameraOffset() {
         //Adding Camera offset
-        float horizontalOffset = .64f;
-        float forwardOffset = 0f;
-        float verticalOffset = 0f;
+        
         if (Killing.aiming) {
-            forwardOffset += 1f;
+            forwardOffset = 1f;
+            horizontalOffset = .64f;
+            verticalOffset = 0f;
         }
         if (PlayerController.thisMoveState == MoveState.STATE_REGULAR) {
-            forwardOffset -= PlayerController.currentSpeed / 3;
+            //forwardOffset -= PlayerController.currentSpeed / 3;
+            forwardOffset = .66f;
+            horizontalOffset = .73f;
+            if (!PlayerController.crouchInput)
+                verticalOffset = .36f;
+            else
+                verticalOffset = -.15f;
         }
         if (PlayerController.thisMoveState == MoveState.STATE_COVER) {
-            verticalOffset += .5f;
-            forwardOffset += .5f;
+            verticalOffset = -.15f;
+            forwardOffset = .66f;
             horizontalOffset = 0f;
         }
         Vector3 camOffset = new Vector3(horizontalOffset, verticalOffset, forwardOffset);

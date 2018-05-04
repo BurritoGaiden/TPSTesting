@@ -126,9 +126,12 @@ public class LevelScript : MonoBehaviour {
     //Script for the level
     IEnumerator TruckLevelCoroutine()
     {
+        //Start level
         truck.SetActive(false);
         theseSnapshots[0].TransitionTo(3f);
         DCharInput();
+
+        //Joel is waking up
         ThisDialogue(0);
         yield return new WaitForSeconds(2);
         ThisDialogue(1);

@@ -28,22 +28,6 @@ public class DialogueHandler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-        //Input: Commented out if scripting
-        /*
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            PresentDialogue(desiredLineIndex);
-        }
-        if (Input.GetKeyDown(KeyCode.P))
-        {
-            if (desiredLineIndex < (dialogueClips.Length - 1)) desiredLineIndex++;
-        }
-        else if (Input.GetKeyDown(KeyCode.O))
-        {
-            if (desiredLineIndex >= 1) desiredLineIndex--;
-        }
-        */
         //Text "stay" check
         if (currentTimeTillTextOff > 0)
         {
@@ -59,14 +43,30 @@ public class DialogueHandler : MonoBehaviour
     //Tells the game to present text and audio, set static data, then clear everything after clip has finished
     void PresentDialogue(int chosenLine)
     {
-        currentLineIndex = chosenLine;
-        currentLineString = dialogueStrings[chosenLine];
+        if (dialogueClips.Length >= (chosenLine - 1) && dialogueClips.Length != 0)
+        {
+            if (dialogueClips[chosenLine] != null)
+                PlayDialogueClip(chosenLine);
+        }
+        else
+            print("This line's audio doesn't exist");
+        if (dialogueStrings[chosenLine] != null)
+        {
+            DisplayText(chosenLine);
+            
+        }
+        else
+            print("This line doesn't exist");
 
-
-        PlayDialogueClip(chosenLine);
-        DisplayText(chosenLine);
-
-        currentTimeTillTextOff = dialogueClips[chosenLine].length;
+        if (dialogueClips.Length > 0)
+        {
+            if (dialogueClips[chosenLine] != null && dialogueStrings[chosenLine] != null)
+            {
+                currentTimeTillTextOff = dialogueClips[chosenLine].length;
+            }
+        }
+        else if (dialogueClips.Length <= 0 && dialogueStrings[chosenLine] != null)
+            currentTimeTillTextOff = 6f;
     }
 
     //Plays the audio clip
