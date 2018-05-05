@@ -169,13 +169,17 @@ public class LevelScript : MonoBehaviour {
 
         truck.SetActive(true);
         theseSnapshots[1].TransitionTo(.5f);
-        truck.transform.position = truckPositions[2].position;
+        //truck.transform.position = truckPositions[2].position;
         PlayerCamera.cameraState = camStates.STATE_DIRFOCUS;
         DCharInput();
         PlayerCamera.camTar = truck.transform;
 
+        print(currentSeg);
+        currentSeg = 1;
+        print(currentSeg);
+
         float counter = 0;
-        while (counter < 4) {
+        while (counter < 2.5) {
             counter += Time.deltaTime;
             Debug.Log("Have waited" + counter + " seconds");
             RailPlayer();
