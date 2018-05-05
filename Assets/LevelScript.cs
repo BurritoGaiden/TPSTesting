@@ -51,6 +51,9 @@ public class LevelScript : MonoBehaviour {
     public AudioMixer thisMixer;
     public AudioMixerSnapshot[] theseSnapshots;
 
+    public AudioClip[] sfx;
+
+
     //This is more of a game manager thing
     public static GamePlayState thisGameplayState = GamePlayState.Regular;
     public Playmode thisPlayMode = Playmode.Linear;
@@ -138,16 +141,19 @@ public class LevelScript : MonoBehaviour {
         yield return new WaitForSeconds(2);
         SetCharCamTransform(tempCamPos[1], tempCamRot[1]);
         yield return new WaitForSeconds(2);
+        ThisDialogue(2);
         thisObjective("Walk Thing 1", "Walk to the white spot", 3, "truckTrig1");
         ECharInput();
         ECamInput();
         ResetCamPositionOnRig();
         enableInterestTrigger("Int1");
 
+        this.GetComponent<AudioSource>().PlayOneShot(sfx[0]);
+
         //Wait till the player has finished this objective
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
-
+        ThisDialogue(3);
         theseSnapshots[1].TransitionTo(3f);
         truck.SetActive(true);
         truck.transform.position = truckPositions[0].position;
@@ -156,10 +162,12 @@ public class LevelScript : MonoBehaviour {
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
+        ThisDialogue(4);
 
         truck.SetActive(false);
         theseSnapshots[0].TransitionTo(4f);
-
+        yield return new WaitForSeconds(3);
+        ThisDialogue(5);
 
 
         thisObjective("Walk Thing 2", "Walk to the white spot", 3, "truckTrig2");
@@ -169,7 +177,6 @@ public class LevelScript : MonoBehaviour {
 
         truck.SetActive(true);
         theseSnapshots[1].TransitionTo(.5f);
-        //truck.transform.position = truckPositions[2].position;
         PlayerCamera.cameraState = camStates.STATE_DIRFOCUS;
         DCharInput();
         PlayerCamera.camTar = truck.transform;
@@ -189,6 +196,45 @@ public class LevelScript : MonoBehaviour {
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
         ECharInput();
 
+        //Player must collect the pieces
+        thisObjective("Collecting Time", "Collect 3 white greyboxes", 1, "truckTrig6");
+
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        ThisDialogue(6);
+        yield return new WaitForSeconds(3);
+        ThisDialogue(7);
+        yield return new WaitForSeconds(2);
+        ThisDialogue(8);
+        yield return new WaitForSeconds(6);
+        ThisDialogue(9);
+        yield return new WaitForSeconds(10);
+        ThisDialogue(10);
+        yield return new WaitForSeconds(1);
+        ThisDialogue(11);
+        yield return new WaitForSeconds(3);
+
+        //Player sets the bomb
+        thisObjective("Collecting Time", "Collect 3 white greyboxes", 1, "truckTrig7");
+
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+        ThisDialogue(14);
+        yield return new WaitForSeconds(2);
+        ThisDialogue(15);
+        yield return new WaitForSeconds(5);
+
+        //when the player hits the follow trigger
+        thisObjective("Run", "Get to the end of the corridor", 3, "truckTrig5");
+
+
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        GetComponent<AudioSource>().PlayOneShot(sfx[1]);
+        ThisDialogue(12);
+
         thisObjective("Walk Thing 3", "Walk to the white spot", 3, "truckTrig3");
 
         waitTillObjectiveDone = true;
@@ -202,11 +248,19 @@ public class LevelScript : MonoBehaviour {
 
             yield return null;
         }
+
+        ThisDialogue(13);
         truck.transform.position = truckPositions[1].position;
         theseSnapshots[2].TransitionTo(3f);
 
-        print("ey");
-        
+        //when the player leaves
+        thisObjective("Run", "Get to the end of the corridor", 3, "truckTrig8");
+
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+        ThisDialogue(16);
+
+        print("ey");       
     }
 
     //TRUCK MOVERS

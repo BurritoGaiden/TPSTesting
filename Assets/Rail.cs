@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
+//using UnityEditor;
 
 [ExecuteInEditMode]
 public class Rail : MonoBehaviour {
@@ -16,7 +16,7 @@ public class Rail : MonoBehaviour {
     private void OnDrawGizmos()
     {
         for (int i = 0; i < nodes.Length - 1; i++) {
-            Handles.DrawDottedLine(nodes[i].position, nodes[i + 1].position, 3f);
+            //Handles.DrawDottedLine(nodes[i].position, nodes[i + 1].position, 3f);
         }
     }
 

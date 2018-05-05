@@ -43,13 +43,11 @@ public class DialogueHandler : MonoBehaviour
     //Tells the game to present text and audio, set static data, then clear everything after clip has finished
     void PresentDialogue(int chosenLine)
     {
-        if (dialogueClips.Length >= (chosenLine - 1) && dialogueClips.Length != 0)
+        //If the chosen line is in the array length of the dialogue clips and there are clips
+        if (dialogueClips[chosenLine] != null)
         {
-            if (dialogueClips[chosenLine] != null)
-                PlayDialogueClip(chosenLine);
+            PlayDialogueClip(chosenLine);
         }
-        else
-            print("This line's audio doesn't exist");
         if (dialogueStrings[chosenLine] != null)
         {
             DisplayText(chosenLine);
@@ -65,8 +63,8 @@ public class DialogueHandler : MonoBehaviour
                 currentTimeTillTextOff = dialogueClips[chosenLine].length;
             }
         }
-        else if (dialogueClips.Length <= 0 && dialogueStrings[chosenLine] != null)
-            currentTimeTillTextOff = 6f;
+        else if (dialogueClips[chosenLine] == null && dialogueStrings[chosenLine] != null)
+            currentTimeTillTextOff = dialogueStrings[chosenLine].Length * .2f;
     }
 
     //Plays the audio clip
