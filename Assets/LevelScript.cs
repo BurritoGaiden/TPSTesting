@@ -138,17 +138,16 @@ public class LevelScript : MonoBehaviour {
 
         //Joel is waking up
         ThisDialogue(0);
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
         ThisDialogue(1);
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
         SetCharCamTransform(tempCamPos[1], tempCamRot[1]);
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
         ThisDialogue(2);
         thisObjective("Walk Thing 1", "Walk to the white spot", 3, "truckTrig1");
         ECharInput();
         ECamInput();
         ResetCamPositionOnRig();
-        //enableInterestTrigger("Int1");
 
         this.GetComponent<AudioSource>().PlayOneShot(sfx[0], 3);
 
@@ -170,16 +169,16 @@ public class LevelScript : MonoBehaviour {
 
         truck.SetActive(false);
         theseSnapshots[0].TransitionTo(4f);
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
         ThisDialogue(5);
-
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
         thisObjective("Walk Thing 2", "Walk to the white spot", 3, "truckTrig2");
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
-        fallingPiece.transform.localPosition = new Vector3(fallingPiece.transform.position.x, 0,fallingPiece.transform.position.z);
+        fallingPiece.transform.localPosition = new Vector3(fallingPiece.transform.position.x, -.5f,fallingPiece.transform.position.z);
         //fallingPiece.transform.rotation = new Quaternion(89, 0, 0, 0);
 
         truck.SetActive(true);
@@ -210,17 +209,17 @@ public class LevelScript : MonoBehaviour {
         while (waitTillObjectiveDone) { yield return null; }
 
         ThisDialogue(6);
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
         ThisDialogue(7);
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
         ThisDialogue(8);
-        yield return new WaitForSeconds(6);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
         ThisDialogue(9);
-        yield return new WaitForSeconds(10);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
         ThisDialogue(10);
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
         ThisDialogue(11);
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
         //Player sets the bomb
         thisObjective("Collecting Time", "Collect 3 white greyboxes", 1, "truckTrig7");
@@ -228,9 +227,9 @@ public class LevelScript : MonoBehaviour {
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
         ThisDialogue(14);
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
         ThisDialogue(15);
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
         //when the player hits the follow trigger
         thisObjective("Run", "Get to the end of the corridor", 3, "truckTrig5");

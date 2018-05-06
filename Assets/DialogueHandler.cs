@@ -11,7 +11,7 @@ public class DialogueHandler : MonoBehaviour
     //Current Data
     private int currentLineIndex;
     private string currentLineString;
-    private float currentTimeTillTextOff;
+    public static float currentTimeTillTextOff;
 
     //Resources
     public AudioClip[] dialogueClips;

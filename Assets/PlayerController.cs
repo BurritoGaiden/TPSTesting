@@ -44,6 +44,9 @@ public class PlayerController : MonoBehaviour {
     public Text pushableText;
     public Text coverText;
 
+    public float colCenter = .85f;
+    public float colHeight = 1.7f;
+
     public static MoveState thisMoveState = MoveState.STATE_REGULAR;
 
 	// Use this for initialization
@@ -80,6 +83,16 @@ public class PlayerController : MonoBehaviour {
 
                 case MoveState.STATE_REGULAR:
                     Move(inputDir, runInput, crouchInput, jumpInput);
+
+                    if (crouchInput)
+                    {
+                        //GetComponent<CharacterController>().center = new Vector3(0,0,.1f);
+                        GetComponent<CharacterController>().height = 1;
+                    }
+                    else {
+                        //GetComponent<CharacterController>().center = new Vector3(0, colCenter, .1f);
+                        GetComponent<CharacterController>().height = colHeight;
+                    }
 
                     //if there is a pushable
                     if (pushableCollidingWith)
