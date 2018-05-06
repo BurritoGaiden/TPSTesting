@@ -49,6 +49,10 @@ public class PlayerController : MonoBehaviour {
 
     public static MoveState thisMoveState = MoveState.STATE_REGULAR;
 
+    public float health = 100f;
+    public Image healthVignette;
+    //public float healthRegenCooldown;
+
 	// Use this for initialization
 	void Awake () {
         animator = GetComponent<Animator>();
@@ -56,7 +60,20 @@ public class PlayerController : MonoBehaviour {
         controller = GetComponent<CharacterController>();
         LevelScript.DCharInput += DisableInput;
         LevelScript.ECharInput += EnableInput;
+        EnemyAPC.HitPlayer += TakeDamage;
 	}
+
+    void TakeDamage() {
+        health -= 8f;
+        //print("Health is now: " + health);
+        //print(healthVignette.color.a);
+        //healthVignette.color = new Vector4(healthVignette.color.r, healthVignette.color.g,healthVignette.color.b,healthVignette.color.a + 6.4f);
+        //print(healthVignette.color.a + " after damage");
+        //print(healthVignette.color);
+        if (health <= 0) {
+            print("you died");
+        }
+    }
 
     // Update is called once per frame
     void Update()

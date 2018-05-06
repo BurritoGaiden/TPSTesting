@@ -187,14 +187,14 @@ public class LevelScript : MonoBehaviour {
         DCharInput();
         PlayerCamera.camTar = truck.transform;
 
-        print(currentSeg);
+        //print(currentSeg);
         currentSeg = 1;
-        print(currentSeg);
+        //print(currentSeg);
 
         float counter = 0;
         while (counter < 2.5) {
             counter += Time.deltaTime;
-            Debug.Log("Have waited" + counter + " seconds");
+            //Debug.Log("Have waited" + counter + " seconds");
             RailPlayer();
             yield return null;
         }
