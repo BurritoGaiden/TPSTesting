@@ -6,12 +6,14 @@ using UnityEngine.UI;
 public class PickUping : MonoBehaviour {
 
     float pickCooldown;
-    public GameObject pickable;
+    public static GameObject pickable;
     public Image pickImage;
+    public Text pickText;
 
     void Start()
     {
         pickImage.enabled = false;
+        pickText.enabled = false;
     }
 
     // Update is called once per frame
@@ -19,7 +21,10 @@ public class PickUping : MonoBehaviour {
         if (pickCooldown > 0) {
             pickCooldown -= Time.deltaTime;
         }
-	}
+        if(pickImage.enabled)
+        pickImage.transform.LookAt(pickImage.transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
+        pickText.transform.LookAt(pickText.transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
+    }
 
     void OnTriggerStay(Collider col) {
         //Visual
@@ -29,14 +34,21 @@ public class PickUping : MonoBehaviour {
             {
                 pickImage.enabled = true;
                 pickImage.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1f, col.transform.position.z);
+                pickText.enabled = true;
+                pickText.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1.5f, col.transform.position.z);
+                pickText.text = "Press E to Pick Up";
             }
             else if (!col.GetComponent<PickupArea>().pickable && pickable)
             {
                 pickImage.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1f, col.transform.position.z);
                 pickImage.enabled = true;
+                pickText.enabled = true;
+                pickText.text = "Press E to Put Down";
+                pickText.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1.5f, col.transform.position.z);
             }
             else if (!col.GetComponent<PickupArea>().pickable && !pickable) {
                 pickImage.enabled = false;
+                pickText.enabled = false;
             }
         }
         else return;
@@ -56,6 +68,7 @@ public class PickUping : MonoBehaviour {
         if (hit.GetComponent<PickupArea>())
         {
             pickImage.enabled = false;
+            pickText.enabled = false;
         }
     }
 

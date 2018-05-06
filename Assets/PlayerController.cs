@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour {
 
@@ -40,6 +41,9 @@ public class PlayerController : MonoBehaviour {
     GameObject currentCover;
     float coverCooldown = 0;
 
+    public Text pushableText;
+    public Text coverText;
+
     public static MoveState thisMoveState = MoveState.STATE_REGULAR;
 
 	// Use this for initialization
@@ -69,13 +73,44 @@ public class PlayerController : MonoBehaviour {
 
             runInput = Input.GetKey(KeyCode.LeftShift);
             crouchInput = Input.GetKey(KeyCode.LeftControl);
-            jumpInput = Input.GetKeyDown(KeyCode.Space);
+            //jumpInput = Input.GetKeyDown(KeyCode.Space);
             coverInput = Input.GetKeyDown(KeyCode.Q);
 
             switch (thisMoveState) {
 
                 case MoveState.STATE_REGULAR:
                     Move(inputDir, runInput, crouchInput, jumpInput);
+
+                    //if there is a pushable
+                    if (pushableCollidingWith)
+                    {
+                        // Get the closest point on the bounds of the cover collider  
+                        // The position on the players legs
+                        var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
+                        var PushPoint = pushableCollidingWith.GetComponent<Collider>().ClosestPoint(playerPos);
+                        pushableText.enabled = true;
+                        pushableText.text = "Press Q to Begin Push";
+                        pushableText.rectTransform.position = new Vector3(PushPoint.x, PushPoint.y + 1f, PushPoint.z);
+                        pushableText.transform.LookAt(pushableText.transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
+                    }
+                    else if(!pushableCollidingWith)
+                        pushableText.enabled = false;
+
+                    //if there is a pushable
+                    if (coverCollidingWith)
+                    {
+                        // Get the closest point on the bounds of the cover collider  
+                        // The position on the players legs
+                        var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
+                        var CoverPoint = coverCollidingWith.GetComponent<Collider>().ClosestPoint(playerPos);
+                        coverText.enabled = true;
+                        coverText.text = "Press Q to Enter Cover";
+                        coverText.rectTransform.position = new Vector3(CoverPoint.x, CoverPoint.y + 1f, CoverPoint.z);
+                        coverText.transform.LookAt(coverText.transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
+                    }
+                    else if(!coverCollidingWith)
+                        coverText.enabled = false;
+
 
                     if (Interesting.looking) {
                         thisMoveState = MoveState.STATE_FOCUS;
@@ -109,6 +144,9 @@ public class PlayerController : MonoBehaviour {
 
                 case MoveState.STATE_COVER:
                     CoverMove(inputDir, currentCover);
+                    pushableText.enabled = false;
+                    coverText.enabled = false;
+
                     if (Killing.aiming) {
                         thisMoveState = MoveState.STATE_COVERAIM;
                     }
@@ -140,6 +178,8 @@ public class PlayerController : MonoBehaviour {
                 //MAKE SURE PUSHING STATE CAN BE EXITED
                 case MoveState.STATE_PUSHING:
                     ObjectMove(inputDir, currentPush);
+                    pushableText.enabled = false;
+                    coverText.enabled = false;
 
                     if (coverInput && coverCooldown <= 0)
                     {

@@ -53,6 +53,8 @@ public class LevelScript : MonoBehaviour {
 
     public AudioClip[] sfx;
 
+    public GameObject fallingPiece;
+
 
     //This is more of a game manager thing
     public static GamePlayState thisGameplayState = GamePlayState.Regular;
@@ -146,13 +148,15 @@ public class LevelScript : MonoBehaviour {
         ECharInput();
         ECamInput();
         ResetCamPositionOnRig();
-        enableInterestTrigger("Int1");
+        //enableInterestTrigger("Int1");
 
-        this.GetComponent<AudioSource>().PlayOneShot(sfx[0]);
+        this.GetComponent<AudioSource>().PlayOneShot(sfx[0], 3);
 
         //Wait till the player has finished this objective
         waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
+        while (waitTillObjectiveDone)
+
+        { yield return null; }
         ThisDialogue(3);
         theseSnapshots[1].TransitionTo(3f);
         truck.SetActive(true);
@@ -174,6 +178,9 @@ public class LevelScript : MonoBehaviour {
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
+
+        fallingPiece.transform.localPosition = new Vector3(fallingPiece.transform.position.x, 0,fallingPiece.transform.position.z);
+        //fallingPiece.transform.rotation = new Quaternion(89, 0, 0, 0);
 
         truck.SetActive(true);
         theseSnapshots[1].TransitionTo(.5f);
@@ -232,7 +239,7 @@ public class LevelScript : MonoBehaviour {
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
-        GetComponent<AudioSource>().PlayOneShot(sfx[1]);
+        GetComponent<AudioSource>().PlayOneShot(sfx[1], 3);
         ThisDialogue(12);
 
         thisObjective("Walk Thing 3", "Walk to the white spot", 3, "truckTrig3");
