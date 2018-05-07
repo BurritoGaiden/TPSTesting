@@ -8,6 +8,8 @@ TagManager:
   - Cover
   - Pushable
   - Trigger
+  - Geo
+  - Shooter
   layers:
   - Default
   - TransparentFX

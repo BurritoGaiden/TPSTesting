@@ -388,7 +388,7 @@ public class PlayerController : MonoBehaviour {
         if (inputDir != Vector2.zero)
         {
             float targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + cameraT.eulerAngles.y;
-            print("Regular Movement Target Rot: " + targetRotation);
+            //print("Regular Movement Target Rot: " + targetRotation);
             transform.eulerAngles = Vector3.up * targetRotation;
         }
 

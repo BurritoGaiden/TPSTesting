@@ -36,6 +36,9 @@ public class LevelScript : MonoBehaviour {
     public static event InterestDelegate enableInterestTrigger;
     public static event InterestDelegate disableInterestTrigger;
 
+    public delegate void DisableTruckDelegate();
+    public static event DisableTruckDelegate DTruck;
+
     //Use this to pause and resume the level script
     public bool runScript;
     public static bool coroutinePause = true;
@@ -267,6 +270,7 @@ public class LevelScript : MonoBehaviour {
             yield return null;
         }
 
+        DTruck();
         ThisDialogue(12);
         truck.transform.position = truckPositions[1].position;
         theseSnapshots[2].TransitionTo(3f);
