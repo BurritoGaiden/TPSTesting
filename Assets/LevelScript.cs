@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.SceneManagement;
 
 public class LevelScript : MonoBehaviour {
 
@@ -72,6 +73,12 @@ public class LevelScript : MonoBehaviour {
             StartCoroutine(TruckLevelCoroutine());
 	}
 
+    void Update() {
+        if (PlayerController.health <= 0) {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+    }
+
     void ObjectiveDoneListener() {
         waitTillObjectiveDone = false;
     }
@@ -133,115 +140,117 @@ public class LevelScript : MonoBehaviour {
     {
         //Start level
         truck.SetActive(false);
-        theseSnapshots[0].TransitionTo(3f);
+        theseSnapshots[0].TransitionTo(0f);
         DCharInput();
 
         //Joel is waking up
         ThisDialogue(0);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+        ECharInput();
+        ECamInput();
+        ResetCamPositionOnRig();
         ThisDialogue(1);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+
+        thisObjective("Find a way out", "", 3, "truckTrig1");
+        
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        DCamInput();
+        DCharInput();
         SetCharCamTransform(tempCamPos[1], tempCamRot[1]);
-        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+        truck.SetActive(true);
+        truck.transform.position = truckPositions[0].position;
+        this.GetComponent<AudioSource>().PlayOneShot(sfx[0], 6);
+        theseSnapshots[1].TransitionTo(.5f);
+        yield return new WaitForSeconds(1f);
         ThisDialogue(2);
-        thisObjective("Walk Thing 1", "Walk to the white spot", 3, "truckTrig1");
+        yield return new WaitForSeconds(3f);
+
+        ThisDialogue(3);        
         ECharInput();
         ECamInput();
         ResetCamPositionOnRig();
 
-        this.GetComponent<AudioSource>().PlayOneShot(sfx[0], 3);
-
-        //Wait till the player has finished this objective
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone)
-
-        { yield return null; }
-        ThisDialogue(3);
-        theseSnapshots[1].TransitionTo(3f);
-        truck.SetActive(true);
-        truck.transform.position = truckPositions[0].position;
-
-        thisObjective("Walk Thing 4", "Walk to the white spot", 3, "truckTrig4");
+        thisObjective("Find the secret exit", "", 3, "truckTrig4");
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
+        //The player has navigated through the secret exit
         ThisDialogue(4);
-
         truck.SetActive(false);
-        theseSnapshots[0].TransitionTo(4f);
-        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
-        ThisDialogue(5);
+        theseSnapshots[0].TransitionTo(1f);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
-        thisObjective("Walk Thing 2", "Walk to the white spot", 3, "truckTrig2");
-
+        thisObjective("Continue", "", 3, "truckTrig2");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
-
+        //The Player has hit the truck trigger
         fallingPiece.transform.localPosition = new Vector3(fallingPiece.transform.position.x, -.5f,fallingPiece.transform.position.z);
-        //fallingPiece.transform.rotation = new Quaternion(89, 0, 0, 0);
-
         truck.SetActive(true);
         theseSnapshots[1].TransitionTo(.5f);
         PlayerCamera.cameraState = camStates.STATE_DIRFOCUS;
         DCharInput();
         PlayerCamera.camTar = truck.transform;
-
-        //print(currentSeg);
         currentSeg = 1;
-        //print(currentSeg);
-
         float counter = 0;
         while (counter < 2.5) {
             counter += Time.deltaTime;
-            //Debug.Log("Have waited" + counter + " seconds");
             RailPlayer();
             yield return null;
         }
 
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
         ECharInput();
+        ThisDialogue(5);
 
-        //Player must collect the pieces
-        thisObjective("Collecting Time", "Collect 3 white greyboxes", 1, "truckTrig6");
+        thisObjective("Run upstairs!", "", 3, "truckTrig9");
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
+
+        //Player must collect the pieces
+        thisObjective("Collect 3 boxes", "", 1, "truckTrig6");
 
         ThisDialogue(6);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
         ThisDialogue(7);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+       
+        //Player sets the bomb
+        thisObjective("Set the bomb by the broken window", "", 1, "truckTrig7");
+
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
         ThisDialogue(8);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+
         ThisDialogue(9);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+
+        //Wait till the player falls down
+        thisObjective("Run", "Get to the end of the corridor", 3, "truckTrig5");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        //Tell the player they'll have to stay in cover
         ThisDialogue(10);
+        GetComponent<AudioSource>().PlayOneShot(sfx[1], 3);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+
+        thisObjective("Move to the next piece of cover", "", 3, "truckTrig11");
+        while (waitTillObjectiveDone) { yield return null; }
+
         ThisDialogue(11);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
-        //Player sets the bomb
-        thisObjective("Collecting Time", "Collect 3 white greyboxes", 1, "truckTrig7");
-
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
-        ThisDialogue(14);
-        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
-        ThisDialogue(15);
-        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
-
-        //when the player hits the follow trigger
-        thisObjective("Run", "Get to the end of the corridor", 3, "truckTrig5");
-
-
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
-
-        GetComponent<AudioSource>().PlayOneShot(sfx[1], 3);
-        ThisDialogue(12);
-
-        thisObjective("Walk Thing 3", "Walk to the white spot", 3, "truckTrig3");
+        thisObjective("Make it to the end of the hallway", "", 3, "truckTrig3");
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone)
@@ -277,9 +286,6 @@ public class LevelScript : MonoBehaviour {
     private float transition;
     private bool isCompleted;
 
-    void Update() {
-
-    }
     void RailPlayer()
     {
         if (!rail)

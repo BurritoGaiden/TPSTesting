@@ -29,7 +29,7 @@ public class PlayerController : MonoBehaviour {
     Transform cameraT;
     CharacterController controller;
 
-    bool runInput;
+    public static bool runInput;
     public static bool crouchInput;
     bool jumpInput;
     bool coverInput;
@@ -49,8 +49,9 @@ public class PlayerController : MonoBehaviour {
 
     public static MoveState thisMoveState = MoveState.STATE_REGULAR;
 
-    public float health = 100f;
+    public static float health = 100f;
     public Image healthVignette;
+    public Image healthMeter;
     //public float healthRegenCooldown;
 
 	// Use this for initialization
@@ -61,10 +62,14 @@ public class PlayerController : MonoBehaviour {
         LevelScript.DCharInput += DisableInput;
         LevelScript.ECharInput += EnableInput;
         EnemyAPC.HitPlayer += TakeDamage;
+
+        healthMeter.fillAmount = health / 100;
 	}
 
     void TakeDamage() {
+        if (health > 0) 
         health -= 8f;
+        healthMeter.fillAmount = health / 100;
         //print("Health is now: " + health);
         //print(healthVignette.color.a);
         //healthVignette.color = new Vector4(healthVignette.color.r, healthVignette.color.g,healthVignette.color.b,healthVignette.color.a + 6.4f);
