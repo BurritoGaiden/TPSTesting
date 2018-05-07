@@ -49,6 +49,17 @@ public class EnemyAPC : MonoBehaviour {
                 //Add velocity to the tracer
                 instantiatedTracer.velocity = transform.TransformDirection(player.transform.position * -tracerSpeed);
             }
+            else if(hit.transform.tag == "Cover" && counter <= 0 && ammo > 0) {
+                ammo--;
+                counter = Random.Range(.08f, .35f);
+                GetComponent<AudioSource>().PlayOneShot(truckSFX[0], 1);
+                print("hit cover");
+                //Spawn the tracer
+                Rigidbody instantiatedTracer = Instantiate(tracer, transform.position, transform.rotation) as Rigidbody;
+
+                //Add velocity to the tracer
+                instantiatedTracer.velocity = transform.TransformDirection(player.transform.position * -tracerSpeed);
+            }
         }
 
         coverHits = Physics.RaycastAll(turret.transform.position, player.transform.position, 30f);
@@ -56,7 +67,7 @@ public class EnemyAPC : MonoBehaviour {
         {
             RaycastHit coverHit = coverHits[i];
             Renderer rend = hit.transform.GetComponent<Renderer>();
-            print(coverHit);
+            //print(coverHit);
             /*
             if (rend)
             {

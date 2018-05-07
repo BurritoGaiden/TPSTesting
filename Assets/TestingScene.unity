@@ -4732,7 +4732,7 @@ Mesh:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: pb_Mesh-931968
+  m_Name: pb_Mesh13698
   serializedVersion: 8
   m_SubMeshes:
   - serializedVersion: 2
@@ -8331,7 +8331,7 @@ Mesh:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: pb_Mesh-749734
+  m_Name: pb_Mesh13306
   serializedVersion: 8
   m_SubMeshes:
   - serializedVersion: 2
@@ -25597,7 +25597,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 958949747}
   m_LocalRotation: {x: -0, y: -0.017292952, z: -0, w: 0.9998505}
-  m_LocalPosition: {x: -3.51, y: -1, z: 18.77}
+  m_LocalPosition: {x: -3.25, y: -1, z: 19.25}
   m_LocalScale: {x: 0.5118018, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -25644,7 +25644,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 1908508396609434, guid: 4cc923b12f429a74396f8a482879e1fc, type: 2}
       propertyPath: m_Name
-      value: truckTrig1 Walkable (1)
+      value: roomTrig1 Walkable (1)
       objectReference: {fileID: 0}
     - target: {fileID: 23776229878443896, guid: 4cc923b12f429a74396f8a482879e1fc,
         type: 2}
@@ -32734,7 +32734,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 4028115942473346, guid: 4cc923b12f429a74396f8a482879e1fc, type: 2}
       propertyPath: m_LocalPosition.x
-      value: -10.027717
+      value: -9.527717
       objectReference: {fileID: 0}
     - target: {fileID: 4028115942473346, guid: 4cc923b12f429a74396f8a482879e1fc, type: 2}
       propertyPath: m_LocalPosition.y
@@ -32742,7 +32742,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4028115942473346, guid: 4cc923b12f429a74396f8a482879e1fc, type: 2}
       propertyPath: m_LocalPosition.z
-      value: 21.497402
+      value: 20.747402
       objectReference: {fileID: 0}
     - target: {fileID: 4028115942473346, guid: 4cc923b12f429a74396f8a482879e1fc, type: 2}
       propertyPath: m_LocalRotation.x
@@ -32766,7 +32766,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 1908508396609434, guid: 4cc923b12f429a74396f8a482879e1fc, type: 2}
       propertyPath: m_Name
-      value: truckTrig11 Walkable (4)
+      value: chaseTrig1 Walkable (4)
       objectReference: {fileID: 0}
     - target: {fileID: 23776229878443896, guid: 4cc923b12f429a74396f8a482879e1fc,
         type: 2}
@@ -36993,7 +36993,7 @@ Mesh:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: pb_Mesh-908610
+  m_Name: pb_Mesh13916
   serializedVersion: 8
   m_SubMeshes:
   - serializedVersion: 2

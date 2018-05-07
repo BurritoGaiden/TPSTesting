@@ -152,11 +152,11 @@ public class LevelScript : MonoBehaviour {
         ThisDialogue(1);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
-        thisObjective("Find a way out", "", 3, "truckTrig1");
-        
+        thisObjective("Find a way out", "", 3, "roomTrig1");
+        print("before break");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
-
+        print("after break");
         DCamInput();
         DCharInput();
         SetCharCamTransform(tempCamPos[1], tempCamRot[1]);
@@ -235,20 +235,23 @@ public class LevelScript : MonoBehaviour {
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
         //Wait till the player falls down
-        thisObjective("Run", "Get to the end of the corridor", 3, "truckTrig5");
+        thisObjective("Fall down the hole", "", 3, "truckTrig5");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
         //Tell the player they'll have to stay in cover
         ThisDialogue(10);
         GetComponent<AudioSource>().PlayOneShot(sfx[1], 3);
+        DCharInput();
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+        ECharInput();
 
-        thisObjective("Move to the next piece of cover", "", 3, "truckTrig11");
+        thisObjective("Move to the next piece of cover", "", 3, "chaseTrig1");
+        waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
         ThisDialogue(11);
-        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+        //yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
         thisObjective("Make it to the end of the hallway", "", 3, "truckTrig3");
 
@@ -264,7 +267,7 @@ public class LevelScript : MonoBehaviour {
             yield return null;
         }
 
-        ThisDialogue(13);
+        ThisDialogue(12);
         truck.transform.position = truckPositions[1].position;
         theseSnapshots[2].TransitionTo(3f);
 
@@ -273,7 +276,7 @@ public class LevelScript : MonoBehaviour {
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
-        ThisDialogue(16);
+        //ThisDialogue(16);
 
         print("ey");       
     }
