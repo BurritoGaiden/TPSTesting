@@ -1,7 +1,5 @@
 fileFormatVersion: 2
 guid: c7daf2b758a472c4abcf56a9af058d30
-timeCreated: 1524247446
-licenseType: Free
 ModelImporter:
   serializedVersion: 22
   fileIDToRecycleName:
@@ -58,6 +56,7 @@ ModelImporter:
     7400008: Walk
     9500000: //RootNode
     13700000: Cube
+    2186277476908879412: ImportLogs
   externalObjects: {}
   materials:
     importMaterials: 1
@@ -76,30 +75,22 @@ ModelImporter:
     animationImportWarnings: "\nClip 'Default Take' has import animation warnings
       that might lower retargeting quality:\nNote: Activate translation DOF on avatar
       to improve retargeting quality.\n\t'Upper_Leg_L' has scale animation that will
-      be discarded.\n\t'Lower_Leg_L' has scale animation that will be discarded.\n\t'Foot_L'
-      has scale animation that will be discarded.\n\t'Upper_Leg_R' has scale animation
-      that will be discarded.\n\t'Lower_Leg_R' has scale animation that will be discarded.\n\t'Foot_R'
-      has scale animation that will be discarded.\n\nClip 'Idle' has import animation
-      warnings that might lower retargeting quality:\nNote: Activate translation DOF
-      on avatar to improve retargeting quality.\n\t'Lower_Leg_L' has scale animation
-      that will be discarded.\n\t'Foot_L' has scale animation that will be discarded.\n\t'Lower_Leg_R'
+      be discarded.\n\t'Foot_L' has scale animation that will be discarded.\n\t'Upper_Leg_R'
       has scale animation that will be discarded.\n\t'Foot_R' has scale animation
       that will be discarded.\n\nClip 'Run' has import animation warnings that might
       lower retargeting quality:\nNote: Activate translation DOF on avatar to improve
-      retargeting quality.\n\t'Upper_Leg_L' has scale animation that will be discarded.\n\t'Lower_Leg_L'
+      retargeting quality.\n\t'Upper_Leg_L' has scale animation that will be discarded.\n\t'Foot_L'
+      has scale animation that will be discarded.\n\t'Upper_Leg_R' has scale animation
+      that will be discarded.\n\t'Foot_R' has scale animation that will be discarded.\n\nClip
+      'Walk' has import animation warnings that might lower retargeting quality:\nNote:
+      Activate translation DOF on avatar to improve retargeting quality.\n\t'Upper_Leg_L'
       has scale animation that will be discarded.\n\t'Foot_L' has scale animation
-      that will be discarded.\n\t'Upper_Leg_R' has scale animation that will be discarded.\n\t'Lower_Leg_R'
-      has scale animation that will be discarded.\n\t'Foot_R' has scale animation
-      that will be discarded.\n\nClip 'Walk' has import animation warnings that might
-      lower retargeting quality:\nNote: Activate translation DOF on avatar to improve
-      retargeting quality.\n\t'Upper_Leg_L' has scale animation that will be discarded.\n\t'Lower_Leg_L'
-      has scale animation that will be discarded.\n\t'Foot_L' has scale animation
-      that will be discarded.\n\t'Upper_Leg_R' has scale animation that will be discarded.\n\t'Lower_Leg_R'
-      has scale animation that will be discarded.\n\t'Foot_R' has scale animation
-      that will be discarded.\n"
+      that will be discarded.\n\t'Upper_Leg_R' has scale animation that will be discarded.\n\t'Foot_R'
+      has scale animation that will be discarded.\n"
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
+    importConstraints: 0
     animationCompression: 3
     animationRotationError: 0.5
     animationPositionError: 0.5

@@ -39,6 +39,10 @@ public class LevelScript : MonoBehaviour {
     public delegate void DisableTruckDelegate();
     public static event DisableTruckDelegate DTruck;
 
+    public delegate void DirectCamFocusDelegate();
+    public static event DirectCamFocusDelegate EDFocus;
+    public static event DirectCamFocusDelegate DDFocus;
+
     //Use this to pause and resume the level script
     public bool runScript;
     public static bool coroutinePause = true;
@@ -58,6 +62,8 @@ public class LevelScript : MonoBehaviour {
     public AudioClip[] sfx;
 
     public GameObject fallingPiece;
+    public GameObject birds;
+    public GameObject benchFloor;
 
 
     //This is more of a game manager thing
@@ -165,7 +171,7 @@ public class LevelScript : MonoBehaviour {
         SetCharCamTransform(tempCamPos[1], tempCamRot[1]);
         truck.SetActive(true);
         truck.transform.position = truckPositions[0].position;
-        this.GetComponent<AudioSource>().PlayOneShot(sfx[0], 6);
+        this.GetComponent<AudioSource>().PlayOneShot(sfx[0], .3f);
         theseSnapshots[1].TransitionTo(.5f);
         yield return new WaitForSeconds(1f);
         ThisDialogue(2);
@@ -221,6 +227,7 @@ public class LevelScript : MonoBehaviour {
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
+        birds.GetComponent<Animation>().Play();
 
         ThisDialogue(7);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
@@ -230,23 +237,46 @@ public class LevelScript : MonoBehaviour {
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
-
+        
         ThisDialogue(8);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
         ThisDialogue(9);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
+        
+
+        //Tell the Player to stand in front of the bench
+        thisObjective("Stand in front of the workbench", "", 3, "fallTrig1");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone)
+        {
+            yield return null;
+        }
+
+
+        //Play camera sequence here
+        benchFloor.SetActive(false);
+
         //Wait till the player falls down
         thisObjective("Fall down the hole", "", 3, "truckTrig5");
         waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
+        while (waitTillObjectiveDone)
+        {
 
+
+            yield return null;
+        }
+        //EDFocus();
+        
         //Tell the player they'll have to stay in cover
         ThisDialogue(10);
-        GetComponent<AudioSource>().PlayOneShot(sfx[1], 3);
+        GetComponent<AudioSource>().PlayOneShot(sfx[1], .8f);
         DCharInput();
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+
+        PlayerCamera.camTar = truck.transform;
+
         ECharInput();
 
         thisObjective("Move to the next piece of cover", "", 3, "chaseTrig1");
@@ -269,6 +299,7 @@ public class LevelScript : MonoBehaviour {
 
             yield return null;
         }
+        //DDFocus();
 
         DTruck();
         ThisDialogue(12);

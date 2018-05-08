@@ -55,29 +55,20 @@ public class EnemyAPC : MonoBehaviour {
             {
                 ammo--;
                 counter = Random.Range(.3f, .5f);
-                GetComponent<AudioSource>().PlayOneShot(truckSFX[0], .5f);
-                int hitChanceMax = 2;
-                if (PlayerController.runInput)
-                {
-                    hitChanceMax = 3;
-                }
-                print(hitChanceMax);
-                int y = Random.Range(0, hitChanceMax);
-                print(y);
-                if (y == 2)
-                {
-                    HitPlayer();
-                    lr.SetPosition(0, new Vector3(turret.transform.position.x, turret.transform.position.y + 1.5f, turret.transform.position.z) - this.transform.position);
-                    lr.SetPosition(1, new Vector3(player.transform.position.x, player.transform.position.y + 1f, player.transform.position.z) - this.transform.position);
-                    Invoke("TurnOffTrail", .05f);
-                }
+                GetComponent<AudioSource>().PlayOneShot(truckSFX[0], .02f);
+
+                HitPlayer();
+                lr.SetPosition(0, new Vector3(turret.transform.position.x, turret.transform.position.y + 1.5f, turret.transform.position.z) - this.transform.position);
+                lr.SetPosition(1, new Vector3(player.transform.position.x, player.transform.position.y + 1f, player.transform.position.z) - this.transform.position);
+                Invoke("TurnOffTrail", .05f);
+
             }
 
             else if (hit.transform.tag == "Cover" && counter <= 0 && ammo > 0)
             {
                 ammo--;
                 counter = Random.Range(.3f, .35f);
-                GetComponent<AudioSource>().PlayOneShot(truckSFX[0], .5f);
+                GetComponent<AudioSource>().PlayOneShot(truckSFX[0], .02f);
                 print("hit cover");
   
                 GameObject impactObj = Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
@@ -100,22 +91,14 @@ public class EnemyAPC : MonoBehaviour {
                 
             }
         }
-
-        coverHits = Physics.RaycastAll(turret.transform.position, player.transform.position, 30f);
-        for (int i = 0; i < coverHits.Length; i++)
-        {
-            RaycastHit coverHit = coverHits[i];
-            Renderer rend = hit.transform.GetComponent<Renderer>();
-        }
-
-
+        
         if (counter > 0) {
             counter -= Time.deltaTime;
         }
 
         if (ammo <= 0) {
             Invoke("GiveAmmo", 3);
-            counter = 3;
+            counter = 2;
         }
     }
 

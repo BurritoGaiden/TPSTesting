@@ -70,11 +70,8 @@ public class PlayerController : MonoBehaviour {
         if (health > 0) 
         health -= 8f;
         healthMeter.fillAmount = health / 100;
-        //print("Health is now: " + health);
-        //print(healthVignette.color.a);
-        //healthVignette.color = new Vector4(healthVignette.color.r, healthVignette.color.g,healthVignette.color.b,healthVignette.color.a + 6.4f);
-        //print(healthVignette.color.a + " after damage");
-        //print(healthVignette.color);
+        print("Health is now: " + health);
+        
         if (health <= 0) {
             print("you died");
         }
@@ -175,6 +172,10 @@ public class PlayerController : MonoBehaviour {
                     {
                         thisMoveState = MoveState.STATE_REGULAR;
                     }
+                    break;
+
+                case MoveState.STATE_DIRFOCUS:
+                    Move(inputDir, false, crouchInput, false);
                     break;
 
                 case MoveState.STATE_COVER:
@@ -492,5 +493,6 @@ public enum MoveState
     STATE_COVERAIM,
     STATE_CLIMBING,
     STATE_PUSHING,
-    STATE_NULL
+    STATE_NULL,
+    STATE_DIRFOCUS
 };

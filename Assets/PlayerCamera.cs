@@ -48,6 +48,16 @@ public class PlayerCamera : MonoBehaviour {
         LevelScript.DCamInput += DisableCameraInput;
         LevelScript.SetCharCamTransform += SetCameraTransform;
         LevelScript.ResetCamPositionOnRig += ResetCameraOnRig;
+        LevelScript.EDFocus += EnDirFocus;
+        LevelScript.DDFocus += DisDirFocus;
+    }
+
+    void EnDirFocus() {
+        cameraState = camStates.STATE_DIRFOCUS;
+    }
+
+    void DisDirFocus() {
+        cameraState = camStates.STATE_PLAYERORBIT;
     }
    
 	void LateUpdate () {
