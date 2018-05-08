@@ -18,9 +18,25 @@ public class EnemyAPC : MonoBehaviour {
     public Rigidbody tracer;
     public float tracerSpeed;
     public GameObject impactEffect;
+    public GameObject bulletTrail;
+    public LineRenderer lr;
 
     void Awake() {
         LevelScript.DTruck += DisableTruck;
+        lr = bulletTrail.GetComponent<LineRenderer>();
+        
+    }
+
+    void TurnOnTrail() {
+        bulletTrail.SetActive(true);
+        //lr.SetPosition(0, turret.transform.localPosition);
+        lr.SetPosition(1, new Vector3(player.transform.position.x, player.transform.position.y + 1f, player.transform.position.z) * -1);
+        Invoke("TurnOffTrail", .1f);
+    }
+
+    void TurnOffTrail() {
+        lr.SetPosition(0, new Vector3(turret.transform.position.x, turret.transform.position.y + 1.5f, turret.transform.position.z) - this.transform.position);
+        lr.SetPosition(1, new Vector3(turret.transform.position.x, turret.transform.position.y + 1.5f, turret.transform.position.z) - this.transform.position);
     }
 
     //TODO: Remove raycast from update, make a reoccurring function
@@ -51,28 +67,25 @@ public class EnemyAPC : MonoBehaviour {
                 if (y == 2)
                 {
                     HitPlayer();
+                    lr.SetPosition(0, new Vector3(turret.transform.position.x, turret.transform.position.y + 1.5f, turret.transform.position.z) - this.transform.position);
+                    lr.SetPosition(1, new Vector3(player.transform.position.x, player.transform.position.y + 1f, player.transform.position.z) - this.transform.position);
+                    Invoke("TurnOffTrail", .05f);
                 }
-
-                //Spawn the tracer
-                Rigidbody instantiatedTracer = Instantiate(tracer, transform.position, transform.rotation) as Rigidbody;
-
-                //Add velocity to the tracer
-                instantiatedTracer.velocity = transform.TransformDirection(player.transform.position * -tracerSpeed);
             }
 
             else if (hit.transform.tag == "Cover" && counter <= 0 && ammo > 0)
             {
                 ammo--;
-                counter = Random.Range(.08f, .35f);
+                counter = Random.Range(.3f, .35f);
                 GetComponent<AudioSource>().PlayOneShot(truckSFX[0], .5f);
                 print("hit cover");
-                //Spawn the tracer
-                Rigidbody instantiatedTracer = Instantiate(tracer, transform.position, transform.rotation) as Rigidbody;
-
+  
                 GameObject impactObj = Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
                 Destroy(impactObj, 1.2f);
-                //Add velocity to the tracer
-                instantiatedTracer.velocity = transform.TransformDirection(player.transform.position * -tracerSpeed);
+
+                lr.SetPosition(0, new Vector3(turret.transform.position.x, turret.transform.position.y + 1.5f, turret.transform.position.z) - this.transform.position);
+                lr.SetPosition(1, new Vector3(hit.point.x, hit.point.y + 1f, hit.point.z) - this.transform.position);
+                Invoke("TurnOffTrail", .05f);
             }
 
             else if (hit.transform.tag == "Geo" && counter <= 0 && ammo > 0)
