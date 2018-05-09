@@ -22,7 +22,7 @@ public class EnemyAPC : MonoBehaviour {
     public LineRenderer lr;
 
     void Awake() {
-        LevelScript.DTruck += DisableTruck;
+        LevelScript.DisableTruck += DisableTruck;
         lr = bulletTrail.GetComponent<LineRenderer>();
         
     }

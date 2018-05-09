@@ -44,7 +44,7 @@ public class ObjectiveHandler : MonoBehaviour {
         Collecting.collectThis += ObjectiveProgressUpdate;
         Walking.WalkThis += ObjectiveProgressUpdate;
         Killing.killThis += ObjectiveProgressUpdate;
-        LevelScript.thisObjective += AddObjective;
+        LevelScript.AssignThisObjective += AddObjective;
 	}
 	
 	// Update is called once per frame

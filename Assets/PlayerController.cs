@@ -59,8 +59,8 @@ public class PlayerController : MonoBehaviour {
         animator = GetComponent<Animator>();
         cameraT = Camera.main.transform;
         controller = GetComponent<CharacterController>();
-        LevelScript.DCharInput += DisableInput;
-        LevelScript.ECharInput += EnableInput;
+        LevelScript.DisableCharacterInput += DisableInput;
+        LevelScript.EnableCharacterInput += EnableInput;
         EnemyAPC.HitPlayer += TakeDamage;
 
         healthMeter.fillAmount = health / 100;

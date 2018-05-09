@@ -22,7 +22,7 @@ public class DialogueHandler : MonoBehaviour
     public Text textDisplayBox;
 
     void Start() {
-        LevelScript.ThisDialogue += PresentDialogue;
+        LevelScript.PlayThisDialogue += PresentDialogue;
     }
 
     // Update is called once per frame

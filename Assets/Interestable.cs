@@ -6,8 +6,8 @@ public class Interestable : MonoBehaviour {
 
 	// Use this for initialization
 	void Awake () {
-        LevelScript.enableInterestTrigger += ActivateTrigger;
-        LevelScript.disableInterestTrigger += DeactivateTrigger;
+        LevelScript.EnableInterestTrigger += ActivateTrigger;
+        LevelScript.DisableInterestTrigger += DeactivateTrigger;
         this.GetComponent<BoxCollider>().enabled = false;
     }
 	

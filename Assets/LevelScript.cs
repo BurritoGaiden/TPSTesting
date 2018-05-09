@@ -5,68 +5,71 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 
+//The LevelScript is the "Director" of the level, determing all gameplay events in a linear fashion
 public class LevelScript : MonoBehaviour {
+    
+//The LevelScript calls delegates that tell other objects in the scene to perform specific methods, like actors being told to do an action
+//This approach works with treating everything in a modular fashion, and decouples objects from each other
 
-    //Declaring the delegate
+    //Delegates for the objects consistent across all levels
+    #region Objective, Player, and Camera Delegates
     public delegate void ObjectiveDelegate(string objName, string objDesc, int objType, string objTargetNameBase);
-    public static event ObjectiveDelegate thisObjective;
+    public static event ObjectiveDelegate AssignThisObjective;
 
     public delegate void DialogueDelegate(int chosenDialogueLine);
-    public static event DialogueDelegate ThisDialogue;
+    public static event DialogueDelegate PlayThisDialogue;
 
-    public delegate void CharDisableDelegate();
-    public static event CharDisableDelegate DCharInput;
-
-    public delegate void CharEnableDelegate();
-    public static event CharEnableDelegate ECharInput;
-
-    public delegate void CamDisableDelegate();
-    public static event CamDisableDelegate DCamInput;
-
-    public delegate void CamEnableDelegate();
-    public static event CamEnableDelegate ECamInput;
+    public delegate void CharacterDelegate();
+    public static event CharacterDelegate DisableCharacterInput, EnableCharacterInput;
 
     public delegate void CameraDelegate();
-    public static event CameraDelegate ResetCamPositionOnRig;
+    public static event CameraDelegate DisableCameraInput, EnableCameraInput, ResetCamPositionOnRig;
 
     public delegate void CameraTransformDelegate(Vector3 pos,Vector3 rot);
     public static event CameraTransformDelegate SetCharCamTransform;
 
     public delegate void InterestDelegate(String thisOne);
-    public static event InterestDelegate enableInterestTrigger;
-    public static event InterestDelegate disableInterestTrigger;
+    public static event InterestDelegate EnableInterestTrigger, DisableInterestTrigger;
 
-    public delegate void DisableTruckDelegate();
-    public static event DisableTruckDelegate DTruck;
+    public delegate void TruckDelegate();
+    public static event TruckDelegate DisableTruck;
 
     public delegate void DirectCamFocusDelegate();
-    public static event DirectCamFocusDelegate EDFocus;
-    public static event DirectCamFocusDelegate DDFocus;
+    public static event DirectCamFocusDelegate EnableDirectorFocus, DisableDirectorFocus;
+    #endregion
 
-    //Use this to pause and resume the level script
+    //Pacing the level script
+    #region LevelScript starters and stoppers
+    //Whether the script should start at run
     public bool runScript;
-    public static bool coroutinePause = true;
+    //Whether to pause and resume the script
+    public static bool pauseScript = true;
+    //Waiting until the current objective is complete
     public static bool waitTillObjectiveDone;
+    #endregion 
 
-    //Testing public vars
-    public Vector3[] tempCamPos;
-    public Vector3[] tempCamRot;
+    //Camera Data
+    [Header("Camera Data")]
+    public Vector3[] levelCameraPositions;
+    public Vector3[] levelCameraAngles;
 
+    //Audio Data + Interface
+    [Header ("Audio Data")]
+    public AudioMixer levelMixer;
+    public AudioMixerSnapshot[] levelSnapshots;
+    public AudioClip[] levelSfx;
+
+    //Level Objects + Data
+    [Header("Level Objects")]
     public GameObject player;
+
     public GameObject truck;
     public Transform[] truckPositions;
 
-    public AudioMixer thisMixer;
-    public AudioMixerSnapshot[] theseSnapshots;
-
-    public AudioClip[] sfx;
-
-    public GameObject fallingPiece;
+    public GameObject[] toggleableGeometry;
     public GameObject birds;
-    public GameObject benchFloor;
 
-
-    //This is more of a game manager thing
+    //Game-state Machine
     public static GamePlayState thisGameplayState = GamePlayState.Regular;
     public Playmode thisPlayMode = Playmode.Linear;
     
@@ -78,129 +81,71 @@ public class LevelScript : MonoBehaviour {
        
 	void Start () {
         if (runScript == true)
-            //StartCoroutine(MainLevelCoroutine());
             StartCoroutine(TruckLevelCoroutine());
 	}
 
-    void Update() {
-        if (PlayerController.health <= 0) {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }
-    }
-
     void ObjectiveDoneListener() {
         waitTillObjectiveDone = false;
-    }
-    
-    //Script for the level
-    IEnumerator MainLevelCoroutine()
-    {
-        DCharInput();
-        SetCharCamTransform(tempCamPos[0], tempCamRot[0]);
-        ThisDialogue(0);
-        yield return new WaitForSeconds(2);
-        ThisDialogue(1);
-        yield return new WaitForSeconds(2);
-        SetCharCamTransform(tempCamPos[1], tempCamRot[1]);
-        yield return new WaitForSeconds(2);
-        //print(thisObjective("Walking Time", "Walk to the white spot", 3, "obj3Targ"));
-        thisObjective("Walking Time", "Walk to the white spot", 3, "obj3Targ");
-        ECharInput();
-        ECamInput();
-        ResetCamPositionOnRig();
-        enableInterestTrigger("Int1");
-
-        //Wait till the player has finished this objective
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
-
-        //disableInterestTrigger("Int1");
-
-        ThisDialogue(2);
-        DCamInput();
-        DCharInput();
-        SetCharCamTransform(tempCamPos[2], tempCamRot[2]);
-        yield return new WaitForSeconds(4);
-        ResetCamPositionOnRig();
-        ECamInput();
-        ECharInput();
-        thisObjective("Collecting Time", "Collect 3 white greyboxes", 1, "obj1Targ");
-
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
-
-        ThisDialogue(3);
-        yield return new WaitForSeconds(5);
-
-        thisObjective("Killing Time", "Kill the bot", 2, "obj2Targ");
-
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
-
-        print("ayy made it");
-        yield return new WaitForSeconds(3f);
-
-        ThisDialogue(4);
-        print("Level Complete");
     }
 
     //Script for the level
     IEnumerator TruckLevelCoroutine()
     {
-        //Start level
+        //Start of level
         truck.SetActive(false);
-        theseSnapshots[0].TransitionTo(0f);
-        DCharInput();
+        levelSnapshots[0].TransitionTo(0f);
+        DisableCharacterInput();
 
         //Joel is waking up
-        ThisDialogue(0);
+        PlayThisDialogue(0);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
-        ECharInput();
-        ECamInput();
+        EnableCharacterInput();
+        EnableCameraInput();
         ResetCamPositionOnRig();
-        ThisDialogue(1);
+        PlayThisDialogue(1);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
-        thisObjective("Find a way out", "", 3, "roomTrig1");
+        AssignThisObjective("Find a way out", "", 3, "roomTrig1");
         print("before break");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
         print("after break");
-        DCamInput();
-        DCharInput();
-        SetCharCamTransform(tempCamPos[1], tempCamRot[1]);
+        DisableCameraInput();
+        DisableCharacterInput();
+        SetCharCamTransform(levelCameraPositions[1], levelCameraAngles[1]);
         truck.SetActive(true);
         truck.transform.position = truckPositions[0].position;
-        this.GetComponent<AudioSource>().PlayOneShot(sfx[0], .3f);
-        theseSnapshots[1].TransitionTo(.5f);
+        this.GetComponent<AudioSource>().PlayOneShot(levelSfx[0], .3f);
+        levelSnapshots[1].TransitionTo(.5f);
         yield return new WaitForSeconds(1f);
-        ThisDialogue(2);
+        PlayThisDialogue(2);
         yield return new WaitForSeconds(3f);
 
-        ThisDialogue(3);        
-        ECharInput();
-        ECamInput();
+        PlayThisDialogue(3);        
+        EnableCharacterInput();
+        EnableCameraInput();
         ResetCamPositionOnRig();
 
-        thisObjective("Find the secret exit", "", 3, "truckTrig4");
+        AssignThisObjective("Find the secret exit", "", 3, "truckTrig4");
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
         //The player has navigated through the secret exit
-        ThisDialogue(4);
+        PlayThisDialogue(4);
         truck.SetActive(false);
-        theseSnapshots[0].TransitionTo(1f);
+        levelSnapshots[0].TransitionTo(1f);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
-        thisObjective("Continue", "", 3, "truckTrig2");
+        AssignThisObjective("Continue", "", 3, "truckTrig2");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
         //The Player has hit the truck trigger
-        fallingPiece.transform.localPosition = new Vector3(fallingPiece.transform.position.x, -.5f,fallingPiece.transform.position.z);
+        toggleableGeometry[0].SetActive(true);
+        
         truck.SetActive(true);
-        theseSnapshots[1].TransitionTo(.5f);
+        levelSnapshots[1].TransitionTo(.5f);
         PlayerCamera.cameraState = camStates.STATE_DIRFOCUS;
-        DCharInput();
+        DisableCharacterInput();
         PlayerCamera.camTar = truck.transform;
         currentSeg = 1;
         float counter = 0;
@@ -211,55 +156,52 @@ public class LevelScript : MonoBehaviour {
         }
 
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
-        ECharInput();
-        ThisDialogue(5);
+        EnableCharacterInput();
+        PlayThisDialogue(5);
 
-        thisObjective("Run upstairs!", "", 3, "truckTrig9");
+        AssignThisObjective("Run upstairs!", "", 3, "truckTrig9");
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
         //Player must collect the pieces
-        thisObjective("Collect 3 boxes", "", 1, "truckTrig6");
+        AssignThisObjective("Collect 3 boxes", "", 1, "truckTrig6");
 
-        ThisDialogue(6);
+        PlayThisDialogue(6);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
         birds.GetComponent<Animation>().Play();
 
-        ThisDialogue(7);
+        PlayThisDialogue(7);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
        
         //Player sets the bomb
-        thisObjective("Set the bomb by the broken window", "", 1, "truckTrig7");
+        AssignThisObjective("Set the bomb by the broken window", "", 1, "truckTrig7");
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
         
-        ThisDialogue(8);
+        PlayThisDialogue(8);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
-        ThisDialogue(9);
+        PlayThisDialogue(9);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
         
 
         //Tell the Player to stand in front of the bench
-        thisObjective("Stand in front of the workbench", "", 3, "fallTrig1");
+        AssignThisObjective("Stand in front of the workbench", "", 3, "fallTrig1");
         waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone)
-        {
-            yield return null;
-        }
+        while (waitTillObjectiveDone) {yield return null;}
 
 
         //Play camera sequence here
-        benchFloor.SetActive(false);
+        toggleableGeometry[1].SetActive(false);
 
         //Wait till the player falls down
-        thisObjective("Fall down the hole", "", 3, "truckTrig5");
+        AssignThisObjective("Fall down the hole", "", 3, "truckTrig5");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone)
         {
@@ -270,23 +212,23 @@ public class LevelScript : MonoBehaviour {
         //EDFocus();
         
         //Tell the player they'll have to stay in cover
-        ThisDialogue(10);
-        GetComponent<AudioSource>().PlayOneShot(sfx[1], .8f);
-        DCharInput();
+        PlayThisDialogue(10);
+        GetComponent<AudioSource>().PlayOneShot(levelSfx[1], .8f);
+        DisableCharacterInput();
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
         PlayerCamera.camTar = truck.transform;
 
-        ECharInput();
+        EnableCharacterInput();
 
-        thisObjective("Move to the next piece of cover", "", 3, "chaseTrig1");
+        AssignThisObjective("Move to the next piece of cover", "", 3, "chaseTrig1");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
-        ThisDialogue(11);
+        PlayThisDialogue(11);
         //yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
-        thisObjective("Make it to the end of the hallway", "", 3, "truckTrig3");
+        AssignThisObjective("Make it to the end of the hallway", "", 3, "truckTrig3");
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone)
@@ -301,13 +243,13 @@ public class LevelScript : MonoBehaviour {
         }
         //DDFocus();
 
-        DTruck();
-        ThisDialogue(12);
+        DisableTruck();
+        PlayThisDialogue(12);
         truck.transform.position = truckPositions[1].position;
-        theseSnapshots[2].TransitionTo(3f);
+        levelSnapshots[2].TransitionTo(3f);
 
         //when the player leaves
-        thisObjective("Run", "Get to the end of the corridor", 3, "truckTrig8");
+        AssignThisObjective("Run", "Get to the end of the corridor", 3, "truckTrig8");
 
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }

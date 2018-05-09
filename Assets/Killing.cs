@@ -23,8 +23,8 @@ public class Killing : MonoBehaviour {
     void Awake () {
         cam = Camera.main;
         ObjectiveHandler.targetName += UpdateLookingFor;
-        LevelScript.ECharInput += EnableShoot;
-        LevelScript.DCharInput += DisableShoot;
+        LevelScript.EnableCharacterInput += EnableShoot;
+        LevelScript.DisableCharacterInput += DisableShoot;
     }
 	
 	// Update is called once per frame

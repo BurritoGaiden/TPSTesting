@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657916, g: 0.49641395, b: 0.574818, a: 1}
+  m_IndirectSpecularColor: {r: 0.4465791, g: 0.4964136, b: 0.57481754, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -5154,7 +5154,7 @@ Mesh:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: pb_Mesh12704
+  m_Name: pb_Mesh28744
   serializedVersion: 8
   m_SubMeshes:
   - serializedVersion: 2
@@ -15204,8 +15204,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 624250722}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.5, y: 0.5, z: 10.5}
-  m_LocalScale: {x: 5.302657, y: 2.9460888, z: 4.9491944}
+  m_LocalPosition: {x: 3.83, y: 0.5, z: 10.5}
+  m_LocalScale: {x: 4.298822, y: 2.9460888, z: 3.1086273}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 97
@@ -20552,7 +20552,7 @@ Mesh:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: pb_Mesh68906
+  m_Name: pb_Mesh30106
   serializedVersion: 8
   m_SubMeshes:
   - serializedVersion: 2
@@ -31430,7 +31430,7 @@ Mesh:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: pb_Mesh13580
+  m_Name: pb_Mesh28220
   serializedVersion: 8
   m_SubMeshes:
   - serializedVersion: 2
@@ -40949,7 +40949,7 @@ Mesh:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: pb_Mesh14136
+  m_Name: pb_Mesh28942
   serializedVersion: 8
   m_SubMeshes:
   - serializedVersion: 2
@@ -52375,31 +52375,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   runScript: 1
-  tempCamPos:
-  - {x: 1.95, y: -0.34, z: 4.27}
+  levelCameraPositions:
+  - {x: 1.95, y: -0.35, z: 4.27}
   - {x: -2.4, y: -1.05, z: -1.49}
   - {x: -5.241, y: 3.149, z: -7.283}
-  tempCamRot:
+  levelCameraAngles:
   - {x: 13.999, y: 217.023, z: -1.22}
   - {x: 13.999, y: 183.317, z: -1.22}
   - {x: 40.61, y: 42.974, z: -0.485}
+  levelMixer: {fileID: 24100000, guid: c9d6337af7d89ed4281827d5528ae970, type: 2}
+  levelSnapshots:
+  - {fileID: 245060492267365550, guid: c9d6337af7d89ed4281827d5528ae970, type: 2}
+  - {fileID: 245746510844366948, guid: c9d6337af7d89ed4281827d5528ae970, type: 2}
+  - {fileID: 245021243624687252, guid: c9d6337af7d89ed4281827d5528ae970, type: 2}
+  levelSfx:
+  - {fileID: 8300000, guid: 24fb6d2e245d2bf448d2e3c7b8242622, type: 3}
+  - {fileID: 8300000, guid: 7318c49b39ea3ff4181a1e8b14a75c3d, type: 3}
   player: {fileID: 2020828166}
   truck: {fileID: 366862606}
   truckPositions:
   - {fileID: 1557086711}
   - {fileID: 2099863355}
-  - {fileID: 0}
-  thisMixer: {fileID: 24100000, guid: c9d6337af7d89ed4281827d5528ae970, type: 2}
-  theseSnapshots:
-  - {fileID: 245060492267365550, guid: c9d6337af7d89ed4281827d5528ae970, type: 2}
-  - {fileID: 245746510844366948, guid: c9d6337af7d89ed4281827d5528ae970, type: 2}
-  - {fileID: 245021243624687252, guid: c9d6337af7d89ed4281827d5528ae970, type: 2}
-  sfx:
-  - {fileID: 8300000, guid: 24fb6d2e245d2bf448d2e3c7b8242622, type: 3}
-  - {fileID: 8300000, guid: 7318c49b39ea3ff4181a1e8b14a75c3d, type: 3}
-  fallingPiece: {fileID: 1475616401}
+  toggleableGeometry:
+  - {fileID: 1475616401}
+  - {fileID: 774664516}
   birds: {fileID: 1821922232}
-  benchFloor: {fileID: 774664516}
   thisPlayMode: 0
   rail: {fileID: 1381512680}
 --- !u!82 &1798685534

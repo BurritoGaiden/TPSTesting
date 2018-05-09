@@ -44,12 +44,12 @@ public class PlayerCamera : MonoBehaviour {
         }
         cam = Camera.main.transform;
 
-        LevelScript.ECamInput += EnableCameraInput;
-        LevelScript.DCamInput += DisableCameraInput;
+        LevelScript.EnableCameraInput += EnableCameraInput;
+        LevelScript.DisableCameraInput += DisableCameraInput;
         LevelScript.SetCharCamTransform += SetCameraTransform;
         LevelScript.ResetCamPositionOnRig += ResetCameraOnRig;
-        LevelScript.EDFocus += EnDirFocus;
-        LevelScript.DDFocus += DisDirFocus;
+        LevelScript.EnableDirectorFocus += EnDirFocus;
+        LevelScript.DisableDirectorFocus += DisDirFocus;
     }
 
     void EnDirFocus() {
