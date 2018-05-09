@@ -52,10 +52,13 @@ public class PlayerController : MonoBehaviour {
     public static float health = 100f;
     public Image healthVignette;
     public Image healthMeter;
+
+    public static Vector3 scriptedMovementTarget;
+
     //public float healthRegenCooldown;
 
-	// Use this for initialization
-	void Awake () {
+    // Use this for initialization
+    void Awake () {
         animator = GetComponent<Animator>();
         cameraT = Camera.main.transform;
         controller = GetComponent<CharacterController>();
@@ -100,6 +103,19 @@ public class PlayerController : MonoBehaviour {
 
             switch (thisMoveState) {
 
+                case MoveState.STATE_SCRIPTEDMOVEMENT:
+
+                    // We don't care about the y axis to simplify the logic
+                    var target = new Vector2(scriptedMovementTarget.x, scriptedMovementTarget.z);
+                    var currentPos = new Vector2(transform.position.x, transform.position.z);
+
+                    var dir = target - currentPos;
+                    Move(dir.normalized, false, false, false, true);
+
+                    if (Vector2.Distance(target, currentPos) < 0.1f)
+                        thisMoveState = MoveState.STATE_REGULAR;
+
+                    break;
                 case MoveState.STATE_REGULAR:
                     Move(inputDir, runInput, crouchInput, jumpInput);
 
@@ -268,11 +284,15 @@ public class PlayerController : MonoBehaviour {
         return angle;
     }
 
-    void Move(Vector2 inputDir, bool running, bool crouching, bool jumped) {
+    void Move(Vector2 inputDir, bool running, bool crouching, bool jumped, bool ignoreCameraRotation = false)
+    {
         //Updating the rotation of the character
         if (inputDir != Vector2.zero)
         {
-            float targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + cameraT.eulerAngles.y;
+            float targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg;
+            if (!ignoreCameraRotation)
+                targetRotation += cameraT.eulerAngles.y;
+
             //print("Regular Movement Target Rot: " + targetRotation);
             transform.eulerAngles = Vector3.up * Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref turnSmoothVelocity, GetModifiedSmoothTime(turnSmoothTime));
         }
@@ -494,5 +514,6 @@ public enum MoveState
     STATE_CLIMBING,
     STATE_PUSHING,
     STATE_NULL,
-    STATE_DIRFOCUS
+    STATE_DIRFOCUS,
+    STATE_SCRIPTEDMOVEMENT
 };

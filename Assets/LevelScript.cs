@@ -102,10 +102,13 @@ public class LevelScript : MonoBehaviour {
         EnableCharacterInput();
         EnableCameraInput();
         ResetCamPositionOnRig();
+
+        AssignThisObjective("Find a way out", "", 3, "roomTrig1");
+
         PlayThisDialogue(1);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
-        AssignThisObjective("Find a way out", "", 3, "roomTrig1");
+        
         print("before break");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
@@ -166,11 +169,11 @@ public class LevelScript : MonoBehaviour {
 
         //Player must collect the pieces
         AssignThisObjective("Collect 3 boxes", "", 1, "truckTrig6");
+        waitTillObjectiveDone = true;
 
         PlayThisDialogue(6);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
 
-        waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
         birds.GetComponent<Animation>().Play();
 
@@ -203,23 +206,31 @@ public class LevelScript : MonoBehaviour {
         //Wait till the player falls down
         AssignThisObjective("Fall down the hole", "", 3, "truckTrig5");
         waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone)
-        {
+        while (waitTillObjectiveDone) { yield return null; }
 
+        ///New Approach with updated camera work
 
-            yield return null;
-        }
-        //EDFocus();
-        
+        // Start moving the truck
+        var truckMovingRoutine = TruckMovingSubRoutine();
+        StartCoroutine(truckMovingRoutine);
+
+        PlayerCamera.cameraState = camStates.STATE_RAIL;
+        PlayerCamera.camTar = truck.transform;
+        PlayerCamera.followRail = GameObject.Find("rail1").transform;
+        PlayerCamera.railOffset = -2;
+        PlayerCamera.setRotationInstantlyNextFrame = true;
+
+        // Wait for the player to land on the ground
+        yield return new WaitForSeconds(0.75f);
+
+        // Move the player towards the first cover
+        PlayerController.thisMoveState = MoveState.STATE_SCRIPTEDMOVEMENT;
+        PlayerController.scriptedMovementTarget = GameObject.Find("movement_target1").transform.position;
+
         //Tell the player they'll have to stay in cover
         PlayThisDialogue(10);
         GetComponent<AudioSource>().PlayOneShot(levelSfx[1], .8f);
-        DisableCharacterInput();
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
-
-        PlayerCamera.camTar = truck.transform;
-
-        EnableCharacterInput();
 
         AssignThisObjective("Move to the next piece of cover", "", 3, "chaseTrig1");
         waitTillObjectiveDone = true;
@@ -231,22 +242,18 @@ public class LevelScript : MonoBehaviour {
         AssignThisObjective("Make it to the end of the hallway", "", 3, "truckTrig3");
 
         waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone)
-        {
-            if (PlayerController.triggerCollidingWith) {
-                if (PlayerController.triggerCollidingWith.tag == "Trigger") {
-                    truck.transform.position = new Vector3(player.transform.position.x, truck.transform.position.y, truck.transform.position.z);
-                }
-            }
+        while (waitTillObjectiveDone) { yield return null; }
 
-            yield return null;
-        }
+        StopCoroutine(truckMovingRoutine);
         //DDFocus();
 
         DisableTruck();
         PlayThisDialogue(12);
         truck.transform.position = truckPositions[1].position;
         levelSnapshots[2].TransitionTo(3f);
+
+        PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
+        PlayerCamera.transitioning = true;
 
         //when the player leaves
         AssignThisObjective("Run", "Get to the end of the corridor", 3, "truckTrig8");
@@ -255,7 +262,16 @@ public class LevelScript : MonoBehaviour {
         while (waitTillObjectiveDone) { yield return null; }
         //ThisDialogue(16);
 
-        print("ey");       
+        print("ey");
+    }
+
+    IEnumerator TruckMovingSubRoutine()
+    {
+        while (true)
+        {
+            truck.transform.position = new Vector3(player.transform.position.x, truck.transform.position.y, truck.transform.position.z);
+            yield return null;
+        }
     }
 
     //TRUCK MOVERS

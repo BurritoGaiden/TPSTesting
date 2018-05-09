@@ -15,6 +15,7 @@ public class PlayerCamera : MonoBehaviour {
 
     public float rotationSmoothTime = .12f;
     Vector3 rotationSmoothVelocity;
+    float rotationSmoothVelocityX, rotationSmoothVelocityY;
     Vector3 currentRotation;
     
     float yaw;
@@ -36,6 +37,15 @@ public class PlayerCamera : MonoBehaviour {
     public float horizontalOffset = .64f;
     public float forwardOffset = 0f;
     public float verticalOffset = 0f;
+
+    // For use with the RAIL state
+    public static Transform followRail;
+    public static float railOffset;
+
+    public static bool setRotationInstantlyNextFrame;
+
+    // Used to smoothly transition between different states like the rail state one
+    public static bool transitioning;
 
     void Awake() {
         if (lockCursor) {
@@ -81,6 +91,12 @@ public class PlayerCamera : MonoBehaviour {
                 FocusBehavior();
                 CameraOffset();
                 break;
+            case camStates.STATE_RAIL:
+                FocusBehavior();
+
+                var pos = followRail.position + Vector3.Project(target.transform.position - followRail.position, followRail.forward);
+                transform.position = pos + (railOffset * followRail.forward);
+                break;
             case camStates.STATE_COVER:
                 OrbitingBehavior();
                 CameraOffset();
@@ -104,17 +120,34 @@ public class PlayerCamera : MonoBehaviour {
         }
 	}
 
-    void OrbitingBehavior() {
+    void OrbitingBehavior()
+    {
         //Mouse control of pitch and yaw
         yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
         pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
         pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
         //Applying control to camera rotation in a smoothed fashion
-        currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+        currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+        //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
         transform.eulerAngles = currentRotation;
 
-        transform.position = target.position - transform.forward * dstFromTarget;  
+        UpdatePosition();
+    }
+
+    void UpdatePosition()
+    {
+        var targetPosition = target.position - transform.forward * dstFromTarget;
+        if (!transitioning || Vector3.Distance(transform.position, targetPosition) < 0.1f)
+        {
+            transitioning = false;
+            transform.position = targetPosition;
+        }
+        else
+        {
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, Time.deltaTime * 5);
+        }
     }
 
     void AimingBehavior()
@@ -125,7 +158,9 @@ public class PlayerCamera : MonoBehaviour {
         pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
         //Applying control to camera rotation in a smoothed fashion
-        currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+        currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+        //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
         transform.eulerAngles = currentRotation;
 
         transform.position = target.position - transform.forward * dstFromTarget;
@@ -137,10 +172,22 @@ public class PlayerCamera : MonoBehaviour {
         pitch = GetAngleBetween3PointsVer(this.transform.position, camTar.position);
         pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
-        currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        if (setRotationInstantlyNextFrame)
+        {
+            currentRotation.x = pitch;
+            currentRotation.y = yaw;
+            setRotationInstantlyNextFrame = false;
+        }
+        else
+        {
+            currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+            currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+            //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        }
+
         transform.eulerAngles = currentRotation;
 
-        transform.position = target.position - transform.forward * dstFromTarget;        
+        transform.position = target.position - transform.forward * dstFromTarget;
     }
 
     float GetAngleBetween3PointsHor(Vector3 a, Vector3 b)
@@ -227,5 +274,6 @@ public enum camStates
     STATE_NULL,
     STATE_COVER,
     STATE_COVERAIM,
-    STATE_PLAYERAIM
+    STATE_PLAYERAIM,
+    STATE_RAIL
 };
