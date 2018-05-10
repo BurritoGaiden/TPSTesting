@@ -34,11 +34,13 @@ public class PlayerController : MonoBehaviour {
     bool jumpInput;
     bool coverInput;
 
+    bool inAutoCrouchArea;
     public static GameObject triggerCollidingWith;
     public GameObject pushableCollidingWith;
     GameObject currentPush;
     public GameObject coverCollidingWith;
     GameObject currentCover;
+    bool inShortCover;
     float coverCooldown = 0;
 
     public Text pushableText;
@@ -46,6 +48,7 @@ public class PlayerController : MonoBehaviour {
 
     public float colCenter = .85f;
     public float colHeight = 1.7f;
+    public float colBoundsHeight;
 
     public static MoveState thisMoveState = MoveState.STATE_REGULAR;
 
@@ -61,7 +64,11 @@ public class PlayerController : MonoBehaviour {
     void Awake () {
         animator = GetComponent<Animator>();
         cameraT = Camera.main.transform;
+
         controller = GetComponent<CharacterController>();
+        controller.height = colHeight;
+        colBoundsHeight = controller.bounds.extents.y;
+
         LevelScript.DisableCharacterInput += DisableInput;
         LevelScript.EnableCharacterInput += EnableInput;
         EnemyAPC.HitPlayer += TakeDamage;
@@ -97,7 +104,7 @@ public class PlayerController : MonoBehaviour {
             inputDir = input.normalized;
 
             runInput = Input.GetKey(KeyCode.LeftShift);
-            crouchInput = Input.GetKey(KeyCode.LeftControl);
+            crouchInput = Input.GetKey(KeyCode.LeftControl) || inAutoCrouchArea;
             //jumpInput = Input.GetKeyDown(KeyCode.Space);
             coverInput = Input.GetKeyDown(KeyCode.Q);
 
@@ -118,16 +125,7 @@ public class PlayerController : MonoBehaviour {
                     break;
                 case MoveState.STATE_REGULAR:
                     Move(inputDir, runInput, crouchInput, jumpInput);
-
-                    if (crouchInput)
-                    {
-                        //GetComponent<CharacterController>().center = new Vector3(0,0,.1f);
-                        GetComponent<CharacterController>().height = 1;
-                    }
-                    else {
-                        //GetComponent<CharacterController>().center = new Vector3(0, colCenter, .1f);
-                        GetComponent<CharacterController>().height = colHeight;
-                    }
+                    UpdateCrouch(crouchInput);
 
                     //if there is a pushable
                     if (pushableCollidingWith)
@@ -177,7 +175,10 @@ public class PlayerController : MonoBehaviour {
                         currentPush = pushableCollidingWith;
                         thisMoveState = MoveState.STATE_PUSHING;
                         print("entered pushing");
+                    }else if (Killing.aiming) {
+                        thisMoveState = MoveState.STATE_REGULARAIM;
                     }
+
                     break;
 
                 case MoveState.STATE_FOCUS:
@@ -196,6 +197,9 @@ public class PlayerController : MonoBehaviour {
 
                 case MoveState.STATE_COVER:
                     CoverMove(inputDir, currentCover);
+
+                    UpdateCrouch(!IsObjectTallerThanPlayer(currentCover));
+
                     pushableText.enabled = false;
                     coverText.enabled = false;
 
@@ -212,6 +216,8 @@ public class PlayerController : MonoBehaviour {
                     break;
 
                 case MoveState.STATE_COVERAIM:
+                    UpdateCrouch(!IsObjectTallerThanPlayer(currentCover));
+
                     CoverMoveAim(inputDir, currentCover);
                     if (!Killing.aiming)
                     {
@@ -224,6 +230,12 @@ public class PlayerController : MonoBehaviour {
                         thisMoveState = MoveState.STATE_REGULAR;
                         print("exited cover");
                     }
+                    break;
+
+                case MoveState.STATE_REGULARAIM:
+                    AimMove(inputDir);
+
+                    if (!Killing.aiming) thisMoveState = MoveState.STATE_REGULAR;
                     break;
 
                 //MAKE SURE PUSHING STATE WORKS
@@ -244,7 +256,11 @@ public class PlayerController : MonoBehaviour {
             }
             
             //Animation the movement
-            animationSpeedPercent = ((runInput) ? currentSpeed / runSpeed : (crouchInput) ? currentSpeed / crouchSpeed : currentSpeed / walkSpeed * .5f);
+            animationSpeedPercent = (
+                (crouchInput) ? currentSpeed / crouchSpeed : // Crouching
+                (runInput) ? currentSpeed / runSpeed :       // Running
+                currentSpeed / walkSpeed * .5f);             // Walking
+
         }        
         //Animation 
         animator.SetFloat("speedPercent", animationSpeedPercent, speedSmoothTime, Time.deltaTime);
@@ -262,6 +278,10 @@ public class PlayerController : MonoBehaviour {
         if (col.transform.tag == "Pushable") {
             pushableCollidingWith = col.gameObject;
         }
+        if(col.transform.tag == "AutoCrouchArea") 
+        {
+            inAutoCrouchArea = true;
+        }
     }
 
     void OnTriggerExit(Collider col) {
@@ -275,6 +295,10 @@ public class PlayerController : MonoBehaviour {
         {
             triggerCollidingWith = null;
         }
+        if (col.transform.tag == "AutoCrouchArea") 
+        {
+            inAutoCrouchArea = false;
+        }
     }
 
     float GetAngleBetween3PointsHor(Vector3 a, Vector3 b)
@@ -282,6 +306,25 @@ public class PlayerController : MonoBehaviour {
         float theta = Mathf.Atan2(b.x - a.x, b.z - a.z);
         float angle = theta * 180 / Mathf.PI;
         return angle;
+    }
+
+    void UpdateCrouch(bool crouching) {
+        if (crouching) {
+            //GetComponent<CharacterController>().center = new Vector3(0,0,.1f);
+            GetComponent<CharacterController>().height = 1;
+        } else {
+            //GetComponent<CharacterController>().center = new Vector3(0, colCenter, .1f);
+            GetComponent<CharacterController>().height = colHeight;
+        }
+    }
+
+    bool IsObjectTallerThanPlayer(GameObject obj) {
+        var coll = obj.GetComponent<Collider>();
+        var bounds = coll.bounds;
+        Debug.Log(bounds.extents.y);
+        if (bounds.extents.y > colBoundsHeight) return true;
+
+        return false;
     }
 
     void Move(Vector2 inputDir, bool running, bool crouching, bool jumped, bool ignoreCameraRotation = false)
@@ -298,7 +341,7 @@ public class PlayerController : MonoBehaviour {
         }
 
         //If running, the target speed = run speed, else the target speed = walk speed. All in the direction of the character
-        float targetSpeed = ((running) ? runSpeed : (crouching) ? crouchSpeed : walkSpeed) * inputDir.magnitude;
+        float targetSpeed = ((crouching) ? crouchSpeed : (running) ? runSpeed : walkSpeed) * inputDir.magnitude;
 
         currentSpeed = Mathf.SmoothDamp(currentSpeed, targetSpeed, ref speedSmoothVelocity, GetModifiedSmoothTime(speedSmoothTime));
 
@@ -315,6 +358,36 @@ public class PlayerController : MonoBehaviour {
         }
 
         if (jumped) Jump();
+    }
+
+    void AimMove(Vector2 inputDir) {
+
+        float targetRotation = cameraT.eulerAngles.y;
+
+        //print("Regular Movement Target Rot: " + targetRotation);
+        transform.eulerAngles = Vector3.up * Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref turnSmoothVelocity, GetModifiedSmoothTime(turnSmoothTime) / 2);
+
+        //If running, the target speed = run speed, else the target speed = walk speed. All in the direction of the character
+        float targetSpeed  = crouchSpeed * inputDir.magnitude;
+
+        currentSpeed = Mathf.SmoothDamp(currentSpeed, targetSpeed, ref speedSmoothVelocity, GetModifiedSmoothTime(speedSmoothTime));
+
+        velocityY += Time.deltaTime * gravity;
+
+
+
+
+        Vector3 velocity = transform.TransformDirection(new Vector3(inputDir.x, 0, inputDir.y)) * currentSpeed + Vector3.up * velocityY;
+        //transform.Translate(transform.forward * currentSpeed * Time.deltaTime, Space.World);
+
+
+        controller.Move(velocity * Time.deltaTime);
+
+        currentSpeed = new Vector2(controller.velocity.x, controller.velocity.z).magnitude;
+
+        if (controller.isGrounded) {
+            velocityY = 0;
+        }
     }
 
     void CoverMoveAim(Vector2 inputDir, GameObject cover)
@@ -362,12 +435,11 @@ public class PlayerController : MonoBehaviour {
             Debug.DrawLine(rayOrigin2, rayOrigin2 + (dir * 1), Color.red);
         }
 
-        if (inputDir != Vector2.zero)
-        {
-            float targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + cameraT.eulerAngles.y;
-            //print("Regular Movement Target Rot: " + targetRotation);
-            transform.eulerAngles = Vector3.up * targetRotation;
-        }
+        float targetRotation = cameraT.eulerAngles.y;
+
+        //print("Regular Movement Target Rot: " + targetRotation);
+        //transform.eulerAngles = Vector3.up * Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref turnSmoothVelocity, GetModifiedSmoothTime(turnSmoothTime));
+        transform.eulerAngles = Vector3.up * targetRotation;
 
         //If running, the target speed = run speed, else the target speed = walk speed. All in the direction of the character
         float targetSpeed = crouchSpeed * inputDir.magnitude;
@@ -376,8 +448,9 @@ public class PlayerController : MonoBehaviour {
 
         velocityY += Time.deltaTime * gravity;
 
-        Vector3 velocity = transform.forward * currentSpeed + Vector3.up * velocityY;
+        Vector3 velocity = transform.TransformDirection(new Vector3(inputDir.x, 0, inputDir.y)) * currentSpeed;
         velocity = Vector3.Project(velocity, normal);
+        velocity.y += velocityY;
 
         // Restrict the movement if one of the rays missed
         // We do this by checking which direction were running along the normal
@@ -420,8 +493,9 @@ public class PlayerController : MonoBehaviour {
 
         velocityY += Time.deltaTime * gravity;
 
-        Vector3 velocity = transform.forward * currentSpeed + Vector3.up * velocityY;
+        Vector3 velocity = transform.forward * currentSpeed;
         velocity = Vector3.Project(velocity, normal);
+        velocity.y += velocityY;
         //transform.Translate(transform.forward * currentSpeed * Time.deltaTime, Space.World);
         controller.Move(velocity * Time.deltaTime);
         currentSpeed = new Vector2(controller.velocity.x, controller.velocity.z).magnitude;
@@ -456,9 +530,11 @@ public class PlayerController : MonoBehaviour {
 
         velocityY += Time.deltaTime * gravity;
 
-        Vector3 velocity = transform.forward * currentSpeed + Vector3.up * velocityY;
+        Vector3 velocity = transform.forward * currentSpeed;
         // New movement code, also move the cover object
         velocity = Vector3.Project(velocity, normal) * Time.deltaTime;
+        velocity.y += velocityY;
+
         controller.Move(velocity);
         cover.transform.position += new Vector3(velocity.x, 0, velocity.z);
 
@@ -507,6 +583,7 @@ public class PlayerController : MonoBehaviour {
 public enum MoveState
 {
     STATE_REGULAR,
+    STATE_REGULARAIM,
     STATE_FOCUS,
     STATE_CROUCH,
     STATE_COVER,

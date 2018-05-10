@@ -47,6 +47,10 @@ public class PlayerCamera : MonoBehaviour {
     // Used to smoothly transition between different states like the rail state one
     public static bool transitioning;
 
+    public static Vector3 detachedPosition;
+
+    public LayerMask occlusionLayers = Physics.DefaultRaycastLayers;
+
     void Awake() {
         if (lockCursor) {
             Cursor.lockState = CursorLockMode.Locked;
@@ -80,10 +84,10 @@ public class PlayerCamera : MonoBehaviour {
                 OrbitingBehavior();
                 CameraOffset();
                 //State Transitions
+
                 if (!camInput) cameraState = camStates.STATE_NULL;
                 else if (PlayerController.thisMoveState == MoveState.STATE_COVER) cameraState = camStates.STATE_COVER;
                 else if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
-                else if (Killing.aiming) cameraState = camStates.STATE_PLAYERAIM;
                 break;
 
                 //Developer driven state. Can only be switched into and out of from the level script
@@ -112,10 +116,10 @@ public class PlayerCamera : MonoBehaviour {
                 if (camInput) cameraState = camStates.STATE_PLAYERORBIT;
                 break;
 
-            case camStates.STATE_PLAYERAIM:
-                AimingBehavior();
+            case camStates.STATE_DETACHED:
+                FocusBehavior();
+                transform.position = detachedPosition;
 
-                if (!Killing.aiming) cameraState = camStates.STATE_PLAYERORBIT;
                 break;
         }
 	}
@@ -230,7 +234,36 @@ public class PlayerCamera : MonoBehaviour {
             horizontalOffset = 0f;
         }
         Vector3 camOffset = new Vector3(horizontalOffset, verticalOffset, forwardOffset);
-        cam.transform.localPosition = camOffset;
+
+        float distToKeepFromWall = 0.35f;
+
+        // make sure there are no walls between the camera and the player
+        // this dosnt catch the far away cases, which is why we also have a secondary check after this
+        RaycastHit hit;
+        if (Physics.Linecast(target.position, transform.TransformPoint(camOffset), out hit, occlusionLayers)) {
+            Debug.DrawLine(target.position, transform.TransformPoint(camOffset));
+            camOffset = transform.InverseTransformPoint(hit.point + hit.normal * distToKeepFromWall); // Keep a small distance from the wall so that we cant see through it
+        }
+
+        var dirs = new Vector3[] {
+            Vector3.right,
+            Vector3.left,
+            Vector3.forward,
+            Vector3.back,
+        };
+
+        // Secondary check wich casts a ray out from the camera in call directions
+        foreach(var dir in dirs) {
+            // Raycast to each side
+            var camPosWithOffset = transform.TransformPoint(camOffset);
+
+            if (Physics.Linecast(camPosWithOffset, camPosWithOffset + dir* distToKeepFromWall, out hit, occlusionLayers)) {
+                var dirAway = camPosWithOffset - hit.point;
+                camOffset = transform.InverseTransformPoint(hit.point + hit.normal * distToKeepFromWall);
+            }
+        }
+
+        cam.transform.localPosition = Vector3.MoveTowards(cam.transform.localPosition, camOffset, Time.deltaTime*5);
     }
 
     float CameraDSTFromTarget() {
@@ -275,5 +308,6 @@ public enum camStates
     STATE_COVER,
     STATE_COVERAIM,
     STATE_PLAYERAIM,
-    STATE_RAIL
+    STATE_RAIL,
+    STATE_DETACHED,
 };

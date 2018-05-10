@@ -10,6 +10,7 @@ TagManager:
   - Trigger
   - Geo
   - Shooter
+  - AutoCrouchArea
   layers:
   - Default
   - TransparentFX
@@ -19,7 +20,7 @@ TagManager:
   - UI
   - 
   - 
-  - 
+  - Player
   - 
   - 
   - 
