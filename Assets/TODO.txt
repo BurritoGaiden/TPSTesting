@@ -1,0 +1,8 @@
+TODO:
+Basic Cover checking and movement restriction
+Aim, reload, ammo
+Basic interactable with player input needed
+Basic ladder and/or plank move/place implemented
+Basic NPC implemented that can be interacted with to say voice lines
+Basic BGM and BGM handler
+Basic crafting and crafting handler
