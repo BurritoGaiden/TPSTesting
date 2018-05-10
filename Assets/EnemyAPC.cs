@@ -6,7 +6,7 @@ public class EnemyAPC : MonoBehaviour {
 
     public GameObject player;
     public GameObject turret;
-    public float counter = 0;
+    public float fireCooldownTimer = 0;
     public float ammo = 0;
     bool alive = true;
 
@@ -21,10 +21,12 @@ public class EnemyAPC : MonoBehaviour {
     public GameObject bulletTrail;
     public LineRenderer lr;
 
+
+    bool reloading;
+
     void Awake() {
         LevelScript.DisableTruck += DisableTruck;
         lr = bulletTrail.GetComponent<LineRenderer>();
-        
     }
 
     void TurnOnTrail() {
@@ -44,61 +46,63 @@ public class EnemyAPC : MonoBehaviour {
     void Update () {
         if (!alive)
             return;
-        RaycastHit hit;
-        RaycastHit[] coverHits;
 
-        Debug.DrawLine(turret.transform.position, new Vector3(player.transform.position.x,player.transform.position.y + 1f, player.transform.position.z));
+        var targetPos = new Vector3(player.transform.position.x, player.transform.position.y + 1f, player.transform.position.z);
 
-        if (Physics.Linecast(turret.transform.position, player.transform.position, out hit))
-        {
-            if (hit.transform.tag == "Player" && counter <= 0 && ammo > 0)
-            {
-                ammo--;
-                counter = Random.Range(.3f, .5f);
-                GetComponent<AudioSource>().PlayOneShot(truckSFX[0], .02f);
+        // When were in certain states, target a little lower
+        if (PlayerController.thisMoveState == MoveState.STATE_COVER || 
+            PlayerController.thisMoveState == MoveState.STATE_CROUCH || 
+            PlayerController.thisMoveState == MoveState.STATE_COVERAIM) {
 
-                HitPlayer();
-                lr.SetPosition(0, new Vector3(turret.transform.position.x, turret.transform.position.y + 1.5f, turret.transform.position.z) - this.transform.position);
-                lr.SetPosition(1, new Vector3(player.transform.position.x, player.transform.position.y + 1f, player.transform.position.z) - this.transform.position);
-                Invoke("TurnOffTrail", .05f);
-
-            }
-
-            else if (hit.transform.tag == "Cover" && counter <= 0 && ammo > 0)
-            {
-                ammo--;
-                counter = Random.Range(.3f, .35f);
-                GetComponent<AudioSource>().PlayOneShot(truckSFX[0], .02f);
-                print("hit cover");
-  
-                GameObject impactObj = Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
-                Destroy(impactObj, 1.2f);
-
-                lr.SetPosition(0, new Vector3(turret.transform.position.x, turret.transform.position.y + 1.5f, turret.transform.position.z) - this.transform.position);
-                lr.SetPosition(1, new Vector3(hit.point.x, hit.point.y + 1f, hit.point.z) - this.transform.position);
-                Invoke("TurnOffTrail", .05f);
-            }
-
-            else if (hit.transform.tag == "Geo" && counter <= 0 && ammo > 0)
-            {
-                print("hit geo");
-               
-            }
-
-            else if (hit.transform.tag == "Shooter" && counter <= 0 && ammo > 0)
-            {
-                print("It's hitting the gun");
-                
-            }
+            targetPos.y -= 0.5f;
         }
+
+        Debug.DrawLine(turret.transform.position, targetPos);
+
+        if (fireCooldownTimer <= 0 && ammo > 0)
+            Shoot(targetPos);
         
-        if (counter > 0) {
-            counter -= Time.deltaTime;
+        if (fireCooldownTimer > 0) {
+            fireCooldownTimer -= Time.deltaTime;
         }
 
-        if (ammo <= 0) {
-            Invoke("GiveAmmo", 3);
-            counter = 2;
+        if (ammo <= 0 && !reloading) {
+            Invoke("GiveAmmo", 5);
+            reloading = true;
+            fireCooldownTimer = 5;
+        }
+    }
+
+    void Shoot(Vector3 targetPos) {
+
+        ammo--;
+
+        fireCooldownTimer = Random.Range(.3f, .5f);
+        GetComponent<AudioSource>().PlayOneShot(truckSFX[0], .02f);
+
+        // Check what we hit
+        RaycastHit hit;
+
+        var hitPoint = Vector3.zero;
+        if (!Physics.Linecast(turret.transform.position, targetPos, out hit, Physics.AllLayers, QueryTriggerInteraction.Ignore)) {
+            hitPoint = targetPos;
+        } else {
+            hitPoint = hit.point;
+        }
+
+        lr.SetPosition(0, turret.transform.position);
+        lr.SetPosition(1, hitPoint);
+        Invoke("TurnOffTrail", .1f);
+        
+        if (hit.transform.tag == "Player") {
+            HitPlayer();
+
+        } else if (hit.collider != null) {
+            // Hit something other than the player, like the map
+            GameObject impactObj = Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
+            Destroy(impactObj, 1.2f);
+
+            print("hit something else");
         }
     }
 
@@ -107,6 +111,7 @@ public class EnemyAPC : MonoBehaviour {
     }
 
     void GiveAmmo() {
-        ammo = 20;
+        reloading = false;
+        ammo = 15;
     }
 }

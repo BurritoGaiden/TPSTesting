@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 
@@ -262,6 +263,17 @@ public class LevelScript : MonoBehaviour {
         while (waitTillObjectiveDone) { yield return null; }
         //ThisDialogue(16);
 
+        // Move the player towards the first cover
+        PlayerController.thisMoveState = MoveState.STATE_SCRIPTEDMOVEMENT;
+        PlayerController.scriptedMovementTarget = GameObject.Find("movement_target2").transform.position;
+
+        PlayerCamera.cameraState = camStates.STATE_DETACHED;
+        PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
+        PlayerCamera.detachedPosition = Camera.main.transform.parent.position;
+
+        yield return new WaitForSeconds(3f);
+        yield return FadeOut();
+
         print("ey");
     }
 
@@ -272,6 +284,38 @@ public class LevelScript : MonoBehaviour {
             truck.transform.position = new Vector3(player.transform.position.x, truck.transform.position.y, truck.transform.position.z);
             yield return null;
         }
+    }
+
+    // Dynamically creates a image that covers the entire screen
+    IEnumerator FadeOut() {
+        var screenCanvas = GameObject.Find("ScreenOverlayCanvas");
+        if(screenCanvas == null) {
+            Debug.LogError("Couldn't fade out, no overlay canvas by the name of ScreenOverlayCanvas found");
+            yield break;
+        }
+
+        // Create and position the screenfader gameobject
+        var imgObj = new GameObject("ScreenFader", typeof(RectTransform));
+        var img = imgObj.AddComponent<Image>();
+        imgObj.transform.SetParent(screenCanvas.transform, false);
+        img.color = new Color(0, 0, 0, 0);
+
+        // Position to cover the whole canvas
+        var rectTransform = imgObj.GetComponent<RectTransform>();
+        rectTransform.anchorMin = Vector2.zero;
+        rectTransform.anchorMax = new Vector2(1, 1);
+        rectTransform.offsetMax = Vector2.zero;
+        rectTransform.offsetMax = Vector2.zero;
+
+        var color = img.color;
+        for(float t  = 0; t < 1; t += Time.deltaTime) {
+            color.a = Mathf.Lerp(0, 1, t);
+            img.color = color;
+            yield return null;
+        }
+
+        color.a = 1;
+        img.color = color;
     }
 
     //TRUCK MOVERS
