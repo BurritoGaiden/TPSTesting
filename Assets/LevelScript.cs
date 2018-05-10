@@ -97,13 +97,59 @@ public class LevelScript : MonoBehaviour {
         levelSnapshots[0].TransitionTo(0f);
         DisableCharacterInput();
 
+        //Play sequence where PC falls down and transitions into gameplay camera
+
+        /*
+        //Current Wake up sequence
         //Joel is waking up
-        PlayThisDialogue(0);
-        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+        //PlayThisDialogue(0);
+        //yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+        */    
         EnableCharacterInput();
         EnableCameraInput();
         ResetCamPositionOnRig();
 
+        //When they hit this trigger, spawn in the car
+        AssignThisObjective("Hit this trigger to spawn the truck", "", 3, "DropTrig1");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+        //Spawn in car
+        truck.SetActive(true);
+        truck.transform.position = truckPositions[3].position;
+
+        //when they hit this trigger, make them wait until button press
+        AssignThisObjective("Hit this trigger to prompt getting into cover", "", 3, "DropTrig2");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+        //Make car show up, then wait for some time
+        truck.transform.position = truckPositions[4].position;
+        //Make car go away
+
+        //When they hit this trigger, make the car about to show up again
+
+        //When they hit this trigger, make the car show up
+        //Play text that tells the player tall cover blocks line of sight
+
+        //When they hit this trigger, the player has dropped down into the maze room
+
+        //tell the player to get across
+
+        //When the player hits the trigger before the broken bridge, say that the player will need to find a way across
+
+        //When the player picks up the planks, start the alternating car section
+        //If the cars see the player, they'll shoot, if they don't see the player for X seconds after showing up in either window, they'll move to the other window
+
+        //When the player has put down the bridge plank successfully, move the car to the close window
+
+        //As the player finishes crossing the bridge, present an unskippable prompt
+        //When the player presses the button for the prompt, move the player over to the right/back of the pushable yellow block.
+        //The apc should be shooting towards the player throughout all of this, but cannot connect a hit because of the tall cover + the pushable is thick.
+
+        //The player should button press rapidly, or push the block. It should move slowly.
+        //Once the block is out of the way, either move the player through the whole automatically, or disengage them so they can move through
+        //The explosive shot should knock the block down to block the player from regressing
+        /*
+        //Current Maze room 
         AssignThisObjective("Find a way out", "", 3, "roomTrig1");
 
         PlayThisDialogue(1);
@@ -139,7 +185,9 @@ public class LevelScript : MonoBehaviour {
         truck.SetActive(false);
         levelSnapshots[0].TransitionTo(1f);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
+        */
 
+        //Secret Room
         AssignThisObjective("Continue", "", 3, "truckTrig2");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
