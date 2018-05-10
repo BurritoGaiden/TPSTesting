@@ -10,7 +10,17 @@ TagManager:
   - Trigger
   - Geo
   - Shooter
+<<<<<<< HEAD
   - AutoCrouchArea
+=======
+<<<<<<< HEAD
+  - AutoCrouchArea
+=======
+  - Ladder
+  - TopLadder
+  - BottomLadder
+>>>>>>> origin/master
+>>>>>>> origin/master
   layers:
   - Default
   - TransparentFX

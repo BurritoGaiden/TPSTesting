@@ -36,6 +36,10 @@ public class PlayerController : MonoBehaviour {
 
     bool inAutoCrouchArea;
     public static GameObject triggerCollidingWith;
+    GameObject currentLadder;
+    public GameObject ladderCollidingWith;
+    GameObject currentTopLadder;
+    GameObject currentBottomLadder;
     public GameObject pushableCollidingWith;
     GameObject currentPush;
     public GameObject coverCollidingWith;
@@ -109,7 +113,13 @@ public class PlayerController : MonoBehaviour {
             coverInput = Input.GetKeyDown(KeyCode.Q);
 
             switch (thisMoveState) {
-
+                case MoveState.STATE_LADDER:
+                    LadderMove(inputDir);
+                    
+                    //Transition
+                    if (currentLadder == null) thisMoveState = MoveState.STATE_REGULAR;
+                    
+                    break;
                 case MoveState.STATE_SCRIPTEDMOVEMENT:
 
                     // We don't care about the y axis to simplify the logic
@@ -125,7 +135,25 @@ public class PlayerController : MonoBehaviour {
                     break;
                 case MoveState.STATE_REGULAR:
                     Move(inputDir, runInput, crouchInput, jumpInput);
+<<<<<<< HEAD
                     UpdateCrouch(crouchInput);
+=======
+<<<<<<< HEAD
+                    UpdateCrouch(crouchInput);
+=======
+
+                    if (crouchInput)
+                    {
+                        //GetComponent<CharacterController>().center = new Vector3(0,0,.1f);
+                        GetComponent<CharacterController>().height = 1;
+                    }
+                    else {
+                        //GetComponent<CharacterController>().center = new Vector3(0, colCenter, .1f);
+                        GetComponent<CharacterController>().height = colHeight;
+                    }
+                                        
+>>>>>>> origin/master
+>>>>>>> origin/master
 
                     //if there is a pushable
                     if (pushableCollidingWith)
@@ -160,6 +188,24 @@ public class PlayerController : MonoBehaviour {
 
                     if (Interesting.looking) {
                         thisMoveState = MoveState.STATE_FOCUS;
+                    }
+                    if (ladderCollidingWith)
+                    {
+                        if (coverInput)
+                        {
+                            coverCooldown = 1.2f;
+                            currentLadder = ladderCollidingWith;
+                            if (this.transform.position.y > currentLadder.transform.position.y)
+                            {
+                                this.transform.position = new Vector3(currentLadder.transform.position.x, currentLadder.transform.position.y + (currentLadder.transform.localScale.y / 2), currentLadder.transform.position.z - currentLadder.transform.localScale.z / 2);
+                            }
+                            else if (this.transform.position.y < currentLadder.transform.position.y)
+                            {
+                                this.transform.position = new Vector3(currentLadder.transform.position.x, currentLadder.transform.position.y - (currentLadder.transform.localScale.y / 2), currentLadder.transform.position.z - currentLadder.transform.localScale.z / 2);
+                            }
+                            thisMoveState = MoveState.STATE_LADDER;
+                            print("entered ladder");
+                        }
                     }
                     if (coverInput && coverCollidingWith && coverCooldown <= 0)
                     {
@@ -267,6 +313,9 @@ public class PlayerController : MonoBehaviour {
     }
 
     void OnTriggerStay(Collider col) {
+        if (col.transform.tag == "Ladder") {
+            ladderCollidingWith = col.gameObject;
+        }
         if (col.transform.tag == "Cover")
         {
             coverCollidingWith = col.gameObject;
@@ -285,6 +334,9 @@ public class PlayerController : MonoBehaviour {
     }
 
     void OnTriggerExit(Collider col) {
+        if (col.transform.tag == "Ladder") {
+            ladderCollidingWith = null;
+        }
         if (col.transform.tag == "Cover") {
             coverCollidingWith = null;
         }
@@ -308,6 +360,10 @@ public class PlayerController : MonoBehaviour {
         return angle;
     }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> origin/master
     void UpdateCrouch(bool crouching) {
         if (crouching) {
             //GetComponent<CharacterController>().center = new Vector3(0,0,.1f);
@@ -325,6 +381,45 @@ public class PlayerController : MonoBehaviour {
         if (bounds.extents.y > colBoundsHeight) return true;
 
         return false;
+<<<<<<< HEAD
+=======
+=======
+    void LadderMove(Vector2 inputDir) {
+        ///get the player current input direction relative to the ladder's up / down
+        print(inputDir.x);
+        print(inputDir.y);
+        ///move the player up or down on the ladder depending on that direction
+
+        if (inputDir.y == 1)
+        {
+            this.transform.position = new Vector3(this.transform.position.x, this.transform.position.y + .6f * Time.deltaTime, this.transform.position.z);
+            if (this.transform.position.y > currentLadder.transform.position.y + currentLadder.transform.localScale.y / 2) {
+                this.transform.position = currentLadder.transform.GetChild(0).position;
+                currentLadder = null;
+            }
+        }
+        else if (inputDir.y == -1) {
+            this.transform.position = new Vector3(this.transform.position.x, this.transform.position.y - .6f * Time.deltaTime, this.transform.position.z);
+            if (this.transform.position.y < currentLadder.transform.position.y - currentLadder.transform.localScale.y / 2)
+            {
+                currentLadder = null;
+            }
+        }
+        /*
+        if (currentTopLadder)
+        {
+            this.transform.position = currentLadder.transform.GetChild(2).position;
+            currentLadder = null;
+        }
+        if (currentBottomLadder)
+        {
+            this.transform.position = currentLadder.transform.GetChild(2).position;
+            currentLadder = null;
+        }
+        */
+        //this.transform.position = new Vector3(currentLadder.transform.position.x, currentLadder.transform.position.y, currentLadder.transform.position.z);
+>>>>>>> origin/master
+>>>>>>> origin/master
     }
 
     void Move(Vector2 inputDir, bool running, bool crouching, bool jumped, bool ignoreCameraRotation = false)
@@ -592,5 +687,6 @@ public enum MoveState
     STATE_PUSHING,
     STATE_NULL,
     STATE_DIRFOCUS,
-    STATE_SCRIPTEDMOVEMENT
+    STATE_SCRIPTEDMOVEMENT,
+    STATE_LADDER
 };
