@@ -218,7 +218,7 @@ public class LevelScript : MonoBehaviour {
         PlayerCamera.cameraState = camStates.STATE_RAIL;
         PlayerCamera.camTar = truck.transform;
         PlayerCamera.followRail = GameObject.Find("rail1").transform;
-        PlayerCamera.railOffset = -2;
+        PlayerCamera.railOffset = -4;
         PlayerCamera.setRotationInstantlyNextFrame = true;
 
         // Wait for the player to land on the ground
