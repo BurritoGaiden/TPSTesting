@@ -284,7 +284,7 @@ public class LevelScript : MonoBehaviour {
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
         //The Player has hit the truck trigger
-        toggleableGeometry[0].SetActive(true);
+        //toggleableGeometry[0].SetActive(true);
         
         truck.SetActive(true);
         levelSnapshots[1].TransitionTo(.5f);
