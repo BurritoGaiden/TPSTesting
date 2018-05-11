@@ -63,10 +63,8 @@ public class ObjectiveHandler : MonoBehaviour {
         {
             if (objectivesList[0].targetList.Count == 0)
             {
-                print("removing");
                 objectivesList.Remove(objectivesList[0]);
                 ObjDone();
-                print("removed");
             }
         }
     }

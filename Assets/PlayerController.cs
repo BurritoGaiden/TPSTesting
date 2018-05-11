@@ -37,11 +37,11 @@ public class PlayerController : MonoBehaviour {
     bool inAutoCrouchArea;
     public static GameObject triggerCollidingWith;
     public GameObject pushableCollidingWith;
-    GameObject currentPush;
+    public GameObject currentPush;
     public GameObject coverCollidingWith;
-    GameObject currentCover;
+    public GameObject currentCover;
     bool inShortCover;
-    float coverCooldown = 0;
+    public float coverCooldown = 0;
 
     public Text pushableText;
     public Text coverText;
@@ -261,6 +261,8 @@ public class PlayerController : MonoBehaviour {
                 (runInput) ? currentSpeed / runSpeed :       // Running
                 currentSpeed / walkSpeed * .5f);             // Walking
 
+        } else {
+            controller.Move(Vector3.down * 0.1f);
         }        
         //Animation 
         animator.SetFloat("speedPercent", animationSpeedPercent, speedSmoothTime, Time.deltaTime);
@@ -336,8 +338,18 @@ public class PlayerController : MonoBehaviour {
             if (!ignoreCameraRotation)
                 targetRotation += cameraT.eulerAngles.y;
 
+            if (float.IsNaN(turnSmoothVelocity)) {
+                turnSmoothVelocity = 0;
+                Debug.LogWarning("TURN SMOOTH VELOCITY DECIDED TO BE NAN BUT I SAVED THE DAY!");
+            }
+                
+
             //print("Regular Movement Target Rot: " + targetRotation);
-            transform.eulerAngles = Vector3.up * Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref turnSmoothVelocity, GetModifiedSmoothTime(turnSmoothTime));
+            var smoothDamp = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref turnSmoothVelocity, GetModifiedSmoothTime(turnSmoothTime));
+            var newRot = Vector3.up * smoothDamp;
+
+            Debug.Log(newRot + " : " + smoothDamp + " : " + GetModifiedSmoothTime(turnSmoothTime) + " : " + transform.eulerAngles.y + " : " + targetRotation + " : " + inputDir + " : " + turnSmoothVelocity);
+            transform.eulerAngles = newRot;
         }
 
         //If running, the target speed = run speed, else the target speed = walk speed. All in the direction of the character

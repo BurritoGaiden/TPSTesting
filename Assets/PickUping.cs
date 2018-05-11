@@ -28,39 +28,37 @@ public class PickUping : MonoBehaviour {
 
     void OnTriggerStay(Collider col) {
         //Visual
-        if (col.GetComponent<PickupArea>())
+        if (col.GetComponent<PickupArea>() == null) return;
+
+        var pickupArea = col.GetComponent<PickupArea>();
+        if (pickupArea.pickable && pickupArea.canPickupFrom)
         {
-            if (col.GetComponent<PickupArea>().pickable)
-            {
-                pickImage.enabled = true;
-                pickImage.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1f, col.transform.position.z);
-                pickText.enabled = true;
-                pickText.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1.5f, col.transform.position.z);
-                pickText.text = "Press E to Pick Up";
-            }
-            else if (!col.GetComponent<PickupArea>().pickable && pickable)
-            {
-                pickImage.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1f, col.transform.position.z);
-                pickImage.enabled = true;
-                pickText.enabled = true;
-                pickText.text = "Press E to Put Down";
-                pickText.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1.5f, col.transform.position.z);
-            }
-            else if (!col.GetComponent<PickupArea>().pickable && !pickable) {
-                pickImage.enabled = false;
-                pickText.enabled = false;
-            }
+            pickImage.enabled = true;
+            pickImage.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1f, col.transform.position.z);
+            pickText.enabled = true;
+            pickText.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1.5f, col.transform.position.z);
+            pickText.text = "Press E to Pick Up";
         }
-        else return;
+        else if (!pickupArea.pickable && pickable)
+        {
+            pickImage.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1f, col.transform.position.z);
+            pickImage.enabled = true;
+            pickText.enabled = true;
+            pickText.text = "Press E to Put Down";
+            pickText.rectTransform.position = new Vector3(col.transform.position.x, col.transform.position.y + 1.5f, col.transform.position.z);
+        }
+        else if (!pickupArea.pickable && !pickable) {
+            pickImage.enabled = false;
+            pickText.enabled = false;
+        }
 
         if (Input.GetKeyDown(KeyCode.E) && pickCooldown <= 0)
         {
             //If the Player has an object and the pickup area is empty
-            if (pickable && !col.GetComponent<PickupArea>().pickable) Putdown(col.gameObject);
+            if (pickable && !pickupArea.pickable) Putdown(col.gameObject);
             //If the Player doesn't have an object and the area does
-            else if (!pickable && col.GetComponent<PickupArea>().pickable) Pickup(col.gameObject);
+            else if (!pickable && pickupArea.pickable && pickupArea.canPickupFrom) Pickup(col.gameObject);
         }
-        
     }
 
     void OnTriggerExit(Collider hit)
@@ -88,10 +86,8 @@ public class PickUping : MonoBehaviour {
         pickable.transform.position = pickupArea.GetComponent<PickupArea>().pickablePlacementPlaceholder.transform.position;
         pickable.transform.rotation = pickupArea.GetComponent<PickupArea>().pickablePlacementPlaceholder.transform.rotation;
 
-        if (pickable.GetComponent<Pickupable>().destinationArea != pickupArea)
-        {
-            pickupArea.GetComponent<PickupArea>().pickable = pickable;
-        }
+
+        pickupArea.GetComponent<PickupArea>().pickable = pickable;
 
         pickable = null;
         Debug.Log("does not have object");

@@ -70,10 +70,17 @@ public class LevelScript : MonoBehaviour {
     public GameObject[] toggleableGeometry;
     public GameObject birds;
 
+    public PickupArea plankPikcupArea;
+    public PickupArea plankPutdownArea;
+    public GameObject coverDropzone1;
+    public GameObject secretBlockingPushable;
+    public GameObject overHeadPuzzleViewCamPos;
+
     //Game-state Machine
     public static GamePlayState thisGameplayState = GamePlayState.Regular;
     public Playmode thisPlayMode = Playmode.Linear;
-    
+
+    public float truckSpeed = 3f;
 
     // Use this for initialization
     void Awake() {
@@ -95,7 +102,20 @@ public class LevelScript : MonoBehaviour {
         //Start of level
         truck.SetActive(false);
         levelSnapshots[0].TransitionTo(0f);
-        DisableCharacterInput();
+        //DisableCharacterInput();
+        EnableCharacterInput();
+        EnableCameraInput();
+
+        PlayerCamera.cameraState = camStates.STATE_DETACHED;
+        PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
+        PlayerCamera.detachedPosition = GameObject.Find("cam_detached_intro").transform.position;
+        PlayerCamera.detachedFixedRotation = GameObject.Find("cam_detached_intro").transform.rotation;
+        PlayerCamera.setRotationInstantlyNextFrame = true;
+
+        yield return MovePlayer("movement_target_intro");
+        PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
+        ResetCamPositionOnRig();
+        yield return MovePlayer("movement_target_intro2");
 
         //Play sequence where PC falls down and transitions into gameplay camera
 
@@ -105,46 +125,118 @@ public class LevelScript : MonoBehaviour {
         //PlayThisDialogue(0);
         //yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
         */    
-        EnableCharacterInput();
-        EnableCameraInput();
-        ResetCamPositionOnRig();
+
 
         //When they hit this trigger, spawn in the car
-        AssignThisObjective("Hit this trigger to spawn the truck", "", 3, "DropTrig1");
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
-        //Spawn in car
-        truck.SetActive(true);
-        truck.transform.position = truckPositions[3].position;
+        //yield return AddAndWaitForObjective("Hit this trigger to spawn the truck", "", 3, "DropTrig1");
 
         //when they hit this trigger, make them wait until button press
-        AssignThisObjective("Hit this trigger to prompt getting into cover", "", 3, "DropTrig2");
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
+        yield return AddAndWaitForObjective("Hit this trigger to prompt getting into cover", "", 3, "DropTrig2");
+        
+
         //Make car show up, then wait for some time
-        truck.transform.position = truckPositions[4].position;
+        truck.SetActive(true);
+        StartCoroutine(MoveTruckAlongRail("truck_rail_1_start"));
+
+        PlayThisDialogue(13);
+
+        // Pause until keypress
+        Time.timeScale = 0;
+
+        while (true) {
+            if (Input.GetKeyDown(KeyCode.Q)) {
+                break;
+            }
+            yield return null;
+        }
+
+        Time.timeScale = 1;
+        yield return null; // shit breaks if i dont have this here, probs related to grounding or something, dont have time to debug
+        yield return MovePlayer("drop_movement_target_1");
+
+        // Etner cover
+        var player = FindObjectOfType<PlayerController>();
+        player.currentCover = coverDropzone1;
+        player.coverCooldown = 1.2f;
+        PlayerController.thisMoveState = MoveState.STATE_COVER;
+
+        // Wait until were in cover
+        while (PlayerController.thisMoveState != MoveState.STATE_COVER) yield return null;
+
         //Make car go away
+        StartCoroutine(MoveTruckAlongRail("truck_rail_2"));
 
         //When they hit this trigger, make the car about to show up again
-
         //When they hit this trigger, make the car show up
+        yield return AddAndWaitForObjective("Walk over the bridge", "", 3, "DropTrig3");
+        StartCoroutine(MoveTruckAlongRail("truck_rail_3"));
+
         //Play text that tells the player tall cover blocks line of sight
 
+
         //When they hit this trigger, the player has dropped down into the maze room
+        yield return AddAndWaitForObjective("Jump down the ledge", "", 3, "Drop2Trig1");
 
         //tell the player to get across
 
         //When the player hits the trigger before the broken bridge, say that the player will need to find a way across
+        //yield return AddAndWaitForObjective("Jump down the ledge", "", 3, "Drop2Trig2");
 
         //When the player picks up the planks, start the alternating car section
         //If the cars see the player, they'll shoot, if they don't see the player for X seconds after showing up in either window, they'll move to the other window
+        while(plankPikcupArea.pickable != null) yield return null;
+
+        var truckLoopingRoutine = MoveTruckBackAndForth("truck_rail_looping_4", "truck_rail_looping_transition_in");
+        StartCoroutine(truckLoopingRoutine);
+
+        // Enter puzzle cam mode
+        PlayerCamera.cameraState = camStates.STATE_DETACHED;
+        PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
+        PlayerCamera.detachedPosition = overHeadPuzzleViewCamPos.transform.position;
+        PlayerCamera.detachedFixedRotation = overHeadPuzzleViewCamPos.transform.rotation;
+        PlayerCamera.transitioning = true;
 
         //When the player has put down the bridge plank successfully, move the car to the close window
+        while (plankPutdownArea.pickable == null) yield return null;
+
+        StopCoroutine(truckLoopingRoutine);
+        yield return null;
+        StartCoroutine(MoveTruckAlongRail("truck_rail_5", false));
 
         //As the player finishes crossing the bridge, present an unskippable prompt
         //When the player presses the button for the prompt, move the player over to the right/back of the pushable yellow block.
         //The apc should be shooting towards the player throughout all of this, but cannot connect a hit because of the tall cover + the pushable is thick.
+        yield return AddAndWaitForObjective("Walk over the bridge", "", 3, "Drop2Trig2");
 
+        PlayThisDialogue(14);
+        // Pause until keypress
+        Time.timeScale = 0;
+
+        while (true) {
+            if (Input.GetKeyDown(KeyCode.Q)) {
+                break;
+            }
+            yield return null;
+        }
+
+        Time.timeScale = 1;
+        yield return null; // shit breaks if i dont have this here, probs related to grounding or something, dont have time to debug
+
+        yield return MovePlayer("movement_target_to_secret_pushable");
+
+        // Set the player state to pushing
+        player.coverCooldown = 1.2f;
+        player.currentPush = secretBlockingPushable;
+        PlayerController.thisMoveState = MoveState.STATE_PUSHING;
+        PlayerCamera.detachedFixedRotation = Quaternion.identity;
+        PlayerCamera.cameraState = camStates.STATE_PUSHING;
+
+        // Wait until the cover has been pushed
+        var originalCoverPos = secretBlockingPushable.transform.position;
+        while (Vector3.Distance(originalCoverPos, secretBlockingPushable.transform.position) < 1f) yield return null;
+
+        PlayerController.thisMoveState = MoveState.STATE_REGULAR;
+        
         //The player should button press rapidly, or push the block. It should move slowly.
         //Once the block is out of the way, either move the player through the whole automatically, or disengage them so they can move through
         //The explosive shot should knock the block down to block the player from regressing
@@ -201,7 +293,7 @@ public class LevelScript : MonoBehaviour {
         PlayerCamera.camTar = truck.transform;
         currentSeg = 1;
         float counter = 0;
-        while (counter < 2.5) {
+        while (counter < 2) {
             counter += Time.deltaTime;
             RailPlayer();
             yield return null;
@@ -325,6 +417,52 @@ public class LevelScript : MonoBehaviour {
         print("ey");
     }
 
+    IEnumerator MovePlayer(string targetPosHelper) {
+        var helper = GameObject.Find(targetPosHelper);
+
+        PlayerController.thisMoveState = MoveState.STATE_SCRIPTEDMOVEMENT;
+        PlayerController.scriptedMovementTarget = helper.transform.position;
+
+        while(PlayerController.thisMoveState == MoveState.STATE_SCRIPTEDMOVEMENT) yield return null;
+    }
+
+    IEnumerator MoveTruckBackAndForth(string railName, string transitionRail) {
+        yield return MoveTruckAlongRail(transitionRail, false);
+
+        while (true) {
+            yield return WaitForCoverDuration(3f);
+            yield return MoveTruckAlongRail(railName);
+
+            yield return WaitForCoverDuration(3f);
+            yield return MoveTruckAlongRail(railName, true, true);
+        }
+    }
+
+    IEnumerator WaitForCoverDuration(float duration) {
+        float timeInCover = 0;
+
+        while (true) {
+
+            if(PlayerController.thisMoveState == MoveState.STATE_COVER) {
+                timeInCover += Time.deltaTime;
+                if (timeInCover > duration)
+                    break;
+
+            } else {
+                timeInCover = 0;
+            }
+
+            yield return null;
+        }
+    }
+
+    IEnumerator AddAndWaitForObjective(string objName, string objDesc, int objType, string objTargetNameBase) {
+        //when they hit this trigger, make them wait until button press
+        AssignThisObjective(objName, objDesc, objType, objTargetNameBase);
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+    }
+
     IEnumerator TruckMovingSubRoutine()
     {
         while (true)
@@ -365,6 +503,27 @@ public class LevelScript : MonoBehaviour {
         color.a = 1;
         img.color = color;
     }
+
+    IEnumerator truckmovingRoutine;
+    IEnumerator MoveTruckAlongRail(string rail, bool lerpToStart = true, bool reverse = false) {
+        if (truckmovingRoutine != null)
+            StopCoroutine(truckmovingRoutine);
+
+        truckmovingRoutine = moveTruckAlongRail(rail, lerpToStart, reverse);
+        return truckmovingRoutine;
+    }
+
+    IEnumerator moveTruckAlongRail(string rail, bool lerpToStart = true, bool reverse = false) {
+        var r = GameObject.Find(rail);
+        if(r == null) {
+            Debug.LogError("Truck rail not found: " + rail);
+        }
+        if (reverse) {
+            yield return r.GetComponent<Rail>().MoveObjectAlongRailReverse(truck.transform, truckSpeed, lerpToStart);
+        } else {
+            yield return r.GetComponent<Rail>().MoveObjectAlongRail(truck.transform, truckSpeed, lerpToStart);
+        }
+    } 
 
     //TRUCK MOVERS
 

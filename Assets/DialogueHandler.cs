@@ -56,15 +56,14 @@ public class DialogueHandler : MonoBehaviour
         else
             print("This line doesn't exist");
 
-        if (dialogueClips.Length > 0)
+        if (dialogueClips.Length > 0 && dialogueClips[chosenLine] != null && dialogueStrings[chosenLine] != null)
         {
-            if (dialogueClips[chosenLine] != null && dialogueStrings[chosenLine] != null)
-            {
-                currentTimeTillTextOff = dialogueClips[chosenLine].length;
-            }
+             currentTimeTillTextOff = dialogueClips[chosenLine].length;
         }
         else if (dialogueClips[chosenLine] == null && dialogueStrings[chosenLine] != null)
-            currentTimeTillTextOff = dialogueStrings[chosenLine].Length * .2f;
+            currentTimeTillTextOff = (float)dialogueStrings[chosenLine].Length * .1f;
+
+        Debug.Log(currentTimeTillTextOff);
     }
 
     //Plays the audio clip
@@ -87,6 +86,7 @@ public class DialogueHandler : MonoBehaviour
     //Removes text
     void RemoveText()
     {
+        if(textDisplayBox.text !="") Debug.Log("BEGONE THOT");
         textDisplayBox.text = "";
         currentLineIndex = 0;
         currentLineString = "";

@@ -10,17 +10,74 @@ public class Rail : MonoBehaviour {
 
     private void Start()
     {
-        nodes = GetComponentsInChildren<Transform>();
+        nodes = new Transform[transform.childCount];
+        int i = 0;
+        foreach (Transform t in transform) {
+            nodes[i] = t;
+            i++;
+        }
     }
 
-   // private void OnDrawGizmos()
-   // {
-        //for (int i = 0; i < nodes.Length - 1; i++) {
-            //Handles.DrawDottedLine(nodes[i].position, nodes[i + 1].position, 3f);
-        //}
-    //}
+#if UNITY_EDITOR
+    void Update() {
+        Start();
+    }
+
+    private void OnDrawGizmos() {
+        for (int i = 0; i < nodes.Length - 1; i++) {
+            UnityEditor.Handles.DrawDottedLine(nodes[i].position, nodes[i + 1].position, 3f);
+        }
+    }
+#endif
+
+    public IEnumerator MoveObjectAlongRail(Transform obj, float speed, bool lerpToFirstNode = false) {
+        yield return MoveObjectAlongNodes(nodes, obj, speed, lerpToFirstNode);
+    }
+
+    public IEnumerator MoveObjectAlongRailReverse(Transform obj, float speed, bool lerpToFirstNode = false) {
+        var newNodes = new Transform[nodes.Length];
+        
+        // Reverse the nodes
+        for (int i = nodes.Length-1; i >= 0; i--) {
+            newNodes[(nodes.Length-1) - i] = nodes[i];
+        }
+
+        yield return MoveObjectAlongNodes(newNodes, obj, speed, lerpToFirstNode);
+    }
+
+    public static IEnumerator MoveObjectAlongNodes(Transform[] nodes,Transform obj, float speed, bool lerpToFirstNode = false) {
+        if (nodes.Length < 1) yield break;
+
+        int currentTargetSegment = 0;
+        if (!lerpToFirstNode) {
+            obj.transform.position = nodes[0].position;
+            currentTargetSegment = 1;
+        }
+
+        while (true) {
+
+            // TODO: Should the rotation be hardcoded like this?
+            var delta = nodes[currentTargetSegment].position - obj.position;
+            var angle = Vector2.SignedAngle(Vector2.right, new Vector2(delta.x, delta.z));
+            obj.eulerAngles = new Vector3(0, -angle, 0);
+
+            // Handle the movement
+            obj.transform.position = Vector3.MoveTowards(obj.transform.position, nodes[currentTargetSegment].position, Time.deltaTime * speed);
+            if (Vector3.Distance(nodes[currentTargetSegment].position, obj.position) < 0.01f) {
+                currentTargetSegment++;
+                if (currentTargetSegment >= nodes.Length) {
+                    yield break;
+                }
+            }
+
+            yield return null;
+        }
+    }
 
     public Vector3 LinearPosition(int segmentOn, float ratio) {
+        if (segmentOn >= nodes.Length - 1)
+            return nodes[nodes.Length - 1].position;
+
         Vector3 p1 = nodes[segmentOn].position;
         Vector3 p2 = nodes[segmentOn + 1].position;
 
@@ -104,11 +161,6 @@ public class Rail : MonoBehaviour {
                 return CatmullPosition(seg, ratio);
         }
     }
-
-    // Update is called once per frame
-    void Update () {
-		
-	}
 }
 
 public enum Playmode {

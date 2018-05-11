@@ -6,4 +6,5 @@ public class PickupArea : MonoBehaviour {
 
     public GameObject pickable;
     public GameObject pickablePlacementPlaceholder;
+    public bool canPickupFrom = true;
 }

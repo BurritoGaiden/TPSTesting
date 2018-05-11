@@ -48,8 +48,12 @@ public class PlayerCamera : MonoBehaviour {
     public static bool transitioning;
 
     public static Vector3 detachedPosition;
+    public static Quaternion detachedFixedRotation = Quaternion.identity;
 
     public LayerMask occlusionLayers = Physics.DefaultRaycastLayers;
+
+    public static string playingAnim;
+    Animator anim;
 
     void Awake() {
         if (lockCursor) {
@@ -64,6 +68,8 @@ public class PlayerCamera : MonoBehaviour {
         LevelScript.ResetCamPositionOnRig += ResetCameraOnRig;
         LevelScript.EnableDirectorFocus += EnDirFocus;
         LevelScript.DisableDirectorFocus += DisDirFocus;
+
+        anim = GetComponent<Animator>();
     }
 
     void EnDirFocus() {
@@ -106,6 +112,11 @@ public class PlayerCamera : MonoBehaviour {
                 CameraOffset();
                 if (PlayerController.thisMoveState != MoveState.STATE_COVER) cameraState = camStates.STATE_PLAYERORBIT;
                 break;
+            case camStates.STATE_PUSHING:
+                OrbitingBehavior();
+                CameraOffset();
+                if (PlayerController.thisMoveState != MoveState.STATE_PUSHING) cameraState = camStates.STATE_PLAYERORBIT;
+                break;
             case camStates.STATE_POIFOCUS:
                 FocusBehavior();
                 CameraOffset();
@@ -117,12 +128,41 @@ public class PlayerCamera : MonoBehaviour {
                 break;
 
             case camStates.STATE_DETACHED:
-                FocusBehavior();
-                transform.position = detachedPosition;
+                var savedPos = transform.position;
+                if (Quaternion.identity == detachedFixedRotation) {
+                    FocusBehavior();
+                } else {
+                    transform.rotation = Quaternion.Lerp(transform.rotation, detachedFixedRotation, Time.deltaTime * 5);
+                }
+
+                Debug.Log("Detached boi");
+                transform.position = Vector3.MoveTowards(savedPos, detachedPosition, Time.deltaTime * 15);
+
+                break;
+            case camStates.STATE_PLAYINGANIM:
+                //transform.position = target.position;
+                //transform.rotation = Quaternion.identity;
+                CameraOffset();
+
+                if (!anim.GetCurrentAnimatorStateInfo(0).IsName(playingAnim)) {
+                    cameraState = camStates.STATE_PLAYERORBIT;
+                } else {
+                    yaw = transform.rotation.eulerAngles.y;
+                    pitch = transform.rotation.eulerAngles.x;
+                    currentRotation = new Vector3(pitch, yaw);
+                    Debug.Log(yaw);
+                }
 
                 break;
         }
 	}
+
+    public static void PlayAnim(string a) {
+        var camAnim = Camera.main.transform.parent.GetComponent<Animator>();
+        camAnim.Play(a, 0);
+        cameraState = camStates.STATE_PLAYINGANIM;
+        playingAnim = a;
+    }
 
     void OrbitingBehavior()
     {
@@ -150,7 +190,7 @@ public class PlayerCamera : MonoBehaviour {
         }
         else
         {
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, Time.deltaTime * 5);
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, Time.deltaTime * 10);
         }
     }
 
@@ -214,6 +254,12 @@ public class PlayerCamera : MonoBehaviour {
     void CameraOffset() {
         //Adding Camera offset
         
+        // If an animation is being played, then we wanna stay at origin
+        if (cameraState == camStates.STATE_PLAYINGANIM) {
+            cam.transform.localPosition = Vector3.MoveTowards(cam.transform.localPosition, Vector3.zero, Time.deltaTime * 10);
+            return;
+        }
+
         if (Killing.aiming) {
             forwardOffset = 1f;
             horizontalOffset = .64f;
@@ -233,6 +279,12 @@ public class PlayerCamera : MonoBehaviour {
             forwardOffset = .66f;
             horizontalOffset = 0f;
         }
+        if (PlayerController.thisMoveState == MoveState.STATE_PUSHING) {
+            verticalOffset = 0;
+            forwardOffset = .66f;
+            horizontalOffset = -1f;
+        }
+
         Vector3 camOffset = new Vector3(horizontalOffset, verticalOffset, forwardOffset);
 
         float distToKeepFromWall = 0.35f;
@@ -306,8 +358,10 @@ public enum camStates
     STATE_POIFOCUS,
     STATE_NULL,
     STATE_COVER,
+    STATE_PUSHING,
     STATE_COVERAIM,
     STATE_PLAYERAIM,
     STATE_RAIL,
     STATE_DETACHED,
+    STATE_PLAYINGANIM,
 };

@@ -27,6 +27,8 @@ public class Objective{
         //For every target in scene, check if their name base matches this objective's
         for (int i = 0; i < targetArray.Length; i++) {
             //Get first characters of name string equal to length of targetnamebase and check against
+            if (targetArray[i].name.Length < targetNameBase.Length) continue;
+
             string currentNameBase = targetArray[i].name.Substring(0, targetNameBase.Length);
             if (currentNameBase == targetNameBase)
             {
