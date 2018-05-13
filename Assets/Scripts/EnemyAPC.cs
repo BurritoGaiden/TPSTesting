@@ -15,12 +15,14 @@ public class EnemyAPC : MonoBehaviour {
     public delegate void DamageDelegate();
     public static event DamageDelegate HitPlayer;
 
+    public float playerSight;
     public Rigidbody tracer;
     public float tracerSpeed;
     public GameObject impactEffect;
     public GameObject bulletTrail;
     public LineRenderer lr;
 
+    public APCState thisAPCState = APCState.STATE_SEARCHING;
 
     bool reloading;
 
@@ -50,34 +52,75 @@ public class EnemyAPC : MonoBehaviour {
         var targetPos = new Vector3(player.transform.position.x, player.transform.position.y + 1f, player.transform.position.z);
 
         // When were in certain states, target a little lower
-        if (PlayerController.thisMoveState == MoveState.STATE_COVER || 
-            PlayerController.thisMoveState == MoveState.STATE_CROUCH || 
-            PlayerController.thisMoveState == MoveState.STATE_COVERAIM) {
+        if (PlayerController.thisMoveState == MoveState.STATE_COVER ||
+            PlayerController.thisMoveState == MoveState.STATE_CROUCH ||
+            PlayerController.thisMoveState == MoveState.STATE_COVERAIM)
+        {
 
             targetPos.y -= 0.5f;
         }
 
         Debug.DrawLine(turret.transform.position, targetPos);
 
-        if (fireCooldownTimer <= 0 && ammo > 0)
-            Shoot(targetPos);
+        switch (thisAPCState) {
+            case APCState.STATE_SEARCHING:
+                // Check what we hit
+                RaycastHit playerCheck;
+
+                var hitPoint = Vector3.zero;
+                if (Physics.Linecast(turret.transform.position, targetPos, out playerCheck, Physics.AllLayers, QueryTriggerInteraction.Ignore))
+                {
+                    if (playerCheck.transform.tag == "Player")
+                    {
+                        if (playerSight < 3)
+                        {
+                            playerSight += Time.deltaTime;
+                        }
+                    }
+                    else
+                    {
+                        if (playerSight > 0)
+                        {
+                            playerSight -= Time.deltaTime;
+                        }
+                    }
+                }
+                if (playerSight > 2) {
+                    thisAPCState = APCState.STATE_SPOTTED;
+                }
+                break;
+            case APCState.STATE_SPOTTED:
+                if (fireCooldownTimer <= 0 && ammo > 0)
+                    Shoot(targetPos);
+
+                if (ammo <= 0 && !reloading)
+                {
+                    Invoke("GiveAmmo", 5);
+                    reloading = true;
+                    fireCooldownTimer = 5;
+                }
+
+                break;
+            case APCState.STATE_CHASING:
+
+                break;
+        }
+
+       
+
         
         if (fireCooldownTimer > 0) {
             fireCooldownTimer -= Time.deltaTime;
         }
 
-        if (ammo <= 0 && !reloading) {
-            Invoke("GiveAmmo", 5);
-            reloading = true;
-            fireCooldownTimer = 5;
-        }
+        
     }
 
     void Shoot(Vector3 targetPos) {
 
         ammo--;
 
-        fireCooldownTimer = Random.Range(.3f, .5f);
+        fireCooldownTimer = Random.Range(.1f, .2f);
         GetComponent<AudioSource>().PlayOneShot(truckSFX[0], .02f);
 
         // Check what we hit
@@ -112,6 +155,13 @@ public class EnemyAPC : MonoBehaviour {
 
     void GiveAmmo() {
         reloading = false;
+        print("Gave Ammo");
         ammo = 15;
     }
+}
+
+public enum APCState {
+    STATE_SEARCHING,
+    STATE_SPOTTED,
+    STATE_CHASING
 }

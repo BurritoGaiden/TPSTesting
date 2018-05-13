@@ -142,7 +142,7 @@ public class PlayerController : MonoBehaviour {
                     else if(!pushableCollidingWith)
                         pushableText.enabled = false;
 
-                    //if there is a pushable
+                    //if there is cover
                     if (coverCollidingWith)
                     {
                         // Get the closest point on the bounds of the cover collider  

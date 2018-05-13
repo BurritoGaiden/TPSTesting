@@ -99,33 +99,25 @@ public class LevelScript : MonoBehaviour {
     //Script for the level
     IEnumerator TruckLevelCoroutine()
     {
-        //Start of level
+        //Set all relevant objects to their desired state at the beginning of the game
         truck.SetActive(false);
         levelSnapshots[0].TransitionTo(0f);
-        //DisableCharacterInput();
         EnableCharacterInput();
         EnableCameraInput();
 
+        ///Intro Sequence - PC moves automatically, being tracked by the cam and transitioning to gameplay camera
+        //Set up the camera for the sequence
         PlayerCamera.cameraState = camStates.STATE_DETACHED;
         PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
         PlayerCamera.detachedPosition = GameObject.Find("cam_detached_intro").transform.position;
         PlayerCamera.detachedFixedRotation = GameObject.Find("cam_detached_intro").transform.rotation;
         PlayerCamera.setRotationInstantlyNextFrame = true;
 
+        //Tell the Player to move 
         yield return MovePlayer("movement_target_intro");
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
         ResetCamPositionOnRig();
         yield return MovePlayer("movement_target_intro2");
-
-        //Play sequence where PC falls down and transitions into gameplay camera
-
-        /*
-        //Current Wake up sequence
-        //Joel is waking up
-        //PlayThisDialogue(0);
-        //yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
-        */    
-
 
         //When they hit this trigger, spawn in the car
         //yield return AddAndWaitForObjective("Hit this trigger to spawn the truck", "", 3, "DropTrig1");
@@ -133,28 +125,27 @@ public class LevelScript : MonoBehaviour {
         //when they hit this trigger, make them wait until button press
         yield return AddAndWaitForObjective("Hit this trigger to prompt getting into cover", "", 3, "DropTrig2");
         
-
-        //Make car show up, then wait for some time
+        //Make car show up, 
         truck.SetActive(true);
         StartCoroutine(MoveTruckAlongRail("truck_rail_1_start"));
 
+        //Button Prompt Text
         PlayThisDialogue(13);
 
-        // Pause until keypress
+        //Pause until keypress
         Time.timeScale = 0;
 
         while (true) {
-            if (Input.GetKeyDown(KeyCode.Q)) {
-                break;
-            }
+            if (Input.GetKeyDown(KeyCode.Q)) break;
             yield return null;
         }
 
+        //Resume Gameplay and Move the Player Character to the target
         Time.timeScale = 1;
         yield return null; // shit breaks if i dont have this here, probs related to grounding or something, dont have time to debug
         yield return MovePlayer("drop_movement_target_1");
 
-        // Etner cover
+        // Enter cover
         var player = FindObjectOfType<PlayerController>();
         player.currentCover = coverDropzone1;
         player.coverCooldown = 1.2f;
@@ -457,7 +448,6 @@ public class LevelScript : MonoBehaviour {
     }
 
     IEnumerator AddAndWaitForObjective(string objName, string objDesc, int objType, string objTargetNameBase) {
-        //when they hit this trigger, make them wait until button press
         AssignThisObjective(objName, objDesc, objType, objTargetNameBase);
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }

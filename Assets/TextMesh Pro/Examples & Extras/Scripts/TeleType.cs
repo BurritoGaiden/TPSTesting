@@ -7,14 +7,18 @@ namespace TMPro.Examples
     
     public class TeleType : MonoBehaviour
     {
-
+        public Vector3 newPosition = new Vector3(1,1,1);
+        public float lerpyImage;
+        public float duration;
 
         //[Range(0, 100)]
         //public int RevealSpeed = 50;
 
         private string label01 = "Example <sprite=2> of using <sprite=7> <#ffa000>Graphics Inline</color> <sprite=5> with Text in <font=\"Bangers SDF\" material=\"Bangers SDF - Drop Shadow\">TextMesh<#40a0ff>Pro</color></font><sprite=0> and Unity<sprite=1>";
         private string label02 = "Example <sprite=2> of using <sprite=7> <#ffa000>Graphics Inline</color> <sprite=5> with Text in <font=\"Bangers SDF\" material=\"Bangers SDF - Drop Shadow\">TextMesh<#40a0ff>Pro</color></font><sprite=0> and Unity<sprite=2>";
-
+        private string label023 = "Press ";
+        private string label03 = "<sprite=2>";
+        private string label0234 = " to get into Cover";
 
         private TMP_Text m_textMeshPro;
 
@@ -23,11 +27,11 @@ namespace TMPro.Examples
         {
             // Get Reference to TextMeshPro Component
             m_textMeshPro = GetComponent<TMP_Text>();
-            m_textMeshPro.text = label01;
+            m_textMeshPro.text = label023 + label03 + label0234;
             m_textMeshPro.enableWordWrapping = true;
             m_textMeshPro.alignment = TextAlignmentOptions.Top;
 
-
+            newPosition = GetComponent<RectTransform>().localScale;
 
             //if (GetComponentInParent(typeof(Canvas)) as Canvas == null)
             //{
@@ -43,7 +47,24 @@ namespace TMPro.Examples
 
         }
 
+        void Update() {
+            PositionUpdate();            
+        }
 
+        void PositionUpdate() {
+            Vector3 posB = new Vector3(2, 2, 2);
+            Vector3 posA = new Vector3(1, 1, 1);
+
+            if(newPosition.x <= 1.1f)
+                newPosition = posB;
+            if (newPosition.x >= 1.9f)
+                newPosition = posA;
+
+            GetComponent<RectTransform>().localScale = Vector3.Lerp(GetComponent<RectTransform>().localScale, newPosition, Time.deltaTime);
+        }
+
+
+        /*
         IEnumerator Start()
         {
 
@@ -78,6 +99,7 @@ namespace TMPro.Examples
 
             //Debug.Log("Done revealing the text.");
         }
+        */
 
     }
 }
