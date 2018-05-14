@@ -77,6 +77,7 @@ public class LevelScript : MonoBehaviour {
     public GameObject coverDropzone1;
     public GameObject secretBlockingPushable;
     public GameObject overHeadPuzzleViewCamPos;
+    public GameObject introCameraTarget;
 
     //Game-state Machine
     public static GamePlayState thisGameplayState = GamePlayState.Regular;
@@ -119,6 +120,11 @@ public class LevelScript : MonoBehaviour {
         PlayerCamera.detachedFixedRotation = GameObject.Find("cam_detached_intro").transform.rotation;
         PlayerCamera.setRotationInstantlyNextFrame = true;
 
+        //Tell the Player to move 
+        PlayerCamera.transitionSpeed = 6f;
+        yield return MovePlayer("movement_target_intro");
+
+
         print("waiting");
         AssignThisObjective("Hit this trigger", "", 3, "roomTrig1");
         waitTillObjectiveDone = true;
@@ -126,7 +132,7 @@ public class LevelScript : MonoBehaviour {
         //Make it so that this is lerping to the position it'd have during regular player orbit
 
         PlayerCamera.cameraState = camStates.STATE_LERPDIRFOCUS;
-        PlayerCamera.camTar = truck.transform;
+        PlayerCamera.camTar = introCameraTarget.transform;
 
         print("done waiting");
 
@@ -155,13 +161,15 @@ public class LevelScript : MonoBehaviour {
         PlayerCamera.setRotationInstantlyNextFrame = true;
 
         //Tell the Player to move 
-        yield return MovePlayer("movement_target_intro");
+        yield return MovePlayerWait("movement_target_intro");
         //PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
         //ResetCamPositionOnRig();
         //yield return MovePlayer("movement_target_intro2");
 
         //When they hit this trigger, spawn in the car
         //yield return AddAndWaitForObjective("Hit this trigger to spawn the truck", "", 3, "DropTrig1");
+
+
 
         //when they hit this trigger, make them wait until button press
         yield return AddAndWaitForObjective("Hit this trigger to prompt getting into cover", "", 3, "DropTrig2");
@@ -184,7 +192,7 @@ public class LevelScript : MonoBehaviour {
         //Resume Gameplay and Move the Player Character to the target
         Time.timeScale = 1;
         yield return null; // shit breaks if i dont have this here, probs related to grounding or something, dont have time to debug
-        yield return MovePlayer("drop_movement_target_1");
+        yield return MovePlayerWait("drop_movement_target_1");
 
         // Enter cover
         var player = FindObjectOfType<PlayerController>();
@@ -254,7 +262,7 @@ public class LevelScript : MonoBehaviour {
         Time.timeScale = 1;
         yield return null; // shit breaks if i dont have this here, probs related to grounding or something, dont have time to debug
 
-        yield return MovePlayer("movement_target_to_secret_pushable");
+        yield return MovePlayerWait("movement_target_to_secret_pushable");
 
         // Set the player state to pushing
         player.coverCooldown = 1.2f;
@@ -449,7 +457,16 @@ public class LevelScript : MonoBehaviour {
         print("ey");
     }
 
-    IEnumerator MovePlayer(string targetPosHelper) {
+    IEnumerator MovePlayer(string targetPosHelper)
+    {
+        var helper = GameObject.Find(targetPosHelper);
+
+        PlayerController.thisMoveState = MoveState.STATE_SCRIPTEDMOVEMENT;
+        PlayerController.scriptedMovementTarget = helper.transform.position;
+        yield return new WaitForSeconds(.1f);
+    }
+
+    IEnumerator MovePlayerWait(string targetPosHelper) {
         var helper = GameObject.Find(targetPosHelper);
 
         PlayerController.thisMoveState = MoveState.STATE_SCRIPTEDMOVEMENT;

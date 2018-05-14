@@ -55,7 +55,7 @@ public class PlayerCamera : MonoBehaviour {
     Animator anim;
 
     public Transform desiredView;
-    public float transitionSpeed;
+    public static float transitionSpeed;
     public static Transform currentView;
     public bool lerpToPos;
 
@@ -88,11 +88,9 @@ public class PlayerCamera : MonoBehaviour {
                 UpdatePosition();
                 CameraOffset();
                 //-----With this enabled
-                //transform.position = target.position - transform.forward * dstFromTarget + CamOffset();
-
+                //cam.transform.position = target.position - transform.forward * dstFromTarget + CamOffset();
 
                 //State Transitions
-
                 if (!camInput) cameraState = camStates.STATE_NULL;
                 else if (PlayerController.thisMoveState == MoveState.STATE_COVER) cameraState = camStates.STATE_COVER;
                 else if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
@@ -160,7 +158,7 @@ public class PlayerCamera : MonoBehaviour {
 
                 //Lerping to a position and rotation
                 transform.position = Vector3.Lerp(transform.position, target.position - transform.forward * dstFromTarget, Time.deltaTime * transitionSpeed);
-                cam.transform.localPosition = CamOffset();
+                cam.transform.localPosition = Vector3.Lerp(cam.transform.localPosition, CamOffset(), Time.deltaTime * transitionSpeed);
 
                 //Turn the rotation we got from the rot/pos establishment and set it in the current angle
                 Vector3 currentAngle = new Vector3(
@@ -323,7 +321,7 @@ public class PlayerCamera : MonoBehaviour {
             horizontalOffset = .64f;
             verticalOffset = 0f;
         }
-        if (PlayerController.thisMoveState == MoveState.STATE_REGULAR)
+        if (PlayerController.thisMoveState == MoveState.STATE_REGULAR || PlayerController.thisMoveState == MoveState.STATE_SCRIPTEDMOVEMENT)
         {
             //forwardOffset -= PlayerController.currentSpeed / 3;
             forwardOffset = .66f;

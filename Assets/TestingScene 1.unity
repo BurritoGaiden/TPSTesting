@@ -200,7 +200,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967035
   desiredView: {fileID: 0}
-  transitionSpeed: 3
   lerpToPos: 0
 --- !u!1 &300435012
 GameObject:
@@ -309,7 +308,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1090384223}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.0510683, y: 1.9074095, z: -17.012989}
+  m_LocalPosition: {x: 6.52, y: 0.78, z: -4.68}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1144343937}
@@ -343,6 +342,7 @@ Transform:
   - {fileID: 1421689009}
   - {fileID: 2073369773}
   - {fileID: 1090384224}
+  - {fileID: 1989441545}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -363,7 +363,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400004, guid: c7daf2b758a472c4abcf56a9af058d30, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -4.25
+      value: -5.28
       objectReference: {fileID: 0}
     - target: {fileID: 400004, guid: c7daf2b758a472c4abcf56a9af058d30, type: 3}
       propertyPath: m_LocalRotation.x
@@ -1013,7 +1013,7 @@ GameObject:
   - component: {fileID: 1421689011}
   - component: {fileID: 1421689010}
   m_Layer: 0
-  m_Name: Truck
+  m_Name: Intro_Camera_Target
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1025,9 +1025,9 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1421689008}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.56, y: 0.90740955, z: 4.03}
-  m_LocalScale: {x: 1.3448683, y: 1.344868, z: 1.344868}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1.85, y: 0.65740955, z: 9.1}
+  m_LocalScale: {x: 1.3448682, y: 1.344868, z: 1.344868}
   m_Children: []
   m_Father: {fileID: 1144343937}
   m_RootOrder: 0
@@ -1095,7 +1095,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 4349244567594856, guid: be452bbca6e773248b5e3e694cf811b2, type: 2}
       propertyPath: m_LocalPosition.x
-      value: 3.051068
+      value: 1.85
       objectReference: {fileID: 0}
     - target: {fileID: 4349244567594856, guid: be452bbca6e773248b5e3e694cf811b2, type: 2}
       propertyPath: m_LocalPosition.y
@@ -1103,7 +1103,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4349244567594856, guid: be452bbca6e773248b5e3e694cf811b2, type: 2}
       propertyPath: m_LocalPosition.z
-      value: -1.5129888
+      value: 0.48
       objectReference: {fileID: 0}
     - target: {fileID: 4349244567594856, guid: be452bbca6e773248b5e3e694cf811b2, type: 2}
       propertyPath: m_LocalRotation.x
@@ -1230,6 +1230,11 @@ Prefab:
       propertyPath: truck
       value: 
       objectReference: {fileID: 1421689008}
+    - target: {fileID: 114601690962391920, guid: 510aa97a307095f4c94c59e08dae2303,
+        type: 2}
+      propertyPath: introCameraTarget
+      value: 
+      objectReference: {fileID: 1421689008}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 510aa97a307095f4c94c59e08dae2303, type: 2}
   m_IsPrefabParent: 0
@@ -1313,6 +1318,34 @@ Transform:
   m_Children: []
   m_Father: {fileID: 48938318}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1989441544
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1989441545}
+  m_Layer: 0
+  m_Name: movement_target_intro
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1989441545
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1989441544}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1.6, y: 0.78, z: 3.61}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1144343937}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2020828166 stripped
 GameObject:
