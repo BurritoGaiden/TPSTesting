@@ -17,7 +17,7 @@ public class Walking : MonoBehaviour {
     public delegate void WalkDelegate(GameObject walkable);
     public static event WalkDelegate WalkThis;
 
-    void Start() {
+    void Awake() {
         ObjectiveHandler.targetName += UpdateLookingFor;
     }
 
@@ -28,6 +28,23 @@ public class Walking : MonoBehaviour {
 
     //Check for the collision. Send a delegate out for the collided object, make sure to use OnControllerColliderHit if using CharacterController
     void OnControllerColliderHit(ControllerColliderHit col)
+    {
+        //We can assume that objects that are targets will have names long enough than the shortest target name base
+        if (col.gameObject.tag == "Target")
+        {
+            string stringToCheckAgainst = col.gameObject.name;
+
+            stringToCheckAgainst = stringToCheckAgainst.Substring(0, lookingFor.Length);
+
+            if (stringToCheckAgainst == lookingFor)
+            {
+                WalkThis(col.gameObject);
+            }
+        }
+    }
+
+    //Check for the collision. Send a delegate out for the collided object, make sure to use OnControllerColliderHit if using CharacterController
+    void OnTriggerEnter(Collider col)
     {
         //We can assume that objects that are targets will have names long enough than the shortest target name base
         if (col.gameObject.tag == "Target")

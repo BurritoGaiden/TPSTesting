@@ -50,6 +50,7 @@ public class DialogueHandler : MonoBehaviour
         }
         if (dialogueStrings[chosenLine] != null)
         {
+
             DisplayText(chosenLine);
             
         }
@@ -86,8 +87,11 @@ public class DialogueHandler : MonoBehaviour
     //Removes text
     void RemoveText()
     {
-        if(textDisplayBox.text !="") Debug.Log("BEGONE THOT");
-        textDisplayBox.text = "";
+        if (textDisplayBox)
+        {
+            if (textDisplayBox.text != "") Debug.Log("BEGONE THOT");
+            textDisplayBox.text = "";
+        }
         currentLineIndex = 0;
         currentLineString = "";
         audioSource.Stop();

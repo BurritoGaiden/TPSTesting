@@ -49,7 +49,9 @@ public class ObjectiveHandler : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+        if(objectiveTextBox)
         PresentObjective();
+        if(objectiveTextBox)
         VisuallyTrackObjectives();
     }
 
@@ -57,18 +59,18 @@ public class ObjectiveHandler : MonoBehaviour {
         CheckIfObjectiveComplete();
     }
 
-
     void CheckIfObjectiveComplete() {
-        if (objectivesList.Count != 0)
+        if (objectivesList.Count != 0) //If there is an objective present
         {
-            if (objectivesList[0].targetList.Count == 0)
+            if (objectivesList[0].targetList.Count == 0) //If that objective's targets are all achieved
             {
-                objectivesList.Remove(objectivesList[0]);
+                objectivesList.Remove(objectivesList[0]); //Remove the objective and tell the objective handler
                 ObjDone();
             }
         }
     }
 
+    #region Visual representation for objectives in world
     //Current objective text in the UI
     void PresentObjective() {
         if (objectivesList.Count != 0)
@@ -137,6 +139,7 @@ public class ObjectiveHandler : MonoBehaviour {
             }
         }
     }
+    #endregion
 
     //Update progress on an objective
     void ObjectiveProgressUpdate(GameObject refGameObject) {

@@ -47,6 +47,7 @@ public class LevelScript : MonoBehaviour {
     public static bool pauseScript = true;
     //Waiting until the current objective is complete
     public static bool waitTillObjectiveDone;
+    public LevelRoutine thisLevelRoutine;
     #endregion 
 
     //Camera Data
@@ -63,6 +64,7 @@ public class LevelScript : MonoBehaviour {
     //Level Objects + Data
     [Header("Level Objects")]
     public GameObject player;
+    public GameObject camera;
 
     public GameObject truck;
     public Transform[] truckPositions;
@@ -89,11 +91,48 @@ public class LevelScript : MonoBehaviour {
        
 	void Start () {
         if (runScript == true)
-            StartCoroutine(TruckLevelCoroutine());
+            switch (thisLevelRoutine) {
+                case LevelRoutine.CameraTesting:
+                    StartCoroutine(CameraLevelRoutine());
+                    break;
+                case LevelRoutine.Truck:
+                    StartCoroutine(TruckLevelCoroutine());
+                    break;
+            }
 	}
 
     void ObjectiveDoneListener() {
         waitTillObjectiveDone = false;
+    }
+
+    //Script for the level
+    IEnumerator CameraLevelRoutine() {
+        //Starting off with regular player and camera control
+        PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
+        ResetCamPositionOnRig();
+        EnableCameraInput();
+        EnableCharacterInput();
+
+        PlayerCamera.cameraState = camStates.STATE_DETACHED;
+        PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
+        PlayerCamera.detachedPosition = GameObject.Find("cam_detached_intro").transform.position;
+        PlayerCamera.detachedFixedRotation = GameObject.Find("cam_detached_intro").transform.rotation;
+        PlayerCamera.setRotationInstantlyNextFrame = true;
+
+        print("waiting");
+        AssignThisObjective("Hit this trigger", "", 3, "roomTrig1");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+        //Make it so that this is lerping to the position it'd have during regular player orbit
+        PlayerCamera.currentView = player.transform;
+        PlayerCamera.cameraState = camStates.STATE_LERPING;
+        //Make it so that the camera is facing the character's forward direction
+
+        print("done waiting");
+
+        print("hey");
+        yield return new WaitForSeconds(3f);
+        print("done");
     }
 
     //Script for the level
@@ -115,9 +154,9 @@ public class LevelScript : MonoBehaviour {
 
         //Tell the Player to move 
         yield return MovePlayer("movement_target_intro");
-        PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
-        ResetCamPositionOnRig();
-        yield return MovePlayer("movement_target_intro2");
+        //PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
+        //ResetCamPositionOnRig();
+        //yield return MovePlayer("movement_target_intro2");
 
         //When they hit this trigger, spawn in the car
         //yield return AddAndWaitForObjective("Hit this trigger to spawn the truck", "", 3, "DropTrig1");
@@ -449,6 +488,7 @@ public class LevelScript : MonoBehaviour {
 
     IEnumerator AddAndWaitForObjective(string objName, string objDesc, int objType, string objTargetNameBase) {
         AssignThisObjective(objName, objDesc, objType, objTargetNameBase);
+        print("Assigned" + objName);
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
     }
@@ -555,4 +595,9 @@ public enum GamePlayState {
     Regular,
     Combat,
     Finale
+}
+
+public enum LevelRoutine {
+    Truck,
+    CameraTesting
 }

@@ -68,24 +68,16 @@ public class PlayerController : MonoBehaviour {
         controller = GetComponent<CharacterController>();
         controller.height = colHeight;
         colBoundsHeight = controller.bounds.extents.y;
-
+        
         LevelScript.DisableCharacterInput += DisableInput;
         LevelScript.EnableCharacterInput += EnableInput;
         EnemyAPC.HitPlayer += TakeDamage;
-
-        healthMeter.fillAmount = health / 100;
+        
+        //if(healthMeter)
+        //healthMeter.fillAmount = health / 100;
 	}
 
-    void TakeDamage() {
-        if (health > 0) 
-        health -= 8f;
-        healthMeter.fillAmount = health / 100;
-        print("Health is now: " + health);
-        
-        if (health <= 0) {
-            print("you died");
-        }
-    }
+    
 
     // Update is called once per frame
     void Update()
@@ -123,6 +115,7 @@ public class PlayerController : MonoBehaviour {
                         thisMoveState = MoveState.STATE_REGULAR;
 
                     break;
+
                 case MoveState.STATE_REGULAR:
                     Move(inputDir, runInput, crouchInput, jumpInput);
                     UpdateCrouch(crouchInput);
@@ -134,13 +127,13 @@ public class PlayerController : MonoBehaviour {
                         // The position on the players legs
                         var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
                         var PushPoint = pushableCollidingWith.GetComponent<Collider>().ClosestPoint(playerPos);
-                        pushableText.enabled = true;
-                        pushableText.text = "Press Q to Begin Push";
-                        pushableText.rectTransform.position = new Vector3(PushPoint.x, PushPoint.y + 1f, PushPoint.z);
-                        pushableText.transform.LookAt(pushableText.transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
+                       // pushableText.enabled = true;
+                       // pushableText.text = "Press Q to Begin Push";
+                       // pushableText.rectTransform.position = new Vector3(PushPoint.x, PushPoint.y + 1f, PushPoint.z);
+                       // pushableText.transform.LookAt(pushableText.transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
                     }
                     else if(!pushableCollidingWith)
-                        pushableText.enabled = false;
+                       // pushableText.enabled = false;
 
                     //if there is cover
                     if (coverCollidingWith)
@@ -149,13 +142,13 @@ public class PlayerController : MonoBehaviour {
                         // The position on the players legs
                         var playerPos = transform.position + new Vector3(0, controller.height / 2, 0);
                         var CoverPoint = coverCollidingWith.GetComponent<Collider>().ClosestPoint(playerPos);
-                        coverText.enabled = true;
-                        coverText.text = "Press Q to Enter Cover";
-                        coverText.rectTransform.position = new Vector3(CoverPoint.x, CoverPoint.y + 1f, CoverPoint.z);
-                        coverText.transform.LookAt(coverText.transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
+                       // coverText.enabled = true;
+                       // coverText.text = "Press Q to Enter Cover";
+                       // coverText.rectTransform.position = new Vector3(CoverPoint.x, CoverPoint.y + 1f, CoverPoint.z);
+                      //  coverText.transform.LookAt(coverText.transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
                     }
                     else if(!coverCollidingWith)
-                        coverText.enabled = false;
+                      //  coverText.enabled = false;
 
 
                     if (Interesting.looking) {
@@ -200,8 +193,8 @@ public class PlayerController : MonoBehaviour {
 
                     UpdateCrouch(!IsObjectTallerThanPlayer(currentCover));
 
-                    pushableText.enabled = false;
-                    coverText.enabled = false;
+                   // pushableText.enabled = false;
+                   // coverText.enabled = false;
 
                     if (Killing.aiming) {
                         thisMoveState = MoveState.STATE_COVERAIM;
@@ -238,12 +231,10 @@ public class PlayerController : MonoBehaviour {
                     if (!Killing.aiming) thisMoveState = MoveState.STATE_REGULAR;
                     break;
 
-                //MAKE SURE PUSHING STATE WORKS
-                //MAKE SURE PUSHING STATE CAN BE EXITED
                 case MoveState.STATE_PUSHING:
                     ObjectMove(inputDir, currentPush);
-                    pushableText.enabled = false;
-                    coverText.enabled = false;
+                   // pushableText.enabled = false;
+                   // coverText.enabled = false;
 
                     if (coverInput && coverCooldown <= 0)
                     {
@@ -348,7 +339,7 @@ public class PlayerController : MonoBehaviour {
             var smoothDamp = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref turnSmoothVelocity, GetModifiedSmoothTime(turnSmoothTime));
             var newRot = Vector3.up * smoothDamp;
 
-            Debug.Log(newRot + " : " + smoothDamp + " : " + GetModifiedSmoothTime(turnSmoothTime) + " : " + transform.eulerAngles.y + " : " + targetRotation + " : " + inputDir + " : " + turnSmoothVelocity);
+            //Debug.Log(newRot + " : " + smoothDamp + " : " + GetModifiedSmoothTime(turnSmoothTime) + " : " + transform.eulerAngles.y + " : " + targetRotation + " : " + inputDir + " : " + turnSmoothVelocity);
             transform.eulerAngles = newRot;
         }
 
@@ -589,6 +580,19 @@ public class PlayerController : MonoBehaviour {
 
     void DisableInput() {
         takeInput = false;
+    }
+
+    void TakeDamage()
+    {
+        if (health > 0)
+            health -= 8f;
+        healthMeter.fillAmount = health / 100;
+        print("Health is now: " + health);
+
+        if (health <= 0)
+        {
+            print("you died");
+        }
     }
 }
 

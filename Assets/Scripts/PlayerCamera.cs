@@ -25,7 +25,6 @@ public class PlayerCamera : MonoBehaviour {
     public Vector2 testYP;
     public static Transform camTar;
 
-
     public static camStates cameraState = camStates.STATE_NULL;
 
     //Sample received delegate string
@@ -55,6 +54,10 @@ public class PlayerCamera : MonoBehaviour {
     public static string playingAnim;
     Animator anim;
 
+    public Transform desiredView;
+    public float transitionSpeed;
+    public static Transform currentView;
+
     void Awake() {
         if (lockCursor) {
             Cursor.lockState = CursorLockMode.Locked;
@@ -70,15 +73,7 @@ public class PlayerCamera : MonoBehaviour {
         LevelScript.DisableDirectorFocus += DisDirFocus;
 
         anim = GetComponent<Animator>();
-    }
-
-    void EnDirFocus() {
-        cameraState = camStates.STATE_DIRFOCUS;
-    }
-
-    void DisDirFocus() {
-        cameraState = camStates.STATE_PLAYERORBIT;
-    }
+    }    
    
 	void LateUpdate () {
 
@@ -127,6 +122,17 @@ public class PlayerCamera : MonoBehaviour {
                 if (camInput) cameraState = camStates.STATE_PLAYERORBIT;
                 break;
 
+            case camStates.STATE_LERPING:
+                transform.position = Vector3.Lerp(transform.position, currentView.position, Time.deltaTime * transitionSpeed);
+
+                Vector3 currentAngle = new Vector3(
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.x, currentView.transform.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.y, currentView.transform.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.z, currentView.transform.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
+
+               transform.eulerAngles = currentAngle;
+                break;
+
             case camStates.STATE_DETACHED:
                 var savedPos = transform.position;
                 if (Quaternion.identity == detachedFixedRotation) {
@@ -152,17 +158,9 @@ public class PlayerCamera : MonoBehaviour {
                     currentRotation = new Vector3(pitch, yaw);
                     Debug.Log(yaw);
                 }
-
                 break;
         }
-	}
-
-    public static void PlayAnim(string a) {
-        var camAnim = Camera.main.transform.parent.GetComponent<Animator>();
-        camAnim.Play(a, 0);
-        cameraState = camStates.STATE_PLAYINGANIM;
-        playingAnim = a;
-    }
+	}   
 
     void OrbitingBehavior()
     {
@@ -250,7 +248,6 @@ public class PlayerCamera : MonoBehaviour {
         return angle;
     }
 
-
     void CameraOffset() {
         //Adding Camera offset
         
@@ -331,6 +328,9 @@ public class PlayerCamera : MonoBehaviour {
         return DST;
     }
 
+
+
+    #region Level Script Delegates
     void SetCameraTransform(Vector3 position, Vector3 rotation)
     {
         Camera.main.transform.localPosition = position;
@@ -345,10 +345,32 @@ public class PlayerCamera : MonoBehaviour {
         camInput = false;
     }
 
-    void ResetCameraOnRig() {
+    void ResetCameraOnRig()
+    {
         Camera.main.transform.position = this.transform.position;
         Camera.main.transform.rotation = this.transform.rotation;
-    }  
+    }
+
+    void EnDirFocus()
+    {
+        cameraState = camStates.STATE_DIRFOCUS;
+    }
+
+    void DisDirFocus()
+    {
+        cameraState = camStates.STATE_PLAYERORBIT;
+    }
+
+    public static void PlayAnim(string a)
+    {
+        var camAnim = Camera.main.transform.parent.GetComponent<Animator>();
+        camAnim.Play(a, 0);
+        cameraState = camStates.STATE_PLAYINGANIM;
+        playingAnim = a;
+    }
+    #endregion
+
+
 }
 
 public enum camStates
@@ -364,4 +386,5 @@ public enum camStates
     STATE_RAIL,
     STATE_DETACHED,
     STATE_PLAYINGANIM,
+    STATE_LERPING
 };
