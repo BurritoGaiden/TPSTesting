@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311947, g: 0.38074005, b: 0.35872722, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -201,6 +201,7 @@ MonoBehaviour:
     m_Bits: 4294967035
   desiredView: {fileID: 0}
   transitionSpeed: 3
+  lerpToPos: 0
 --- !u!1 &300435012
 GameObject:
   m_ObjectHideFlags: 0
@@ -1011,10 +1012,9 @@ GameObject:
   - component: {fileID: 1421689012}
   - component: {fileID: 1421689011}
   - component: {fileID: 1421689010}
-  - component: {fileID: 1421689013}
   m_Layer: 0
-  m_Name: CamTrig1 cubeo
-  m_TagString: Target
+  m_Name: Truck
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1026,7 +1026,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1421689008}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.8010681, y: 0.90740955, z: 1.7370112}
+  m_LocalPosition: {x: 0.56, y: 0.90740955, z: 4.03}
   m_LocalScale: {x: 1.3448683, y: 1.344868, z: 1.344868}
   m_Children: []
   m_Father: {fileID: 1144343937}
@@ -1086,20 +1086,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1421689008}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &1421689013
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1421689008}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3186f07614e2da740b8c888cd8323f51, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  on: 0
-  thisBoxCollider: {fileID: 0}
-  thisMeshRenderer: {fileID: 0}
 --- !u!1001 &1569174280
 Prefab:
   m_ObjectHideFlags: 0
@@ -1239,6 +1225,11 @@ Prefab:
       propertyPath: player
       value: 
       objectReference: {fileID: 2020828166}
+    - target: {fileID: 114601690962391920, guid: 510aa97a307095f4c94c59e08dae2303,
+        type: 2}
+      propertyPath: truck
+      value: 
+      objectReference: {fileID: 1421689008}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 510aa97a307095f4c94c59e08dae2303, type: 2}
   m_IsPrefabParent: 0

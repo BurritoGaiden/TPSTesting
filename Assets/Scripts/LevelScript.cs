@@ -124,15 +124,17 @@ public class LevelScript : MonoBehaviour {
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
         //Make it so that this is lerping to the position it'd have during regular player orbit
-        PlayerCamera.currentView = player.transform;
-        PlayerCamera.cameraState = camStates.STATE_LERPING;
-        //Make it so that the camera is facing the character's forward direction
+
+        PlayerCamera.cameraState = camStates.STATE_LERPDIRFOCUS;
+        PlayerCamera.camTar = truck.transform;
 
         print("done waiting");
 
         print("hey");
         yield return new WaitForSeconds(3f);
         print("done");
+
+        PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
     }
 
     //Script for the level

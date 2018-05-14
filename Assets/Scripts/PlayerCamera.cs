@@ -57,6 +57,7 @@ public class PlayerCamera : MonoBehaviour {
     public Transform desiredView;
     public float transitionSpeed;
     public static Transform currentView;
+    public bool lerpToPos;
 
     void Awake() {
         if (lockCursor) {
@@ -83,7 +84,13 @@ public class PlayerCamera : MonoBehaviour {
             case camStates.STATE_PLAYERORBIT:
                 //State Behavior
                 OrbitingBehavior();
+                //-----Seeing if this works disabled
+                UpdatePosition();
                 CameraOffset();
+                //-----With this enabled
+                //transform.position = target.position - transform.forward * dstFromTarget + CamOffset();
+
+
                 //State Transitions
 
                 if (!camInput) cameraState = camStates.STATE_NULL;
@@ -104,11 +111,13 @@ public class PlayerCamera : MonoBehaviour {
                 break;
             case camStates.STATE_COVER:
                 OrbitingBehavior();
+                UpdatePosition();
                 CameraOffset();
                 if (PlayerController.thisMoveState != MoveState.STATE_COVER) cameraState = camStates.STATE_PLAYERORBIT;
                 break;
             case camStates.STATE_PUSHING:
                 OrbitingBehavior();
+                UpdatePosition();
                 CameraOffset();
                 if (PlayerController.thisMoveState != MoveState.STATE_PUSHING) cameraState = camStates.STATE_PLAYERORBIT;
                 break;
@@ -122,15 +131,65 @@ public class PlayerCamera : MonoBehaviour {
                 if (camInput) cameraState = camStates.STATE_PLAYERORBIT;
                 break;
 
-            case camStates.STATE_LERPING:
-                transform.position = Vector3.Lerp(transform.position, currentView.position, Time.deltaTime * transitionSpeed);
+            case camStates.STATE_LERPDIRFOCUS:
+                currentView = transform;
+                //Establishing position and rotation
+                yaw = GetAngleBetween3PointsHor(this.transform.position, camTar.position);
+                pitch = GetAngleBetween3PointsVer(this.transform.position, camTar.position);
+                pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
+                if (setRotationInstantlyNextFrame)
+                {
+                    currentRotation.x = pitch;
+                    currentRotation.y = yaw;
+                    setRotationInstantlyNextFrame = false;
+                }
+                else
+                {
+                    currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+                    currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+                    //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+                }
+
+                //---------------------------------------------------
+
+                //Assign rotation values to placeholder that'll make the angle lerp work
+                currentView.eulerAngles = currentRotation;
+
+                //---------------------------------------------------
+
+                //Lerping to a position and rotation
+                transform.position = Vector3.Lerp(transform.position, target.position - transform.forward * dstFromTarget, Time.deltaTime * transitionSpeed);
+                cam.transform.localPosition = CamOffset();
+
+                //Turn the rotation we got from the rot/pos establishment and set it in the current angle
                 Vector3 currentAngle = new Vector3(
                     Mathf.LerpAngle(transform.rotation.eulerAngles.x, currentView.transform.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
                     Mathf.LerpAngle(transform.rotation.eulerAngles.y, currentView.transform.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
                     Mathf.LerpAngle(transform.rotation.eulerAngles.z, currentView.transform.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
 
-               transform.eulerAngles = currentAngle;
+                //Assign to our rig :)
+                transform.eulerAngles = currentAngle;
+                break;
+
+            case camStates.STATE_LERPING:
+                transform.position = Vector3.Lerp(transform.position, currentView.position, Time.deltaTime * transitionSpeed);
+
+                Vector3 currentAngleL = new Vector3(
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.x, currentView.transform.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.y, currentView.transform.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.z, currentView.transform.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
+
+               transform.eulerAngles = currentAngleL;
+                break;
+
+            case camStates.STATE_JUSTORBIT:
+                OrbitingBehavior();
+
+                break;
+
+            case camStates.STATE_JUSTPOS:
+
                 break;
 
             case camStates.STATE_DETACHED:
@@ -162,6 +221,8 @@ public class PlayerCamera : MonoBehaviour {
         }
 	}   
 
+
+
     void OrbitingBehavior()
     {
         //Mouse control of pitch and yaw
@@ -174,8 +235,6 @@ public class PlayerCamera : MonoBehaviour {
         currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
         //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
         transform.eulerAngles = currentRotation;
-
-        UpdatePosition();
     }
 
     void UpdatePosition()
@@ -248,6 +307,49 @@ public class PlayerCamera : MonoBehaviour {
         return angle;
     }
 
+    Vector3 CamOffset() {
+        //Adding Camera offset
+
+        // If an animation is being played, then we wanna stay at origin
+        if (cameraState == camStates.STATE_PLAYINGANIM)
+        {
+            cam.transform.localPosition = Vector3.MoveTowards(cam.transform.localPosition, Vector3.zero, Time.deltaTime * 10);
+            return new Vector3(0,0,0);
+        }
+
+        if (Killing.aiming)
+        {
+            forwardOffset = 1f;
+            horizontalOffset = .64f;
+            verticalOffset = 0f;
+        }
+        if (PlayerController.thisMoveState == MoveState.STATE_REGULAR)
+        {
+            //forwardOffset -= PlayerController.currentSpeed / 3;
+            forwardOffset = .66f;
+            horizontalOffset = .73f;
+            if (!PlayerController.crouchInput)
+                verticalOffset = .36f;
+            else
+                verticalOffset = -.15f;
+        }
+        if (PlayerController.thisMoveState == MoveState.STATE_COVER)
+        {
+            verticalOffset = -.15f;
+            forwardOffset = .66f;
+            horizontalOffset = 0f;
+        }
+        if (PlayerController.thisMoveState == MoveState.STATE_PUSHING)
+        {
+            verticalOffset = 0;
+            forwardOffset = .66f;
+            horizontalOffset = -1f;
+        }
+
+        Vector3 camOffset = new Vector3(horizontalOffset, verticalOffset, forwardOffset);
+        return camOffset;
+    }
+
     void CameraOffset() {
         //Adding Camera offset
         
@@ -311,8 +413,8 @@ public class PlayerCamera : MonoBehaviour {
                 camOffset = transform.InverseTransformPoint(hit.point + hit.normal * distToKeepFromWall);
             }
         }
-
-        cam.transform.localPosition = Vector3.MoveTowards(cam.transform.localPosition, camOffset, Time.deltaTime*5);
+        cam.transform.localPosition = CamOffset();
+        //cam.transform.localPosition = Vector3.MoveTowards(cam.transform.localPosition, camOffset, Time.deltaTime * 5);
     }
 
     float CameraDSTFromTarget() {
@@ -386,5 +488,8 @@ public enum camStates
     STATE_RAIL,
     STATE_DETACHED,
     STATE_PLAYINGANIM,
-    STATE_LERPING
+    STATE_LERPING,
+    STATE_JUSTORBIT,
+    STATE_JUSTPOS,
+    STATE_LERPDIRFOCUS
 };
