@@ -79,6 +79,13 @@ public class LevelScript : MonoBehaviour {
     public GameObject overHeadPuzzleViewCamPos;
     public GameObject introCameraTarget;
 
+    public Transform bridgeToEntrancePoint;
+    public Transform EntrancePoint;
+
+    public Transform EntranceCameraTarget;
+    public Transform dilapidatedPoint;
+
+
     //Game-state Machine
     public static GamePlayState thisGameplayState = GamePlayState.Regular;
     public Playmode thisPlayMode = Playmode.Linear;
@@ -273,8 +280,12 @@ public class LevelScript : MonoBehaviour {
         }
 
         //Change camera transform
-
+        camera.transform.position = bridgeToEntrancePoint.position;
+        camera.transform.rotation = bridgeToEntrancePoint.rotation;
         //Tell camera to lerp to a specific point
+        PlayerCamera.cameraState = camStates.STATE_LERPDIRFOCUS;
+        PlayerCamera.camTar = EntranceCameraTarget;
+        //PlayerCamera.currentView = EntrancePoint;
 
         Time.timeScale = 1;
         yield return null; // shit breaks if i dont have this here, probs related to grounding or something, dont have time to debug
@@ -286,15 +297,19 @@ public class LevelScript : MonoBehaviour {
         player.currentPush = secretBlockingPushable;
         PlayerController.thisMoveState = MoveState.STATE_PUSHING;
         PlayerCamera.detachedFixedRotation = Quaternion.identity;
-        PlayerCamera.cameraState = camStates.STATE_PUSHING;
+        //PlayerCamera.cameraState = camStates.STATE_PUSHING;
 
         // Wait until the cover has been pushed
         var originalCoverPos = secretBlockingPushable.transform.position;
         while (Vector3.Distance(originalCoverPos, secretBlockingPushable.transform.position) < 1f) yield return null;
 
         //Tell player to move through hole
+        yield return MovePlayerWait("dilapidated_room");
+        //camera.transform.position = dilapidatedPoint.position;
+        //camera.transform.rotation = dilapidatedPoint.rotation;
         PlayerController.thisMoveState = MoveState.STATE_REGULAR;
-        
+        PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
+
         //The player should button press rapidly, or push the block. It should move slowly.
         //Once the block is out of the way, either move the player through the whole automatically, or disengage them so they can move through
         //The explosive shot should knock the block down to block the player from regressing
