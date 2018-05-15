@@ -12,6 +12,7 @@ TagManager:
   - Pushable
   - Shooter
   - PuzzleCameraView
+  - PuzzlePlaceholder
   layers:
   - Default
   - TransparentFX

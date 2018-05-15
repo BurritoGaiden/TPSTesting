@@ -227,7 +227,6 @@ public class LevelScript : MonoBehaviour {
         StartCoroutine(MoveTruckAlongRail("truck_rail_2"));
 
         //When they hit this trigger, make the car about to show up again
-        //When they hit this trigger, make the car show up
         yield return AddAndWaitForObjective("Walk over the bridge", "", 3, "DropTrig3");
         StartCoroutine(MoveTruckAlongRail("truck_rail_3"));
 
@@ -237,32 +236,18 @@ public class LevelScript : MonoBehaviour {
         //When they hit this trigger, the player has dropped down into the maze room
         yield return AddAndWaitForObjective("Jump down the ledge", "", 3, "Drop2Trig1");
 
-        //tell the player to get across
-
-        //When the player hits the trigger before the broken bridge, say that the player will need to find a way across
-        //yield return AddAndWaitForObjective("Jump down the ledge", "", 3, "Drop2Trig2");
-
         //When the player picks up the planks, start the alternating car section
         //If the cars see the player, they'll shoot, if they don't see the player for X seconds after showing up in either window, they'll move to the other window
         while(plankPikcupArea.pickable != null) yield return null;
 
-        PlayerCamera.transitionSpeed = 1;
-        PlayerCamera.cameraState = camStates.STATE_LERPING;
-        PlayerCamera.currentView = GameObject.FindWithTag("PuzzleCameraView").transform;
-
         var truckLoopingRoutine = MoveTruckBackAndForth("truck_rail_looping_4", "truck_rail_looping_transition_in");
         StartCoroutine(truckLoopingRoutine);
 
-        yield return new WaitForSeconds(1.2f);
-        PlayerCamera.cameraState = camStates.STATE_CCTV;
-        PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
-
-        // Enter puzzle cam mode
-        //PlayerCamera.cameraState = camStates.STATE_DETACHED;
-        //PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
-        //PlayerCamera.detachedPosition = overHeadPuzzleViewCamPos.transform.position;
-        //PlayerCamera.detachedFixedRotation = overHeadPuzzleViewCamPos.transform.rotation;
-        //PlayerCamera.transitioning = true;
+        //PlayerCamera.transitionSpeed = 1;
+        PlayerCamera.cameraState = camStates.STATE_PUZZLELERPDIRFOCUS;
+        PlayerCamera.puzzleDirCamPosition = GameObject.FindWithTag("PuzzleCameraView").transform;
+        PlayerCamera.puzzleCameraTarget = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
+        PlayerCamera.puzzleDirPlaceholder = GameObject.FindWithTag("PuzzlePlaceholder").transform;
 
         //When the player has put down the bridge plank successfully, move the car to the close window
         while (plankPutdownArea.pickable == null) yield return null;
@@ -287,9 +272,6 @@ public class LevelScript : MonoBehaviour {
             yield return null;
         }
 
-        //Change camera transform
-        //camera.transform.position = bridgeToEntrancePoint.position;
-        //camera.transform.rotation = bridgeToEntrancePoint.rotation;
         //Tell camera to lerp to a specific point
         PlayerCamera.cameraState = camStates.STATE_LERPDIRFOCUS;
         PlayerCamera.camTar = EntranceCameraTarget;
@@ -318,54 +300,10 @@ public class LevelScript : MonoBehaviour {
         PlayerController.thisMoveState = MoveState.STATE_REGULAR;
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
 
-        //The player should button press rapidly, or push the block. It should move slowly.
-        //Once the block is out of the way, either move the player through the whole automatically, or disengage them so they can move through
-        //The explosive shot should knock the block down to block the player from regressing
-        /*
-        //Current Maze room 
-        AssignThisObjective("Find a way out", "", 3, "roomTrig1");
-
-        PlayThisDialogue(1);
-        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
-
-        
-        print("before break");
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
-        print("after break");
-        DisableCameraInput();
-        DisableCharacterInput();
-        SetCharCamTransform(levelCameraPositions[1], levelCameraAngles[1]);
-        truck.SetActive(true);
-        truck.transform.position = truckPositions[0].position;
-        this.GetComponent<AudioSource>().PlayOneShot(levelSfx[0], .3f);
-        levelSnapshots[1].TransitionTo(.5f);
-        yield return new WaitForSeconds(1f);
-        PlayThisDialogue(2);
-        yield return new WaitForSeconds(3f);
-
-        PlayThisDialogue(3);        
-        EnableCharacterInput();
-        EnableCameraInput();
-        ResetCamPositionOnRig();
-
-        AssignThisObjective("Find the secret exit", "", 3, "truckTrig4");
-
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
-        //The player has navigated through the secret exit
-        PlayThisDialogue(4);
-        truck.SetActive(false);
-        levelSnapshots[0].TransitionTo(1f);
-        yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
-        */
-
         //Secret Room
         AssignThisObjective("Continue", "", 3, "truckTrig2");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
-        //The Player has hit the truck trigger
-        //toggleableGeometry[0].SetActive(true);
         
         truck.SetActive(true);
         levelSnapshots[1].TransitionTo(.5f);

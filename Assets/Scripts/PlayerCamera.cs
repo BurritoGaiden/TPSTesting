@@ -59,6 +59,10 @@ public class PlayerCamera : MonoBehaviour {
     public static Transform currentView;
     public bool lerpToPos;
 
+    public static Transform puzzleDirPlaceholder;
+    public static Transform puzzleDirCamPosition;
+    public static Transform puzzleCameraTarget;
+
     void Awake() {
         if (lockCursor) {
             Cursor.lockState = CursorLockMode.Locked;
@@ -170,6 +174,49 @@ public class PlayerCamera : MonoBehaviour {
                 transform.eulerAngles = currentAngle;
                 break;
 
+                //Needs to lerp away from regular player cam position to a new position
+                //Needs to also track the player position with it's rotation
+            case camStates.STATE_PUZZLELERPDIRFOCUS:
+                //Set up placeholder to take data
+                puzzleDirPlaceholder = transform;
+                //Establishing rotation
+                yaw = GetAngleBetween3PointsHor(this.transform.position, puzzleCameraTarget.position);
+                pitch = GetAngleBetween3PointsVer(this.transform.position, puzzleCameraTarget.position);
+                pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+                if (setRotationInstantlyNextFrame)
+                {
+                    currentRotation.x = pitch;
+                    currentRotation.y = yaw;
+                    setRotationInstantlyNextFrame = false;
+                }
+                else
+                {
+                    currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+                    currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+                }
+
+                //---------------------------------------------------
+
+                //Assign rotation values to placeholder that'll make the angle lerp work
+                puzzleDirPlaceholder.eulerAngles = currentRotation;
+
+                //---------------------------------------------------
+
+                //Lerping to a position and rotation
+                transform.position = Vector3.Lerp(transform.position, puzzleDirCamPosition.position, Time.deltaTime * transitionSpeed);
+                cam.transform.localPosition = Vector3.Lerp(cam.transform.localPosition, CamOffset(), Time.deltaTime * transitionSpeed);
+
+                //Turn the rotation we got from the rot/pos establishment and set it in the current angle
+                Vector3 currentAnglePL = new Vector3(
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.x, puzzleDirPlaceholder.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.y, puzzleDirPlaceholder.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.z, puzzleDirPlaceholder.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
+
+                //Assign to our rig :)
+                transform.eulerAngles = currentAnglePL;
+                break;
+
             case camStates.STATE_LERPING:
                 transform.position = Vector3.Lerp(transform.position, currentView.position, Time.deltaTime * transitionSpeed);
 
@@ -182,12 +229,24 @@ public class PlayerCamera : MonoBehaviour {
                 CameraOffset();
                 break;
 
+            case camStates.STATE_PUZZLELERPING:
+                transform.position = Vector3.Lerp(transform.position, currentView.position, Time.deltaTime * transitionSpeed);
+
+                Vector3 currentAngleP = new Vector3(
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.x, currentView.transform.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.y, currentView.transform.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.z, currentView.transform.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
+
+                transform.eulerAngles = currentAngleP;
+                CameraOffset();
+                break;
+
             case camStates.STATE_JUSTORBIT:
                 OrbitingBehavior();
 
                 break;
 
-            case camStates.STATE_CCTV:
+            case camStates.STATE_PUZZLECCTV:
                 yaw = GetAngleBetween3PointsHor(this.transform.position, camTar.position);
                 pitch = GetAngleBetween3PointsVer(this.transform.position, camTar.position);
                 pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
@@ -402,6 +461,16 @@ public class PlayerCamera : MonoBehaviour {
 
     void CameraOffset() {
         //Adding Camera offset
+        if (cameraState == camStates.STATE_PUZZLECCTV || cameraState == camStates.STATE_PUZZLELERPING) {
+            //forwardOffset -= PlayerController.currentSpeed / 3;
+            forwardOffset = .66f;
+            horizontalOffset = .73f;
+            if (!PlayerController.crouchInput)
+                verticalOffset = .36f;
+            else
+                verticalOffset = -.15f;
+
+        }
         if (cameraState == camStates.STATE_CCTV) {
 
             return;
@@ -545,5 +614,8 @@ public enum camStates
     STATE_JUSTORBIT,
     STATE_JUSTPOS,
     STATE_LERPDIRFOCUS,
-    STATE_CCTV
+    STATE_CCTV,
+    STATE_PUZZLELERPING,
+    STATE_PUZZLECCTV,
+    STATE_PUZZLELERPDIRFOCUS
 };
