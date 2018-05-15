@@ -198,7 +198,7 @@ public class PlayerCamera : MonoBehaviour {
                     transform.rotation = Quaternion.Lerp(transform.rotation, detachedFixedRotation, Time.deltaTime * 5);
                 }
 
-                Debug.Log("Detached boi");
+                //Debug.Log("Detached boi");
                 transform.position = Vector3.MoveTowards(savedPos, detachedPosition, Time.deltaTime * 15);
 
                 break;

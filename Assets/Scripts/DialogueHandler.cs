@@ -89,7 +89,7 @@ public class DialogueHandler : MonoBehaviour
     {
         if (textDisplayBox)
         {
-            if (textDisplayBox.text != "") Debug.Log("BEGONE THOT");
+            if (textDisplayBox.text != "") //Debug.Log("BEGONE THOT");
             textDisplayBox.text = "";
         }
         currentLineIndex = 0;

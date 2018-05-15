@@ -146,12 +146,18 @@ public class LevelScript : MonoBehaviour {
     //Script for the level
     IEnumerator TruckLevelCoroutine()
     {
+        print("Setup truck and music");
         //Set all relevant objects to their desired state at the beginning of the game
         truck.SetActive(false);
         levelSnapshots[0].TransitionTo(0f);
+
+        print("set up inputs");
+        PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
+        ResetCamPositionOnRig();
         EnableCharacterInput();
         EnableCameraInput();
 
+        print("setup camera vars");
         ///Intro Sequence - PC moves automatically, being tracked by the cam and transitioning to gameplay camera
         //Set up the camera for the sequence
         PlayerCamera.cameraState = camStates.STATE_DETACHED;
@@ -160,16 +166,23 @@ public class LevelScript : MonoBehaviour {
         PlayerCamera.detachedFixedRotation = GameObject.Find("cam_detached_intro").transform.rotation;
         PlayerCamera.setRotationInstantlyNextFrame = true;
 
+        print("tell the player to move");
         //Tell the Player to move 
-        yield return MovePlayerWait("movement_target_intro");
-        //PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
-        //ResetCamPositionOnRig();
-        //yield return MovePlayer("movement_target_intro2");
+        PlayerCamera.transitionSpeed = 6f;
+        yield return MovePlayer("movement_target_intro");
 
-        //When they hit this trigger, spawn in the car
-        //yield return AddAndWaitForObjective("Hit this trigger to spawn the truck", "", 3, "DropTrig1");
+        print("Wait till hitting move trig");
+        AssignThisObjective("Hit this trigger", "", 3, "roomTrig1");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
 
+        PlayerCamera.cameraState = camStates.STATE_LERPDIRFOCUS;
+        PlayerCamera.camTar = introCameraTarget.transform;
 
+        yield return new WaitForSeconds(2f);
+        print("done");
+
+        PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
 
         //when they hit this trigger, make them wait until button press
         yield return AddAndWaitForObjective("Hit this trigger to prompt getting into cover", "", 3, "DropTrig2");
@@ -259,6 +272,10 @@ public class LevelScript : MonoBehaviour {
             yield return null;
         }
 
+        //Change camera transform
+
+        //Tell camera to lerp to a specific point
+
         Time.timeScale = 1;
         yield return null; // shit breaks if i dont have this here, probs related to grounding or something, dont have time to debug
 
@@ -275,6 +292,7 @@ public class LevelScript : MonoBehaviour {
         var originalCoverPos = secretBlockingPushable.transform.position;
         while (Vector3.Distance(originalCoverPos, secretBlockingPushable.transform.position) < 1f) yield return null;
 
+        //Tell player to move through hole
         PlayerController.thisMoveState = MoveState.STATE_REGULAR;
         
         //The player should button press rapidly, or push the block. It should move slowly.
@@ -398,7 +416,7 @@ public class LevelScript : MonoBehaviour {
         PlayerCamera.cameraState = camStates.STATE_RAIL;
         PlayerCamera.camTar = truck.transform;
         PlayerCamera.followRail = GameObject.Find("rail1").transform;
-        PlayerCamera.railOffset = -2;
+        PlayerCamera.railOffset = -6;
         PlayerCamera.setRotationInstantlyNextFrame = true;
 
         // Wait for the player to land on the ground
