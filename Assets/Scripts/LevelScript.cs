@@ -246,15 +246,23 @@ public class LevelScript : MonoBehaviour {
         //If the cars see the player, they'll shoot, if they don't see the player for X seconds after showing up in either window, they'll move to the other window
         while(plankPikcupArea.pickable != null) yield return null;
 
+        PlayerCamera.transitionSpeed = 1;
+        PlayerCamera.cameraState = camStates.STATE_LERPING;
+        PlayerCamera.currentView = GameObject.FindWithTag("PuzzleCameraView").transform;
+
         var truckLoopingRoutine = MoveTruckBackAndForth("truck_rail_looping_4", "truck_rail_looping_transition_in");
         StartCoroutine(truckLoopingRoutine);
 
-        // Enter puzzle cam mode
-        PlayerCamera.cameraState = camStates.STATE_DETACHED;
+        yield return new WaitForSeconds(1.2f);
+        PlayerCamera.cameraState = camStates.STATE_CCTV;
         PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
-        PlayerCamera.detachedPosition = overHeadPuzzleViewCamPos.transform.position;
-        PlayerCamera.detachedFixedRotation = overHeadPuzzleViewCamPos.transform.rotation;
-        PlayerCamera.transitioning = true;
+
+        // Enter puzzle cam mode
+        //PlayerCamera.cameraState = camStates.STATE_DETACHED;
+        //PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
+        //PlayerCamera.detachedPosition = overHeadPuzzleViewCamPos.transform.position;
+        //PlayerCamera.detachedFixedRotation = overHeadPuzzleViewCamPos.transform.rotation;
+        //PlayerCamera.transitioning = true;
 
         //When the player has put down the bridge plank successfully, move the car to the close window
         while (plankPutdownArea.pickable == null) yield return null;
@@ -280,8 +288,8 @@ public class LevelScript : MonoBehaviour {
         }
 
         //Change camera transform
-        camera.transform.position = bridgeToEntrancePoint.position;
-        camera.transform.rotation = bridgeToEntrancePoint.rotation;
+        //camera.transform.position = bridgeToEntrancePoint.position;
+        //camera.transform.rotation = bridgeToEntrancePoint.rotation;
         //Tell camera to lerp to a specific point
         PlayerCamera.cameraState = camStates.STATE_LERPDIRFOCUS;
         PlayerCamera.camTar = EntranceCameraTarget;

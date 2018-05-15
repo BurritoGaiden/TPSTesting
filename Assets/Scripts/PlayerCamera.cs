@@ -179,11 +179,34 @@ public class PlayerCamera : MonoBehaviour {
                     Mathf.LerpAngle(transform.rotation.eulerAngles.z, currentView.transform.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
 
                transform.eulerAngles = currentAngleL;
+                CameraOffset();
                 break;
 
             case camStates.STATE_JUSTORBIT:
                 OrbitingBehavior();
 
+                break;
+
+            case camStates.STATE_CCTV:
+                yaw = GetAngleBetween3PointsHor(this.transform.position, camTar.position);
+                pitch = GetAngleBetween3PointsVer(this.transform.position, camTar.position);
+                pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+                if (setRotationInstantlyNextFrame)
+                {
+                    currentRotation.x = pitch;
+                    currentRotation.y = yaw;
+                    setRotationInstantlyNextFrame = false;
+                }
+                else
+                {
+                    currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+                    currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+                    //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+                }
+
+                transform.eulerAngles = currentRotation;
+                CameraOffset();
                 break;
 
             case camStates.STATE_JUSTPOS:
@@ -217,9 +240,38 @@ public class PlayerCamera : MonoBehaviour {
                 }
                 break;
         }
-	}   
+	}
 
+    void CCTVPlayerBehavior()
+    {
+        yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+        pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
 
+        Vector3 targetRotation = new Vector3(pitch, yaw);
+        transform.eulerAngles = targetRotation;
+    }
+
+    void CCTVBehavior()
+    {
+        yaw = GetAngleBetween3PointsHor(this.transform.position, camTar.position);
+        pitch = GetAngleBetween3PointsVer(this.transform.position, camTar.position);
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+        if (setRotationInstantlyNextFrame)
+        {
+            currentRotation.x = pitch;
+            currentRotation.y = yaw;
+            setRotationInstantlyNextFrame = false;
+        }
+        else
+        {
+            currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+            currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+            //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        }
+
+        transform.eulerAngles = currentRotation;
+    }
 
     void OrbitingBehavior()
     {
@@ -350,7 +402,10 @@ public class PlayerCamera : MonoBehaviour {
 
     void CameraOffset() {
         //Adding Camera offset
-        
+        if (cameraState == camStates.STATE_CCTV) {
+
+            return;
+        }
         // If an animation is being played, then we wanna stay at origin
         if (cameraState == camStates.STATE_PLAYINGANIM) {
             cam.transform.localPosition = Vector3.MoveTowards(cam.transform.localPosition, Vector3.zero, Time.deltaTime * 10);
@@ -489,5 +544,6 @@ public enum camStates
     STATE_LERPING,
     STATE_JUSTORBIT,
     STATE_JUSTPOS,
-    STATE_LERPDIRFOCUS
+    STATE_LERPDIRFOCUS,
+    STATE_CCTV
 };

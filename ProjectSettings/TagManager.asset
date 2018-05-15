@@ -3,7 +3,15 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Target
+  - Trigger
+  - Cover
+  - Geo
+  - AutoCrouchArea
+  - Pushable
+  - Shooter
+  - PuzzleCameraView
   layers:
   - Default
   - TransparentFX
