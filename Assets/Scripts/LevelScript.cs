@@ -92,9 +92,12 @@ public class LevelScript : MonoBehaviour {
 
     public float truckSpeed = 3f;
 
+    EnemyAPC enemyAPC;
+
     // Use this for initialization
     void Awake() {
         ObjectiveHandler.ObjDone += ObjectiveDoneListener;
+        enemyAPC = truck.GetComponent<EnemyAPC>();
     }
        
 	void Start () {
@@ -186,7 +189,7 @@ public class LevelScript : MonoBehaviour {
         PlayerCamera.cameraState = camStates.STATE_LERPDIRFOCUS;
         PlayerCamera.camTar = introCameraTarget.transform;
 
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(1.5f);
         print("done");
 
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
@@ -196,7 +199,7 @@ public class LevelScript : MonoBehaviour {
         
         //Make car show up, 
         truck.SetActive(true);
-        StartCoroutine(MoveTruckAlongRail("truck_rail_1_start"));
+        MoveTruckAlongRail("truck_rail_1_start", false);
 
         //Button Prompt Text
         PlayThisDialogue(13);
@@ -224,23 +227,29 @@ public class LevelScript : MonoBehaviour {
         while (PlayerController.thisMoveState != MoveState.STATE_COVER) yield return null;
 
         //Make car go away
-        StartCoroutine(MoveTruckAlongRail("truck_rail_2"));
+        MoveTruckAlongRail("truck_rail_2");
 
         //When they hit this trigger, make the car about to show up again
         yield return AddAndWaitForObjective("Walk over the bridge", "", 3, "DropTrig3");
-        StartCoroutine(MoveTruckAlongRail("truck_rail_3"));
+        MoveTruckAlongRail("truck_rail_3", false);
 
-        //Play text that tells the player tall cover blocks line of sight
+        waitTillObjectiveDone = true;
+        AssignThisObjective("Jump down the ledge", "", 3, "Drop2Trig1");
 
+        // Wait for the player to enter cover, or jump down
+        while (PlayerController.thisMoveState != MoveState.STATE_COVER && waitTillObjectiveDone) yield return null;
 
-        //When they hit this trigger, the player has dropped down into the maze room
-        yield return AddAndWaitForObjective("Jump down the ledge", "", 3, "Drop2Trig1");
+        // Move truck down 
+        MoveTruckAlongRail("truck_rail_looping_transition_in");
+
+        // WAit till the player jumps down
+        while (waitTillObjectiveDone) yield return null;
 
         //When the player picks up the planks, start the alternating car section
         //If the cars see the player, they'll shoot, if they don't see the player for X seconds after showing up in either window, they'll move to the other window
         while(plankPikcupArea.pickable != null) yield return null;
 
-        var truckLoopingRoutine = MoveTruckBackAndForth("truck_rail_looping_4", "truck_rail_looping_transition_in");
+        var truckLoopingRoutine = MoveTruckBackAndForth("truck_rail_looping_4", "");
         StartCoroutine(truckLoopingRoutine);
 
         //PlayerCamera.transitionSpeed = 1;
@@ -253,8 +262,12 @@ public class LevelScript : MonoBehaviour {
         while (plankPutdownArea.pickable == null) yield return null;
 
         StopCoroutine(truckLoopingRoutine);
+        enemyAPC.SetTurretAimDir(TurretDirection.Forward);
+
         yield return null;
-        StartCoroutine(MoveTruckAlongRail("truck_rail_5", false));
+        MoveTruckAlongRail("truck_rail_5", false);
+
+        enemyAPC.thisAimState = APCAimState.STATE_PLAYER;
 
         //As the player finishes crossing the bridge, present an unskippable prompt
         //When the player presses the button for the prompt, move the player over to the right/back of the pushable yellow block.
@@ -310,11 +323,12 @@ public class LevelScript : MonoBehaviour {
         PlayerCamera.cameraState = camStates.STATE_DIRFOCUS;
         DisableCharacterInput();
         PlayerCamera.camTar = truck.transform;
-        currentSeg = 1;
-        float counter = 0;
-        while (counter < 2) {
-            counter += Time.deltaTime;
-            RailPlayer();
+
+        enemyAPC.PlayRail(rail, true);
+        enemyAPC.thisAimState = APCAimState.STATE_PLAYER;
+        for (float counter = 0; counter < 2; counter += Time.deltaTime) {
+            //counter += Time.deltaTime;
+            //RailPlayer();
             yield return null;
         }
 
@@ -373,6 +387,8 @@ public class LevelScript : MonoBehaviour {
         // Start moving the truck
         var truckMovingRoutine = TruckMovingSubRoutine();
         StartCoroutine(truckMovingRoutine);
+
+        enemyAPC.thisAimState = APCAimState.STATE_PLAYER;
 
         PlayerCamera.cameraState = camStates.STATE_RAIL;
         PlayerCamera.camTar = truck.transform;
@@ -455,15 +471,43 @@ public class LevelScript : MonoBehaviour {
     }
 
     IEnumerator MoveTruckBackAndForth(string railName, string transitionRail) {
-        yield return MoveTruckAlongRail(transitionRail, false);
+        //If there's a transition rail, move along that first
+        if (!string.IsNullOrEmpty(transitionRail)) {
+            MoveTruckAlongRail(transitionRail, false);
+
+            // Wait until it's done moving along the transition rail
+            while (enemyAPC.thisMoveState == APCMoveState.STATE_RAIL) yield return null;
+        }
 
         while (true) {
-            yield return WaitForCoverDuration(3f);
-            yield return MoveTruckAlongRail(railName);
+            enemyAPC.thisAimState = APCAimState.STATE_PLAYER;
 
+            // Wait until we have been in cover for 3 seconds
             yield return WaitForCoverDuration(3f);
-            yield return MoveTruckAlongRail(railName, true, true);
+
+            enemyAPC.SetTurretAimDir(TurretDirection.Forward);
+
+            MoveTruckAlongRail(railName);
+
+            // Wait until it's done moving along the rail
+            while (enemyAPC.thisMoveState == APCMoveState.STATE_RAIL) yield return null;
+            
+            enemyAPC.thisAimState = APCAimState.STATE_PLAYER;
+
+            // Wait until we have been in cover for 3 seconds
+            yield return WaitForCoverDuration(3f);
+
+            enemyAPC.FlipDirection();
+            enemyAPC.SetTurretAimDir(TurretDirection.Forward);
+
+            MoveTruckAlongRail(railName, true, true);
+
+            // Wait until it's done moving along the rail
+            while (enemyAPC.thisMoveState == APCMoveState.STATE_RAIL) yield return null;
+
+            enemyAPC.FlipDirection();
         }
+
     }
 
     IEnumerator WaitForCoverDuration(float duration) {
@@ -495,6 +539,8 @@ public class LevelScript : MonoBehaviour {
     {
         while (true)
         {
+
+            Debug.Log("HMMMM");
             truck.transform.position = new Vector3(player.transform.position.x, truck.transform.position.y, truck.transform.position.z);
             yield return null;
         }
@@ -532,59 +578,21 @@ public class LevelScript : MonoBehaviour {
         img.color = color;
     }
 
-    IEnumerator truckmovingRoutine;
-    IEnumerator MoveTruckAlongRail(string rail, bool lerpToStart = true, bool reverse = false) {
-        if (truckmovingRoutine != null)
-            StopCoroutine(truckmovingRoutine);
-
-        truckmovingRoutine = moveTruckAlongRail(rail, lerpToStart, reverse);
-        return truckmovingRoutine;
-    }
-
-    IEnumerator moveTruckAlongRail(string rail, bool lerpToStart = true, bool reverse = false) {
+    void MoveTruckAlongRail(string rail, bool lerpToStart = true, bool reverse = false) {
         var r = GameObject.Find(rail);
-        if(r == null) {
+        if (r == null) {
             Debug.LogError("Truck rail not found: " + rail);
         }
-        if (reverse) {
-            yield return r.GetComponent<Rail>().MoveObjectAlongRailReverse(truck.transform, truckSpeed, lerpToStart);
-        } else {
-            yield return r.GetComponent<Rail>().MoveObjectAlongRail(truck.transform, truckSpeed, lerpToStart);
-        }
-    } 
 
-    //TRUCK MOVERS
+        if (reverse) {
+            enemyAPC.PlayRailReverse(r.GetComponent<Rail>(), !lerpToStart);
+        } else {
+            enemyAPC.PlayRail(r.GetComponent<Rail>(), !lerpToStart);
+        }
+    }
 
     public Rail rail;
 
-    private int currentSeg;
-    private float transition;
-    private bool isCompleted;
-
-    void RailPlayer()
-    {
-        if (!rail)
-            return;
-
-        if (!isCompleted)
-            PlayRail();
-    }
-
-    void PlayRail() {
-        transition += Time.deltaTime * 1 / 1.2f;
-        if (transition > 1)
-        {
-            transition = 0;
-            currentSeg++;
-        }
-        else if (transition < 0) {
-            transition = 1;
-            currentSeg--;
-        }
-
-        truck.transform.position = rail.PositionOnRail(currentSeg, transition, thisPlayMode);
-        truck.transform.rotation = rail.Orientation(currentSeg, transition);
-    }
 
     //TODO: program a delegate that allows calls for specific targets on an objective being completed
 }

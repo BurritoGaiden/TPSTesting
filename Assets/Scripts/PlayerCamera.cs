@@ -161,8 +161,10 @@ public class PlayerCamera : MonoBehaviour {
                 //---------------------------------------------------
 
                 //Lerping to a position and rotation
-                transform.position = Vector3.Lerp(transform.position, target.position - transform.forward * dstFromTarget, Time.deltaTime * transitionSpeed);
-                cam.transform.localPosition = Vector3.Lerp(cam.transform.localPosition, CamOffset(), Time.deltaTime * transitionSpeed);
+                //transform.position = Vector3.Lerp(transform.position, target.position - transform.forward * dstFromTarget, Time.deltaTime * transitionSpeed);
+                transform.position = LerpOrMoveTowardsPoisition(transform.position, target.position - transform.forward * dstFromTarget, transitionSpeed, transitionSpeed / 3f);
+                //cam.transform.localPosition = Vector3.Lerp(cam.transform.localPosition, CamOffset(), Time.deltaTime * transitionSpeed);
+                cam.transform.localPosition = LerpOrMoveTowardsPoisition(cam.transform.localPosition, CamOffset(), transitionSpeed, transitionSpeed / 3f);
 
                 //Turn the rotation we got from the rot/pos establishment and set it in the current angle
                 Vector3 currentAngle = new Vector3(
@@ -552,7 +554,15 @@ public class PlayerCamera : MonoBehaviour {
         return DST;
     }
 
+    // Either lerps towards position, or if the distance lerped is lower than lowerSpeed, then uses Vector3.MoveTowards
+    Vector3 LerpOrMoveTowardsPoisition(Vector3 currentPos, Vector3 targetPos, float lerpSpeed, float lowestSpeed) {
+        var newPos = Vector3.Lerp(currentPos, targetPos, Time.deltaTime * lerpSpeed);
+        if(Vector3.Distance(newPos, currentPos) < Time.deltaTime * lowestSpeed) {
+            newPos = Vector3.MoveTowards(currentPos, targetPos, lowestSpeed * Time.deltaTime);
+        }
 
+        return newPos;
+    }
 
     #region Level Script Delegates
     void SetCameraTransform(Vector3 position, Vector3 rotation)

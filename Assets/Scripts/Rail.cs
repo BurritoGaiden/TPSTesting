@@ -6,7 +6,15 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class Rail : MonoBehaviour {
 
-    private Transform[] nodes;
+    [HideInInspector]
+    public Transform[] nodes;
+
+    [System.Serializable]
+    public class TurretUpdate {
+        public int nodeIndex;
+        public TurretDirection direction;
+    }
+    public TurretUpdate[] turretUpdates;
 
     private void Start()
     {
@@ -36,16 +44,16 @@ public class Rail : MonoBehaviour {
 
     public IEnumerator MoveObjectAlongRailReverse(Transform obj, float speed, bool lerpToFirstNode = false) {
         var newNodes = new Transform[nodes.Length];
-        
+
         // Reverse the nodes
-        for (int i = nodes.Length-1; i >= 0; i--) {
-            newNodes[(nodes.Length-1) - i] = nodes[i];
+        for (int i = nodes.Length - 1; i >= 0; i--) {
+            newNodes[(nodes.Length - 1) - i] = nodes[i];
         }
 
         yield return MoveObjectAlongNodes(newNodes, obj, speed, lerpToFirstNode);
     }
 
-    public static IEnumerator MoveObjectAlongNodes(Transform[] nodes,Transform obj, float speed, bool lerpToFirstNode = false) {
+    public static IEnumerator MoveObjectAlongNodes(Transform[] nodes, Transform obj, float speed, bool lerpToFirstNode = false) {
         if (nodes.Length < 1) yield break;
 
         int currentTargetSegment = 0;

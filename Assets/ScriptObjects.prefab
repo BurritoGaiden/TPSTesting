@@ -854,6 +854,11 @@ MonoBehaviour:
   coverDropzone1: {fileID: 0}
   secretBlockingPushable: {fileID: 0}
   overHeadPuzzleViewCamPos: {fileID: 0}
+  introCameraTarget: {fileID: 0}
+  bridgeToEntrancePoint: {fileID: 0}
+  EntrancePoint: {fileID: 0}
+  EntranceCameraTarget: {fileID: 0}
+  dilapidatedPoint: {fileID: 0}
   thisPlayMode: 0
   truckSpeed: 3
   rail: {fileID: 0}

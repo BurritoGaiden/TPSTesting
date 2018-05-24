@@ -58,6 +58,14 @@ public class PlayerController : MonoBehaviour {
 
     public static Vector3 scriptedMovementTarget;
 
+    public float groundCheckDistance = 0.1f;
+
+    // Used to disable movement for a short duration after getting grounded
+    float lastTimeInAir;
+    bool isGrounded;
+    
+
+
     //public float healthRegenCooldown;
 
     // Use this for initialization
@@ -84,11 +92,11 @@ public class PlayerController : MonoBehaviour {
     {
         Vector2 input = new Vector2(0,0);
         Vector2 inputDir = new Vector2(0,0);
-        float animationSpeedPercent = 0;
 
         if (coverCooldown > 0) {
             coverCooldown -= Time.deltaTime;
         }
+
 
         if (takeInput)
         {
@@ -246,17 +254,55 @@ public class PlayerController : MonoBehaviour {
                     break;
             }
             
-            //Animation the movement
-            animationSpeedPercent = (
-                (crouchInput) ? currentSpeed / crouchSpeed : // Crouching
-                (runInput) ? currentSpeed / runSpeed :       // Running
-                currentSpeed / walkSpeed * .5f);             // Walking
+
 
         } else {
             controller.Move(Vector3.down * 0.1f);
-        }        
+        }
         //Animation 
-        animator.SetFloat("speedPercent", animationSpeedPercent, speedSmoothTime, Time.deltaTime);
+        //animator.SetFloat("speedPercent", animationSpeedPercent, speedSmoothTime, Time.deltaTime);
+        CheckGroundStatus();
+
+        UpdateAnimator();
+    }
+
+    void UpdateAnimator() {
+
+        var inSmallCover = ((thisMoveState == MoveState.STATE_COVER || thisMoveState == MoveState.STATE_COVERAIM) && !IsObjectTallerThanPlayer(currentCover));
+
+        bool crouching = false;
+        if ((thisMoveState == MoveState.STATE_REGULAR && crouchInput) || inSmallCover) {
+            animator.SetBool("Crouch", true);
+            crouching = true;
+        } else {
+            animator.SetBool("Crouch", false);
+        }
+
+        //Animation the movement
+        // Tweak this if the animation and movement is off
+        float forwardAmount = transform.InverseTransformDirection(controller.velocity).z;
+        if (!crouching)
+            forwardAmount /= 3;
+
+        animator.SetFloat("Forward", forwardAmount);
+
+        animator.SetBool("OnGround", isGrounded);
+        if (!isGrounded) {
+            animator.SetFloat("Jump", velocityY);
+        }
+
+        // Copy pasted from ThirdPersonCharacter.cs (more or less):
+        // calculate which leg is behind, so as to leave that leg trailing in the jump animation
+        // (This code is reliant on the specific run cycle offset in our animations,
+        // and assumes one leg passes the other at the normalized clip times of 0.0 and 0.5)
+        const float runCycleOffset = 0.2f;
+        float runCycle =
+            Mathf.Repeat(
+                animator.GetCurrentAnimatorStateInfo(0).normalizedTime + runCycleOffset, 1);
+        float jumpLeg = (runCycle < 0.5f ? 1 : -1) * forwardAmount;
+        if (isGrounded) {
+            animator.SetFloat("JumpLeg", jumpLeg);
+        }
     }
 
     void OnTriggerStay(Collider col) {
@@ -302,10 +348,31 @@ public class PlayerController : MonoBehaviour {
     }
 
     void UpdateCrouch(bool crouching) {
+        var currentHeight = controller.height;
+
+        float crouchHeight = 1;
         if (crouching) {
-            //GetComponent<CharacterController>().center = new Vector3(0,0,.1f);
-            GetComponent<CharacterController>().height = 1;
+            if(currentHeight != crouchHeight) {
+                // Change the height and center of the player controller
+                // So that it stays on the ground when we decrease the height
+                var delta = controller.height - crouchHeight;
+                var center = controller.center;
+                center.y -= delta/2;
+                controller.center = center;
+
+                controller.height = crouchHeight;
+            }
         } else {
+            if(controller.height != colHeight) {
+                // Change the height and center of the player controller
+                var delta = controller.height - colHeight;
+                var center = controller.center;
+                center.y -= delta / 2;
+                controller.center = center;
+
+                controller.height = crouchHeight;
+            }
+
             //GetComponent<CharacterController>().center = new Vector3(0, colCenter, .1f);
             GetComponent<CharacterController>().height = colHeight;
         }
@@ -314,7 +381,6 @@ public class PlayerController : MonoBehaviour {
     bool IsObjectTallerThanPlayer(GameObject obj) {
         var coll = obj.GetComponent<Collider>();
         var bounds = coll.bounds;
-        Debug.Log(bounds.extents.y);
         if (bounds.extents.y > colBoundsHeight) return true;
 
         return false;
@@ -352,6 +418,11 @@ public class PlayerController : MonoBehaviour {
 
         Vector3 velocity = transform.forward * currentSpeed + Vector3.up * velocityY;
         //transform.Translate(transform.forward * currentSpeed * Time.deltaTime, Space.World);
+        if (isGrounded && Time.time - lastTimeInAir < 0.3f) {
+            velocity.x = 0;
+            velocity.z = 0;
+        }
+
         controller.Move(velocity * Time.deltaTime);
         currentSpeed = new Vector2(controller.velocity.x, controller.velocity.z).magnitude;
 
@@ -378,9 +449,12 @@ public class PlayerController : MonoBehaviour {
         velocityY += Time.deltaTime * gravity;
 
 
-
-
         Vector3 velocity = transform.TransformDirection(new Vector3(inputDir.x, 0, inputDir.y)) * currentSpeed + Vector3.up * velocityY;
+        if(isGrounded && Time.time - lastTimeInAir < 0.3f) {
+            velocity.x = 0;
+            velocity.z = 0;
+        }
+
         //transform.Translate(transform.forward * currentSpeed * Time.deltaTime, Space.World);
 
 
@@ -592,6 +666,30 @@ public class PlayerController : MonoBehaviour {
         if (health <= 0)
         {
             print("you died");
+        }
+    }
+
+    void CheckGroundStatus() {
+        if (controller.isGrounded) {
+            isGrounded = true;
+            return;
+        }
+
+#if UNITY_EDITOR
+        // helper to visualise the ground check ray in the scene view
+        Debug.DrawLine(transform.position + (Vector3.up * 0.1f), transform.position + (Vector3.up * 0.1f) + (Vector3.down * groundCheckDistance));
+#endif
+
+        var layers = Physics.AllLayers;
+        layers = layers ^ 1 << gameObject.layer; // Ignore the layer this object is on
+
+        Vector3 halfExtents = new Vector3(controller.bounds.extents.x, groundCheckDistance, controller.bounds.extents.z);
+
+        if (Physics.OverlapBox(transform.position, halfExtents, Quaternion.identity, layers, QueryTriggerInteraction.Ignore).Length > 0) {
+            isGrounded = true;
+        } else {
+            isGrounded = false;
+            lastTimeInAir = Time.time;
         }
     }
 }
