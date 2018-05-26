@@ -50,6 +50,8 @@ public class EnemyAPC : MonoBehaviour {
     void Awake() {
         LevelScript.DisableTruck += DisableTruck;
         lr = bulletTrail.GetComponent<LineRenderer>();
+        //this.GetComponent<AudioSource>().Play();
+        //this.GetComponent<AudioSource>().loop = true;
     }
 
     void TurnOnTrail() {
@@ -225,6 +227,7 @@ public class EnemyAPC : MonoBehaviour {
 
     IEnumerator JerkRoutine() {
         jerking = true;
+        //Play startup sfx here
 
         var originalPos = transform.position;
 

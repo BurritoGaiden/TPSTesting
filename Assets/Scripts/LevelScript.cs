@@ -194,6 +194,8 @@ public class LevelScript : MonoBehaviour {
 
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
 
+        GameObject.Find("CameraRig").GetComponent<CameraShake>().Shake(1, 1);
+
         //when they hit this trigger, make them wait until button press
         yield return AddAndWaitForObjective("Hit this trigger to prompt getting into cover", "", 3, "DropTrig2");
         
