@@ -13,6 +13,8 @@ AudioMixerController:
   - {fileID: 245746510844366948}
   - {fileID: 245021243624687252}
   - {fileID: 245060492267365550}
+  - {fileID: 245571974238442808}
+  - {fileID: 245625568306852580}
   m_StartSnapshot: {fileID: 24500006}
   m_SuspendThreshold: -80
   m_EnableSuspend: 1
@@ -26,7 +28,7 @@ AudioMixerController:
     - 39a5d7b15dd3e54419476599027524c1
     name: View
   m_CurrentViewIndex: 0
-  m_TargetSnapshot: {fileID: 245060492267365550}
+  m_TargetSnapshot: {fileID: 24500006}
 --- !u!243 &24300002
 AudioMixerGroupController:
   m_ObjectHideFlags: 0
@@ -73,7 +75,7 @@ AudioMixerSnapshotController:
     4de20203c2fc70943ab2fe0cf7f3bf2c: -80
     fe7f8f6779bcf6046b63896598256743: 0.10800299
     f77f840f64a5da04994cc0c01c7bc5f1: -80
-    a26ad6efd013c5345aff6a032a6a8e21: 5.02454
+    a26ad6efd013c5345aff6a032a6a8e21: -0.93152964
   m_TransitionOverrides: {}
 --- !u!243 &243419926911393166
 AudioMixerGroupController:
@@ -195,6 +197,38 @@ AudioMixerSnapshotController:
     fe7f8f6779bcf6046b63896598256743: -80
     f77f840f64a5da04994cc0c01c7bc5f1: -80
     a26ad6efd013c5345aff6a032a6a8e21: -18.10123
+  m_TransitionOverrides: {}
+--- !u!245 &245571974238442808
+AudioMixerSnapshotController:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: DesertRegularSnapshot
+  m_AudioMixer: {fileID: 24100000}
+  m_SnapshotID: 960a6b871c50379498251e3026b16d75
+  m_FloatValues:
+    fee7b512da3dbe147a859e2686b94336: 0
+    b82ba1827c5c7064ca3409da9221f1cb: -0.037667945
+    4de20203c2fc70943ab2fe0cf7f3bf2c: -80
+    fe7f8f6779bcf6046b63896598256743: -80
+    f77f840f64a5da04994cc0c01c7bc5f1: -80
+    a26ad6efd013c5345aff6a032a6a8e21: -13.205425
+  m_TransitionOverrides: {}
+--- !u!245 &245625568306852580
+AudioMixerSnapshotController:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: DesertCombatSnapshot
+  m_AudioMixer: {fileID: 24100000}
+  m_SnapshotID: a6cc892d02545014ba6f2a3bf69d50eb
+  m_FloatValues:
+    fee7b512da3dbe147a859e2686b94336: 0
+    b82ba1827c5c7064ca3409da9221f1cb: 9.757735
+    4de20203c2fc70943ab2fe0cf7f3bf2c: -80
+    fe7f8f6779bcf6046b63896598256743: -80
+    f77f840f64a5da04994cc0c01c7bc5f1: -80
+    a26ad6efd013c5345aff6a032a6a8e21: -8.963343
   m_TransitionOverrides: {}
 --- !u!245 &245746510844366948
 AudioMixerSnapshotController:

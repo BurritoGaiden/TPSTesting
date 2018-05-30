@@ -84,6 +84,7 @@ public class LevelScript : MonoBehaviour {
 
     public Transform EntranceCameraTarget;
     public Transform dilapidatedPoint;
+    public Image buttonPromptImage;
 
 
     //Game-state Machine
@@ -159,7 +160,8 @@ public class LevelScript : MonoBehaviour {
         print("Setup truck and music");
         //Set all relevant objects to their desired state at the beginning of the game
         truck.SetActive(false);
-        levelSnapshots[0].TransitionTo(0f);
+        buttonPromptImage.enabled = false;
+        //levelSnapshots[0].TransitionTo(0f);
 
         print("set up inputs");
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
@@ -194,25 +196,30 @@ public class LevelScript : MonoBehaviour {
 
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
 
-        GameObject.Find("CameraRig").GetComponent<CameraShake>().Shake(1, 1);
+        //GameObject.Find("CameraRig").GetComponent<CameraShake>().Shake(1, 1);
 
         //when they hit this trigger, make them wait until button press
         yield return AddAndWaitForObjective("Hit this trigger to prompt getting into cover", "", 3, "DropTrig2");
         
         //Make car show up, 
         truck.SetActive(true);
+        truck.GetComponent<AudioSource>().volume = .2f;
         MoveTruckAlongRail("truck_rail_1_start", false);
 
         //Button Prompt Text
         PlayThisDialogue(13);
 
+        buttonPromptImage.enabled = true;
+
         //Pause until keypress
-        Time.timeScale = 0;
+        Time.timeScale = 0.00001f;
 
         while (true) {
             if (Input.GetKeyDown(KeyCode.Q)) break;
             yield return null;
         }
+
+        buttonPromptImage.enabled = false;
 
         //Resume Gameplay and Move the Player Character to the target
         Time.timeScale = 1;
@@ -224,19 +231,26 @@ public class LevelScript : MonoBehaviour {
         player.currentCover = coverDropzone1;
         player.coverCooldown = 1.2f;
         PlayerController.thisMoveState = MoveState.STATE_COVER;
+        //tell the car to get louder
+        truck.GetComponent<AudioSource>().volume = .5f;
 
         // Wait until were in cover
         while (PlayerController.thisMoveState != MoveState.STATE_COVER) yield return null;
 
         //Make car go away
         MoveTruckAlongRail("truck_rail_2");
+        yield return new WaitForSeconds(3.5f);
+        //tell the car to quiet down
+        truck.GetComponent<AudioSource>().volume = .1f;
 
         //When they hit this trigger, make the car about to show up again
         yield return AddAndWaitForObjective("Walk over the bridge", "", 3, "DropTrig3");
+        truck.GetComponent<AudioSource>().volume = .7f;
         MoveTruckAlongRail("truck_rail_3", false);
 
         waitTillObjectiveDone = true;
         AssignThisObjective("Jump down the ledge", "", 3, "Drop2Trig1");
+        truck.GetComponent<AudioSource>().volume = .3f;
 
         // Wait for the player to enter cover, or jump down
         while (PlayerController.thisMoveState != MoveState.STATE_COVER && waitTillObjectiveDone) yield return null;
@@ -250,6 +264,11 @@ public class LevelScript : MonoBehaviour {
         //When the player picks up the planks, start the alternating car section
         //If the cars see the player, they'll shoot, if they don't see the player for X seconds after showing up in either window, they'll move to the other window
         while(plankPikcupArea.pickable != null) yield return null;
+        //Destroy the crates here
+        GameObject[] crates = GameObject.FindGameObjectsWithTag("PuzzleCrates");
+        for (int i = 0; i < crates.Length; i++) {
+            crates[i].GetComponent<CrateDestroyer>().ExplodeCrate();
+        }
 
         var truckLoopingRoutine = MoveTruckBackAndForth("truck_rail_looping_4", "");
         StartCoroutine(truckLoopingRoutine);
@@ -321,7 +340,7 @@ public class LevelScript : MonoBehaviour {
         while (waitTillObjectiveDone) { yield return null; }
         
         truck.SetActive(true);
-        levelSnapshots[1].TransitionTo(.5f);
+        //levelSnapshots[1].TransitionTo(.5f);
         PlayerCamera.cameraState = camStates.STATE_DIRFOCUS;
         DisableCharacterInput();
         PlayerCamera.camTar = truck.transform;
@@ -428,7 +447,7 @@ public class LevelScript : MonoBehaviour {
         DisableTruck();
         PlayThisDialogue(12);
         truck.transform.position = truckPositions[1].position;
-        levelSnapshots[2].TransitionTo(3f);
+        //levelSnapshots[2].TransitionTo(3f);
 
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
         PlayerCamera.transitioning = true;
