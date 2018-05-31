@@ -7,7 +7,6 @@ public class PlayerCamera : MonoBehaviour {
     //NOTE: THIS SCRIPT IS ON THE CAMERA RIG AT THIS TIME
     public Transform cam;
     public bool camInput;
-    public bool lockCursor;
     public float mouseSensitivity = 10;
     public Transform target;
     public float dstFromTarget = 2;
@@ -21,14 +20,14 @@ public class PlayerCamera : MonoBehaviour {
     float yaw;
     float pitch;
 
-    public static Transform camTar;
+    public static Transform cameraLookTarget;
+    public static Transform targetPosition;
+    public static Transform valuePlaceholder;
+
     public static camStates cameraState = camStates.STATE_NULL;
 
     //Sample received delegate string
     public string lookingFor;
-
-    //FOR DEBUGGING PURPOSES
-    public string currentStateString;
 
     public float horizontalOffset = .64f;
     public float forwardOffset = 0f;
@@ -56,15 +55,9 @@ public class PlayerCamera : MonoBehaviour {
     public static Transform currentView;
     public bool lerpToPos;
 
-    public static Transform puzzleDirPlaceholder;
-    public static Transform puzzleDirCamPosition;
-    public static Transform puzzleCameraTarget;
-
     void Awake() {
-        if (lockCursor) {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
         anim = GetComponent<Animator>();
         cam = Camera.main.transform;
 
@@ -77,26 +70,26 @@ public class PlayerCamera : MonoBehaviour {
 
     void LateUpdate () {
         CameraStateLogic();
-        
 	}
+
+    void PlayerOrbit() {
+        //State Behavior
+        OrbitingBehavior();
+        UpdatePosition();
+        CameraOffset();
+
+        //State Transitions
+        if (!camInput) cameraState = camStates.STATE_NULL;
+        else if (PlayerController.thisMoveState == MoveState.STATE_COVER) cameraState = camStates.STATE_COVER;
+        else if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
+    }
 
     void CameraStateLogic() {
         switch (cameraState)
         {
             //State Case
             case camStates.STATE_PLAYERORBIT:
-                //State Behavior
-                OrbitingBehavior();
-                //-----Seeing if this works disabled
-                UpdatePosition();
-                CameraOffset();
-                //-----With this enabled
-                //cam.transform.position = target.position - transform.forward * dstFromTarget + CamOffset();
-
-                //State Transitions
-                if (!camInput) cameraState = camStates.STATE_NULL;
-                else if (PlayerController.thisMoveState == MoveState.STATE_COVER) cameraState = camStates.STATE_COVER;
-                else if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
+                PlayerOrbit();
                 break;
 
             //Developer driven state. Can only be switched into and out of from the level script
@@ -135,8 +128,8 @@ public class PlayerCamera : MonoBehaviour {
             case camStates.STATE_LERPDIRFOCUS:
                 currentView = transform;
                 //Establishing position and rotation
-                yaw = GetAngleBetween3PointsHor(this.transform.position, camTar.position);
-                pitch = GetAngleBetween3PointsVer(this.transform.position, camTar.position);
+                yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+                pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
                 pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
                 if (setRotationInstantlyNextFrame)
@@ -160,9 +153,7 @@ public class PlayerCamera : MonoBehaviour {
                 //---------------------------------------------------
 
                 //Lerping to a position and rotation
-                //transform.position = Vector3.Lerp(transform.position, target.position - transform.forward * dstFromTarget, Time.deltaTime * transitionSpeed);
                 transform.position = LerpOrMoveTowardsPoisition(transform.position, target.position - transform.forward * dstFromTarget, transitionSpeed, transitionSpeed / 3f);
-                //cam.transform.localPosition = Vector3.Lerp(cam.transform.localPosition, CamOffset(), Time.deltaTime * transitionSpeed);
                 cam.transform.localPosition = LerpOrMoveTowardsPoisition(cam.transform.localPosition, CamOffset(), transitionSpeed, transitionSpeed / 3f);
 
                 //Turn the rotation we got from the rot/pos establishment and set it in the current angle
@@ -179,10 +170,10 @@ public class PlayerCamera : MonoBehaviour {
             //Needs to also track the player position with it's rotation
             case camStates.STATE_PUZZLELERPDIRFOCUS:
                 //Set up placeholder to take data
-                puzzleDirPlaceholder = transform;
+                valuePlaceholder = transform;
                 //Establishing rotation
-                yaw = GetAngleBetween3PointsHor(this.transform.position, puzzleCameraTarget.position);
-                pitch = GetAngleBetween3PointsVer(this.transform.position, puzzleCameraTarget.position);
+                yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+                pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
                 pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
                 if (setRotationInstantlyNextFrame)
@@ -200,19 +191,19 @@ public class PlayerCamera : MonoBehaviour {
                 //---------------------------------------------------
 
                 //Assign rotation values to placeholder that'll make the angle lerp work
-                puzzleDirPlaceholder.eulerAngles = currentRotation;
+                valuePlaceholder.eulerAngles = currentRotation;
 
                 //---------------------------------------------------
 
                 //Lerping to a position and rotation
-                transform.position = Vector3.Lerp(transform.position, puzzleDirCamPosition.position, Time.deltaTime * transitionSpeed);
+                transform.position = Vector3.Lerp(transform.position, targetPosition.position, Time.deltaTime * transitionSpeed);
                 cam.transform.localPosition = Vector3.Lerp(cam.transform.localPosition, CamOffset(), Time.deltaTime * transitionSpeed);
 
                 //Turn the rotation we got from the rot/pos establishment and set it in the current angle
                 Vector3 currentAnglePL = new Vector3(
-                    Mathf.LerpAngle(transform.rotation.eulerAngles.x, puzzleDirPlaceholder.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
-                    Mathf.LerpAngle(transform.rotation.eulerAngles.y, puzzleDirPlaceholder.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
-                    Mathf.LerpAngle(transform.rotation.eulerAngles.z, puzzleDirPlaceholder.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.x, valuePlaceholder.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.y, valuePlaceholder.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.z, valuePlaceholder.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
 
                 //Assign to our rig :)
                 transform.eulerAngles = currentAnglePL;
@@ -248,8 +239,8 @@ public class PlayerCamera : MonoBehaviour {
                 break;
 
             case camStates.STATE_PUZZLECCTV:
-                yaw = GetAngleBetween3PointsHor(this.transform.position, camTar.position);
-                pitch = GetAngleBetween3PointsVer(this.transform.position, camTar.position);
+                yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+                pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
                 pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
                 if (setRotationInstantlyNextFrame)
@@ -319,8 +310,8 @@ public class PlayerCamera : MonoBehaviour {
 
     void CCTVBehavior()
     {
-        yaw = GetAngleBetween3PointsHor(this.transform.position, camTar.position);
-        pitch = GetAngleBetween3PointsVer(this.transform.position, camTar.position);
+        yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+        pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
         pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
         if (setRotationInstantlyNextFrame)
@@ -385,8 +376,8 @@ public class PlayerCamera : MonoBehaviour {
 
     void FocusBehavior()
     {
-        yaw = GetAngleBetween3PointsHor(this.transform.position, camTar.position);
-        pitch = GetAngleBetween3PointsVer(this.transform.position, camTar.position);
+        yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+        pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
         pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
         if (setRotationInstantlyNextFrame)

@@ -124,7 +124,7 @@ public class LevelScript : MonoBehaviour {
         b_SetCharacterInput(true);
 
         st_SetCameraState(camStates.STATE_DETACHED);
-        PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
+        PlayerCamera.targetPosition = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
         PlayerCamera.detachedPosition = GameObject.Find("cam_detached_intro").transform.position;
         PlayerCamera.detachedFixedRotation = GameObject.Find("cam_detached_intro").transform.rotation;
         PlayerCamera.setRotationInstantlyNextFrame = true;
@@ -141,7 +141,7 @@ public class LevelScript : MonoBehaviour {
         //Make it so that this is lerping to the position it'd have during regular player orbit
 
         PlayerCamera.cameraState = camStates.STATE_LERPDIRFOCUS;
-        PlayerCamera.camTar = introCameraTarget.transform;
+        PlayerCamera.targetPosition = introCameraTarget.transform;
 
         print("done waiting");
 
@@ -170,7 +170,7 @@ public class LevelScript : MonoBehaviour {
         ///Intro Sequence - PC moves automatically, being tracked by the cam and transitioning to gameplay camera
         //Set up the camera for the sequence
         st_SetCameraState(camStates.STATE_DETACHED);
-        PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
+        PlayerCamera.targetPosition = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
         PlayerCamera.detachedPosition = GameObject.Find("cam_detached_intro").transform.position;
         PlayerCamera.detachedFixedRotation = GameObject.Find("cam_detached_intro").transform.rotation;
         PlayerCamera.setRotationInstantlyNextFrame = true;
@@ -186,7 +186,7 @@ public class LevelScript : MonoBehaviour {
         while (waitTillObjectiveDone) { yield return null; }
 
         st_SetCameraState(camStates.STATE_LERPDIRFOCUS);
-        PlayerCamera.camTar = introCameraTarget.transform;
+        PlayerCamera.targetPosition = introCameraTarget.transform;
 
         yield return new WaitForSeconds(1.5f);
         print("done");
@@ -270,11 +270,10 @@ public class LevelScript : MonoBehaviour {
         var truckLoopingRoutine = MoveTruckBackAndForth("truck_rail_looping_4", "");
         StartCoroutine(truckLoopingRoutine);
 
-        //PlayerCamera.transitionSpeed = 1;
         PlayerCamera.cameraState = camStates.STATE_PUZZLELERPDIRFOCUS;
-        PlayerCamera.puzzleDirCamPosition = GameObject.FindWithTag("PuzzleCameraView").transform;
-        PlayerCamera.puzzleCameraTarget = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
-        PlayerCamera.puzzleDirPlaceholder = GameObject.FindWithTag("PuzzlePlaceholder").transform;
+        PlayerCamera.targetPosition = GameObject.FindWithTag("PuzzleCameraView").transform;
+        PlayerCamera.cameraLookTarget = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
+        PlayerCamera.valuePlaceholder = GameObject.FindWithTag("PuzzlePlaceholder").transform;
 
         //When the player has put down the bridge plank successfully, move the car to the close window
         GameObject plankPutdownArea = GameObject.Find("PlankPutdownArea_Step16");
@@ -306,7 +305,7 @@ public class LevelScript : MonoBehaviour {
 
         //Tell camera to lerp to a specific point
         PlayerCamera.cameraState = camStates.STATE_LERPDIRFOCUS;
-        PlayerCamera.camTar = EntranceCameraTarget;
+        PlayerCamera.targetPosition = EntranceCameraTarget;
         //PlayerCamera.currentView = EntrancePoint;
 
         Time.timeScale = 1;
@@ -341,7 +340,7 @@ public class LevelScript : MonoBehaviour {
         //levelSnapshots[1].TransitionTo(.5f);
         PlayerCamera.cameraState = camStates.STATE_DIRFOCUS;
         b_SetCharacterInput(false);
-        PlayerCamera.camTar = truck.transform;
+        PlayerCamera.targetPosition = truck.transform;
 
         truck.GetComponent<EnemyAPC>().PlayRail(rail, true);
         truck.GetComponent<EnemyAPC>().thisAimState = APCAimState.STATE_PLAYER;
@@ -408,7 +407,7 @@ public class LevelScript : MonoBehaviour {
         truck.GetComponent<EnemyAPC>().thisAimState = APCAimState.STATE_PLAYER;
 
         PlayerCamera.cameraState = camStates.STATE_RAIL;
-        PlayerCamera.camTar = truck.transform;
+        PlayerCamera.targetPosition = truck.transform;
         PlayerCamera.followRail = GameObject.Find("rail1").transform;
         PlayerCamera.railOffset = -6;
         PlayerCamera.setRotationInstantlyNextFrame = true;
@@ -460,7 +459,7 @@ public class LevelScript : MonoBehaviour {
         PlayerController.scriptedMovementTarget = GameObject.Find("movement_target2").transform.position;
 
         PlayerCamera.cameraState = camStates.STATE_DETACHED;
-        PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
+        PlayerCamera.targetPosition = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
         PlayerCamera.detachedPosition = Camera.main.transform.parent.position;
 
         yield return new WaitForSeconds(3f);
