@@ -5,13 +5,14 @@ using UnityEngine.UI;
 
 public class GameplayUI : MonoBehaviour {
 
-    public Image healthVignette;
-    public Image healthMeter;
-
     public Text pushableText;
     public Text coverText;
 
     public Image buttonPromptImage;
+    public Image healthVignette;
+    public Image healthMeter;
+    public Image[] UIImages;
+    public Text[] UIText;
 
     void Awake() {
         LevelScript.b_SetUIElementEnabled += SetElement;
@@ -23,13 +24,10 @@ public class GameplayUI : MonoBehaviour {
     }
 
     void SetElement(string desiredObject, bool desiredState) {
-        GameObject desiredO = GameObject.Find(desiredObject);
-        if (desiredO.GetComponent<Image>())
-        {
-            desiredO.GetComponent<Image>().enabled = desiredState;
-        }
-        else if (desiredO.GetComponent<Text>()) {
-            desiredO.GetComponent<Text>().enabled = desiredState;
+        for (int i = 0; i < UIImages.Length; i++) {
+            if (UIImages[i].name == desiredObject) {
+                UIImages[i].enabled = desiredState;
+            }
         }
     }
 }

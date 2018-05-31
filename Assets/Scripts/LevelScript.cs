@@ -88,20 +88,15 @@ public class LevelScript : MonoBehaviour {
     public Transform EntranceCameraTarget;
     public Transform dilapidatedPoint;
     
-
-
     //Game-state Machine
     public static GamePlayState thisGameplayState = GamePlayState.Regular;
     public Playmode thisPlayMode = Playmode.Linear;
 
     public float truckSpeed = 3f;
 
-    EnemyAPC enemyAPC;
-
     // Use this for initialization
     void Awake() {
         ObjectiveHandler.ObjDone += ObjectiveDoneListener;
-        enemyAPC = truck.GetComponent<EnemyAPC>();
     }
        
 	void Start () {
@@ -286,12 +281,12 @@ public class LevelScript : MonoBehaviour {
         while (plankPutdownArea.GetComponent<PickupArea>().pickable == null) yield return null;
 
         StopCoroutine(truckLoopingRoutine);
-        enemyAPC.SetTurretAimDir(TurretDirection.Forward);
+        truck.GetComponent<EnemyAPC>().SetTurretAimDir(TurretDirection.Forward);
 
         yield return null;
         MoveTruckAlongRail("truck_rail_5", false);
 
-        enemyAPC.thisAimState = APCAimState.STATE_PLAYER;
+        truck.GetComponent<EnemyAPC>().thisAimState = APCAimState.STATE_PLAYER;
 
         //As the player finishes crossing the bridge, present an unskippable prompt
         //When the player presses the button for the prompt, move the player over to the right/back of the pushable yellow block.
@@ -348,8 +343,8 @@ public class LevelScript : MonoBehaviour {
         b_SetCharacterInput(false);
         PlayerCamera.camTar = truck.transform;
 
-        enemyAPC.PlayRail(rail, true);
-        enemyAPC.thisAimState = APCAimState.STATE_PLAYER;
+        truck.GetComponent<EnemyAPC>().PlayRail(rail, true);
+        truck.GetComponent<EnemyAPC>().thisAimState = APCAimState.STATE_PLAYER;
         for (float counter = 0; counter < 2; counter += Time.deltaTime) {
             //counter += Time.deltaTime;
             //RailPlayer();
@@ -410,7 +405,7 @@ public class LevelScript : MonoBehaviour {
         var truckMovingRoutine = TruckMovingSubRoutine();
         StartCoroutine(truckMovingRoutine);
 
-        enemyAPC.thisAimState = APCAimState.STATE_PLAYER;
+        truck.GetComponent<EnemyAPC>().thisAimState = APCAimState.STATE_PLAYER;
 
         PlayerCamera.cameraState = camStates.STATE_RAIL;
         PlayerCamera.camTar = truck.transform;
@@ -498,36 +493,36 @@ public class LevelScript : MonoBehaviour {
             MoveTruckAlongRail(transitionRail, false);
 
             // Wait until it's done moving along the transition rail
-            while (enemyAPC.thisMoveState == APCMoveState.STATE_RAIL) yield return null;
+            while (truck.GetComponent<EnemyAPC>().thisMoveState == APCMoveState.STATE_RAIL) yield return null;
         }
 
         while (true) {
-            enemyAPC.thisAimState = APCAimState.STATE_PLAYER;
+            truck.GetComponent<EnemyAPC>().thisAimState = APCAimState.STATE_PLAYER;
 
             // Wait until we have been in cover for 3 seconds
             yield return WaitForCoverDuration(3f);
 
-            enemyAPC.SetTurretAimDir(TurretDirection.Forward);
+            truck.GetComponent<EnemyAPC>().SetTurretAimDir(TurretDirection.Forward);
 
             MoveTruckAlongRail(railName);
 
             // Wait until it's done moving along the rail
-            while (enemyAPC.thisMoveState == APCMoveState.STATE_RAIL) yield return null;
-            
-            enemyAPC.thisAimState = APCAimState.STATE_PLAYER;
+            while (truck.GetComponent<EnemyAPC>().thisMoveState == APCMoveState.STATE_RAIL) yield return null;
+
+            truck.GetComponent<EnemyAPC>().thisAimState = APCAimState.STATE_PLAYER;
 
             // Wait until we have been in cover for 3 seconds
             yield return WaitForCoverDuration(3f);
 
-            enemyAPC.FlipDirection();
-            enemyAPC.SetTurretAimDir(TurretDirection.Forward);
+            truck.GetComponent<EnemyAPC>().FlipDirection();
+            truck.GetComponent<EnemyAPC>().SetTurretAimDir(TurretDirection.Forward);
 
             MoveTruckAlongRail(railName, true, true);
 
             // Wait until it's done moving along the rail
-            while (enemyAPC.thisMoveState == APCMoveState.STATE_RAIL) yield return null;
+            while (truck.GetComponent<EnemyAPC>().thisMoveState == APCMoveState.STATE_RAIL) yield return null;
 
-            enemyAPC.FlipDirection();
+            truck.GetComponent<EnemyAPC>().FlipDirection();
         }
 
     }
@@ -607,15 +602,13 @@ public class LevelScript : MonoBehaviour {
         }
 
         if (reverse) {
-            enemyAPC.PlayRailReverse(r.GetComponent<Rail>(), !lerpToStart);
+            truck.GetComponent<EnemyAPC>().PlayRailReverse(r.GetComponent<Rail>(), !lerpToStart);
         } else {
-            enemyAPC.PlayRail(r.GetComponent<Rail>(), !lerpToStart);
+            truck.GetComponent<EnemyAPC>().PlayRail(r.GetComponent<Rail>(), !lerpToStart);
         }
     }
 
     public Rail rail;
-
-
     //TODO: program a delegate that allows calls for specific targets on an objective being completed
 }
 
