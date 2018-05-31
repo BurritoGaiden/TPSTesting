@@ -1,18 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour {
 
     //TODO: Add behavior for expanding collision check on push to include pushed object, fix shooting
-
     public bool takeInput;
     public float crouchSpeed = 1.5f;
     public float walkSpeed = 2f;
     public float runSpeed = 6f;
     public float gravity = -12f;
     public float jumpHeight = 1f;
+
     [Range (0,1)]
     public float airControlPercent;
 
@@ -29,11 +28,6 @@ public class PlayerController : MonoBehaviour {
     Transform cameraT;
     CharacterController controller;
 
-    public static bool runInput;
-    public static bool crouchInput;
-    bool jumpInput;
-    bool coverInput;
-
     bool inAutoCrouchArea;
     public static GameObject triggerCollidingWith;
     public GameObject pushableCollidingWith;
@@ -43,19 +37,11 @@ public class PlayerController : MonoBehaviour {
     bool inShortCover;
     public float coverCooldown = 0;
 
-    public Text pushableText;
-    public Text coverText;
-
     public float colCenter = .85f;
     public float colHeight = 1.7f;
     public float colBoundsHeight;
 
     public static MoveState thisMoveState = MoveState.STATE_REGULAR;
-
-    public static float health = 100f;
-    public Image healthVignette;
-    public Image healthMeter;
-
     public static Vector3 scriptedMovementTarget;
 
     public float groundCheckDistance = 0.1f;
@@ -63,10 +49,6 @@ public class PlayerController : MonoBehaviour {
     // Used to disable movement for a short duration after getting grounded
     float lastTimeInAir;
     bool isGrounded;
-    
-
-
-    //public float healthRegenCooldown;
 
     // Use this for initialization
     void Awake () {
@@ -76,38 +58,17 @@ public class PlayerController : MonoBehaviour {
         controller = GetComponent<CharacterController>();
         controller.height = colHeight;
         colBoundsHeight = controller.bounds.extents.y;
-        
-        LevelScript.DisableCharacterInput += DisableInput;
-        LevelScript.EnableCharacterInput += EnableInput;
-        EnemyAPC.HitPlayer += TakeDamage;
-        
-        //if(healthMeter)
-        //healthMeter.fillAmount = health / 100;
 	}
-
-    
 
     // Update is called once per frame
     void Update()
     {
-        Vector2 input = new Vector2(0,0);
-        Vector2 inputDir = new Vector2(0,0);
-
         if (coverCooldown > 0) {
             coverCooldown -= Time.deltaTime;
         }
 
-
         if (takeInput)
         {
-            input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-            inputDir = input.normalized;
-
-            runInput = Input.GetKey(KeyCode.LeftShift);
-            crouchInput = Input.GetKey(KeyCode.LeftControl) || inAutoCrouchArea;
-            //jumpInput = Input.GetKeyDown(KeyCode.Space);
-            coverInput = Input.GetKeyDown(KeyCode.Q);
-
             switch (thisMoveState) {
 
                 case MoveState.STATE_SCRIPTEDMOVEMENT:
@@ -125,8 +86,8 @@ public class PlayerController : MonoBehaviour {
                     break;
 
                 case MoveState.STATE_REGULAR:
-                    Move(inputDir, runInput, crouchInput, jumpInput);
-                    UpdateCrouch(crouchInput);
+                    Move(CharacterUserControl.inputDir, CharacterUserControl.runInput, CharacterUserControl.crouchInput, CharacterUserControl.jumpInput);
+                    UpdateCrouch(CharacterUserControl.crouchInput);
 
                     //if there is a pushable
                     if (pushableCollidingWith)
@@ -162,7 +123,7 @@ public class PlayerController : MonoBehaviour {
                     if (Interesting.looking) {
                         thisMoveState = MoveState.STATE_FOCUS;
                     }
-                    if (coverInput && coverCollidingWith && coverCooldown <= 0)
+                    if (CharacterUserControl.contextSensitiveInput && coverCollidingWith && coverCooldown <= 0)
                     {
                         coverCooldown = 1.2f;
                         currentCover = coverCollidingWith;
@@ -170,20 +131,20 @@ public class PlayerController : MonoBehaviour {
                         print("entered cover");                            
                     }
                     //MAKE SURE THIS STATE TRANSITION WORKS
-                    else if (coverInput && pushableCollidingWith && coverCooldown <= 0)
+                    else if (CharacterUserControl.contextSensitiveInput && pushableCollidingWith && coverCooldown <= 0)
                     {
                         coverCooldown = 1.2f;
                         currentPush = pushableCollidingWith;
                         thisMoveState = MoveState.STATE_PUSHING;
                         print("entered pushing");
-                    }else if (Killing.aiming) {
+                    }else if (CharacterUserControl.aimInput) {
                         thisMoveState = MoveState.STATE_REGULARAIM;
                     }
 
                     break;
 
                 case MoveState.STATE_FOCUS:
-                    Move(inputDir, false, crouchInput, false);
+                    Move(CharacterUserControl.inputDir, false, CharacterUserControl.crouchInput, false);
 
                     //Transition
                     if (!Interesting.looking)
@@ -193,21 +154,21 @@ public class PlayerController : MonoBehaviour {
                     break;
 
                 case MoveState.STATE_DIRFOCUS:
-                    Move(inputDir, false, crouchInput, false);
+                    Move(CharacterUserControl.inputDir, false, CharacterUserControl.crouchInput, false);
                     break;
 
                 case MoveState.STATE_COVER:
-                    CoverMove(inputDir, currentCover);
+                    CoverMove(CharacterUserControl.inputDir, currentCover);
 
                     UpdateCrouch(!IsObjectTallerThanPlayer(currentCover));
 
                    // pushableText.enabled = false;
                    // coverText.enabled = false;
 
-                    if (Killing.aiming) {
+                    if (CharacterUserControl.aimInput) {
                         thisMoveState = MoveState.STATE_COVERAIM;
                     }
-                    else if (coverInput && coverCooldown <= 0)
+                    else if (CharacterUserControl.contextSensitiveInput && coverCooldown <= 0)
                     {
                         coverCooldown = 1.2f;
                         currentCover = null;
@@ -219,12 +180,12 @@ public class PlayerController : MonoBehaviour {
                 case MoveState.STATE_COVERAIM:
                     UpdateCrouch(!IsObjectTallerThanPlayer(currentCover));
 
-                    CoverMoveAim(inputDir, currentCover);
-                    if (!Killing.aiming)
+                    CoverMoveAim(CharacterUserControl.inputDir, currentCover);
+                    if (!CharacterUserControl.aimInput)
                     {
                         thisMoveState = MoveState.STATE_COVER;
                     }
-                    else if (coverInput && coverCooldown <= 0)
+                    else if (CharacterUserControl.contextSensitiveInput && coverCooldown <= 0)
                     {
                         coverCooldown = 1.2f;
                         currentCover = null;
@@ -234,17 +195,17 @@ public class PlayerController : MonoBehaviour {
                     break;
 
                 case MoveState.STATE_REGULARAIM:
-                    AimMove(inputDir);
+                    AimMove(CharacterUserControl.inputDir);
 
-                    if (!Killing.aiming) thisMoveState = MoveState.STATE_REGULAR;
+                    if (!CharacterUserControl.aimInput) thisMoveState = MoveState.STATE_REGULAR;
                     break;
 
                 case MoveState.STATE_PUSHING:
-                    ObjectMove(inputDir, currentPush);
+                    ObjectMove(CharacterUserControl.inputDir, currentPush);
                    // pushableText.enabled = false;
                    // coverText.enabled = false;
 
-                    if (coverInput && coverCooldown <= 0)
+                    if (CharacterUserControl.contextSensitiveInput && coverCooldown <= 0)
                     {
                         coverCooldown = 1.2f;
                         currentPush = null;
@@ -271,7 +232,7 @@ public class PlayerController : MonoBehaviour {
         var inSmallCover = ((thisMoveState == MoveState.STATE_COVER || thisMoveState == MoveState.STATE_COVERAIM) && !IsObjectTallerThanPlayer(currentCover));
 
         bool crouching = false;
-        if ((thisMoveState == MoveState.STATE_REGULAR && crouchInput) || inSmallCover) {
+        if ((thisMoveState == MoveState.STATE_REGULAR && CharacterUserControl.crouchInput) || inSmallCover) {
             animator.SetBool("Crouch", true);
             crouching = true;
         } else {
@@ -372,8 +333,6 @@ public class PlayerController : MonoBehaviour {
 
                 controller.height = crouchHeight;
             }
-
-            //GetComponent<CharacterController>().center = new Vector3(0, colCenter, .1f);
             GetComponent<CharacterController>().height = colHeight;
         }
     }
@@ -646,28 +605,7 @@ public class PlayerController : MonoBehaviour {
             return float.MaxValue;
         }
         return smoothTime / airControlPercent;
-    }
-
-    void EnableInput() {
-        takeInput = true;
-    }
-
-    void DisableInput() {
-        takeInput = false;
-    }
-
-    void TakeDamage()
-    {
-        if (health > 0)
-            health -= 8f;
-        healthMeter.fillAmount = health / 100;
-        print("Health is now: " + health);
-
-        if (health <= 0)
-        {
-            print("you died");
-        }
-    }
+    }   
 
     void CheckGroundStatus() {
         if (controller.isGrounded) {

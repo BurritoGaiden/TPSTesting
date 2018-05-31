@@ -20,14 +20,20 @@ public class LevelScript : MonoBehaviour {
     public delegate void DialogueDelegate(int chosenDialogueLine);
     public static event DialogueDelegate PlayThisDialogue;
 
-    public delegate void CharacterDelegate();
-    public static event CharacterDelegate DisableCharacterInput, EnableCharacterInput;
+    public delegate void InputDelegate(bool desiredInput);
+    public static event InputDelegate b_SetCharacterInput, b_SetCameraInput;
+
+    public delegate void CameraStateDelegate(camStates desiredState);
+    public static event CameraStateDelegate st_SetCameraState;
 
     public delegate void CameraDelegate();
-    public static event CameraDelegate DisableCameraInput, EnableCameraInput, ResetCamPositionOnRig;
+    public static event CameraDelegate ResetCamPositionOnRig;
 
-    public delegate void CameraTransformDelegate(Vector3 pos,Vector3 rot);
-    public static event CameraTransformDelegate SetCharCamTransform;
+    public delegate void UIDelegate(string elementName, bool desiredInput);
+    public static event UIDelegate b_SetUIElementEnabled;
+
+    public delegate void CameraTransformDelegate(Transform desiredTransform, Quaternion desiredRotation);
+    public static event CameraTransformDelegate SetCameraPosition;
 
     public delegate void InterestDelegate(String thisOne);
     public static event InterestDelegate EnableInterestTrigger, DisableInterestTrigger;
@@ -35,8 +41,6 @@ public class LevelScript : MonoBehaviour {
     public delegate void TruckDelegate();
     public static event TruckDelegate DisableTruck;
 
-    public delegate void DirectCamFocusDelegate();
-    public static event DirectCamFocusDelegate EnableDirectorFocus, DisableDirectorFocus;
     #endregion
 
     //Pacing the level script
@@ -72,7 +76,6 @@ public class LevelScript : MonoBehaviour {
     public GameObject[] toggleableGeometry;
     public GameObject birds;
 
-    public PickupArea plankPikcupArea;
     public PickupArea plankPutdownArea;
     public GameObject coverDropzone1;
     public GameObject secretBlockingPushable;
@@ -84,7 +87,7 @@ public class LevelScript : MonoBehaviour {
 
     public Transform EntranceCameraTarget;
     public Transform dilapidatedPoint;
-    public Image buttonPromptImage;
+    
 
 
     //Game-state Machine
@@ -122,10 +125,10 @@ public class LevelScript : MonoBehaviour {
         //Starting off with regular player and camera control
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
         ResetCamPositionOnRig();
-        EnableCameraInput();
-        EnableCharacterInput();
+        b_SetCameraInput(true);
+        b_SetCharacterInput(true);
 
-        PlayerCamera.cameraState = camStates.STATE_DETACHED;
+        st_SetCameraState(camStates.STATE_DETACHED);
         PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
         PlayerCamera.detachedPosition = GameObject.Find("cam_detached_intro").transform.position;
         PlayerCamera.detachedFixedRotation = GameObject.Find("cam_detached_intro").transform.rotation;
@@ -160,19 +163,18 @@ public class LevelScript : MonoBehaviour {
         print("Setup truck and music");
         //Set all relevant objects to their desired state at the beginning of the game
         truck.SetActive(false);
-        buttonPromptImage.enabled = false;
-        //levelSnapshots[0].TransitionTo(0f);
+        b_SetUIElementEnabled("HealthVignette", false);
 
         print("set up inputs");
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
         ResetCamPositionOnRig();
-        EnableCharacterInput();
-        EnableCameraInput();
+        b_SetCharacterInput(true);
+        b_SetCameraInput(true);
 
         print("setup camera vars");
         ///Intro Sequence - PC moves automatically, being tracked by the cam and transitioning to gameplay camera
         //Set up the camera for the sequence
-        PlayerCamera.cameraState = camStates.STATE_DETACHED;
+        st_SetCameraState(camStates.STATE_DETACHED);
         PlayerCamera.camTar = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
         PlayerCamera.detachedPosition = GameObject.Find("cam_detached_intro").transform.position;
         PlayerCamera.detachedFixedRotation = GameObject.Find("cam_detached_intro").transform.rotation;
@@ -188,14 +190,13 @@ public class LevelScript : MonoBehaviour {
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
-        PlayerCamera.cameraState = camStates.STATE_LERPDIRFOCUS;
+        st_SetCameraState(camStates.STATE_LERPDIRFOCUS);
         PlayerCamera.camTar = introCameraTarget.transform;
 
         yield return new WaitForSeconds(1.5f);
         print("done");
 
-        PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
-
+        st_SetCameraState(camStates.STATE_PLAYERORBIT);
         //GameObject.Find("CameraRig").GetComponent<CameraShake>().Shake(1, 1);
 
         //when they hit this trigger, make them wait until button press
@@ -209,7 +210,7 @@ public class LevelScript : MonoBehaviour {
         //Button Prompt Text
         PlayThisDialogue(13);
 
-        buttonPromptImage.enabled = true;
+        b_SetUIElementEnabled("HealthVignette", true);
 
         //Pause until keypress
         Time.timeScale = 0.00001f;
@@ -219,7 +220,7 @@ public class LevelScript : MonoBehaviour {
             yield return null;
         }
 
-        buttonPromptImage.enabled = false;
+        b_SetUIElementEnabled("HealthVignette", false);
 
         //Resume Gameplay and Move the Player Character to the target
         Time.timeScale = 1;
@@ -263,7 +264,8 @@ public class LevelScript : MonoBehaviour {
 
         //When the player picks up the planks, start the alternating car section
         //If the cars see the player, they'll shoot, if they don't see the player for X seconds after showing up in either window, they'll move to the other window
-        while(plankPikcupArea.pickable != null) yield return null;
+        GameObject plankPickupArea = GameObject.Find("PlankPickupArea_Step15");
+        while (plankPickupArea.GetComponent<PickupArea>().pickable != null) yield return null;
         //Destroy the crates here
         GameObject[] crates = GameObject.FindGameObjectsWithTag("PuzzleCrates");
         for (int i = 0; i < crates.Length; i++) {
@@ -280,7 +282,8 @@ public class LevelScript : MonoBehaviour {
         PlayerCamera.puzzleDirPlaceholder = GameObject.FindWithTag("PuzzlePlaceholder").transform;
 
         //When the player has put down the bridge plank successfully, move the car to the close window
-        while (plankPutdownArea.pickable == null) yield return null;
+        GameObject plankPutdownArea = GameObject.Find("PlankPutdownArea_Step16");
+        while (plankPutdownArea.GetComponent<PickupArea>().pickable == null) yield return null;
 
         StopCoroutine(truckLoopingRoutine);
         enemyAPC.SetTurretAimDir(TurretDirection.Forward);
@@ -342,7 +345,7 @@ public class LevelScript : MonoBehaviour {
         truck.SetActive(true);
         //levelSnapshots[1].TransitionTo(.5f);
         PlayerCamera.cameraState = camStates.STATE_DIRFOCUS;
-        DisableCharacterInput();
+        b_SetCharacterInput(false);
         PlayerCamera.camTar = truck.transform;
 
         enemyAPC.PlayRail(rail, true);
@@ -354,7 +357,7 @@ public class LevelScript : MonoBehaviour {
         }
 
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
-        EnableCharacterInput();
+        b_SetCharacterInput(true);
         PlayThisDialogue(5);
 
         AssignThisObjective("Run upstairs!", "", 3, "truckTrig9");
@@ -386,8 +389,6 @@ public class LevelScript : MonoBehaviour {
 
         PlayThisDialogue(9);
         yield return new WaitForSeconds(DialogueHandler.currentTimeTillTextOff);
-
-        
 
         //Tell the Player to stand in front of the bench
         AssignThisObjective("Stand in front of the workbench", "", 3, "fallTrig1");

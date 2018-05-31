@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.4482482, g: 0.49827296, b: 0.5755841, a: 1}
+  m_IndirectSpecularColor: {r: 0.4482479, g: 0.49827254, b: 0.57558364, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1503,7 +1503,6 @@ GameObject:
   m_Component:
   - component: {fileID: 48938318}
   - component: {fileID: 48938319}
-  - component: {fileID: 48938320}
   m_Layer: 0
   m_Name: CameraRig
   m_TagString: Untagged
@@ -1555,17 +1554,6 @@ MonoBehaviour:
     m_Bits: 4294967035
   desiredView: {fileID: 0}
   lerpToPos: 0
---- !u!114 &48938320
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 48938317}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 03c5eade2f6deeb47bb0e31c5b8d8a2f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &55140280
 GameObject:
   m_ObjectHideFlags: 0
@@ -5964,6 +5952,11 @@ Prefab:
     - target: {fileID: 149790, guid: 7737647c22c1fc64a88d5cd030c352ce, type: 2}
       propertyPath: m_Name
       value: Character
+      objectReference: {fileID: 0}
+    - target: {fileID: 114352312917293422, guid: 7737647c22c1fc64a88d5cd030c352ce,
+        type: 2}
+      propertyPath: takeInput
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 7737647c22c1fc64a88d5cd030c352ce, type: 2}
@@ -50638,7 +50631,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 1908508396609434, guid: 4cc923b12f429a74396f8a482879e1fc, type: 2}
       propertyPath: m_Name
-      value: Int2 PlankPickupArea
+      value: PlankPickupArea_Step15
       objectReference: {fileID: 0}
     - target: {fileID: 4028115942473346, guid: 4cc923b12f429a74396f8a482879e1fc, type: 2}
       propertyPath: m_LocalScale.x
@@ -51383,7 +51376,7 @@ Mesh:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: pb_Mesh90948
+  m_Name: pb_Mesh37130
   serializedVersion: 8
   m_SubMeshes:
   - serializedVersion: 2
@@ -52911,6 +52904,74 @@ Mesh:
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
   m_MeshOptimized: 0
+--- !u!1 &973893947
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 973893948}
+  - component: {fileID: 973893950}
+  - component: {fileID: 973893949}
+  m_Layer: 5
+  m_Name: HealthVignette
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &973893948
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 973893947}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 827.02026}
+  m_LocalScale: {x: 6.4000006, y: 6.4000006, z: 6.4000006}
+  m_Children: []
+  m_Father: {fileID: 1563639118}
+  m_RootOrder: 9
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.000015258789, y: -0.000030517578}
+  m_SizeDelta: {x: 1920, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &973893949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 973893947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_Sprite: {fileID: 21300000, guid: acc5ea6102c91a04180aeb65104cac30, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 1
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+--- !u!222 &973893950
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 973893947}
 --- !u!1 &975771258 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1908508396609434, guid: 4cc923b12f429a74396f8a482879e1fc,
@@ -86766,6 +86827,28 @@ Prefab:
 GameObject:
   m_PrefabParentObject: {fileID: 149790, guid: 7737647c22c1fc64a88d5cd030c352ce, type: 2}
   m_PrefabInternal: {fileID: 106630863}
+--- !u!114 &1507481371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1507481370}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be26d37101b0b2247b66f9029c63253a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1507481372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1507481370}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97f9c438bfc810b448cb665e9afb0abe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!43 &1510415558
 Mesh:
   m_ObjectHideFlags: 0
@@ -89828,6 +89911,7 @@ GameObject:
   - component: {fileID: 1563639117}
   - component: {fileID: 1563639116}
   - component: {fileID: 1563639115}
+  - component: {fileID: 1563639119}
   m_Layer: 5
   m_Name: ScreenOverlayCanvas
   m_TagString: Untagged
@@ -89911,6 +89995,7 @@ RectTransform:
   - {fileID: 181700633}
   - {fileID: 1928086681}
   - {fileID: 1815762061}
+  - {fileID: 973893948}
   m_Father: {fileID: 0}
   m_RootOrder: 17
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -89919,6 +90004,22 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1563639119
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1563639114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 556c72e38774cc44cad98c9c09d9b1e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  healthVignette: {fileID: 0}
+  healthMeter: {fileID: 0}
+  pushableText: {fileID: 0}
+  coverText: {fileID: 0}
+  buttonPromptImage: {fileID: 0}
 --- !u!43 &1563725227
 Mesh:
   m_ObjectHideFlags: 0
@@ -91438,7 +91539,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 1908508396609434, guid: 4cc923b12f429a74396f8a482879e1fc, type: 2}
       propertyPath: m_Name
-      value: Int2 PlankPickupArea
+      value: PlankPutdownArea_Step16
       objectReference: {fileID: 0}
     - target: {fileID: 4028115942473346, guid: 4cc923b12f429a74396f8a482879e1fc, type: 2}
       propertyPath: m_LocalScale.x
@@ -108695,7 +108796,6 @@ GameObject:
   - component: {fileID: 1965781778}
   - component: {fileID: 1965781777}
   - component: {fileID: 1965781776}
-  - component: {fileID: 1965781780}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -108766,79 +108866,6 @@ Transform:
   m_Father: {fileID: 48938318}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1965781780
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1965781775}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 83c81407209f85e4c87c0cda8b32868e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Camera: {fileID: 1965781778}
-  motionBob:
-    HorizontalBobRange: 0.33
-    VerticalBobRange: 0.33
-    Bobcurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 0.5
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1.5
-        value: -1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 2
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    VerticaltoHorizontalRatio: 1
-  jumpAndLandingBob:
-    BobDuration: 0
-    BobAmount: 0
-  rigidbodyFirstPersonController: {fileID: 0}
-  StrideInterval: 0
-  RunningStrideLengthen: 0
 --- !u!43 &1967751553
 Mesh:
   m_ObjectHideFlags: 0
@@ -111283,13 +111310,9 @@ MonoBehaviour:
   coverCollidingWith: {fileID: 0}
   currentCover: {fileID: 0}
   coverCooldown: 0
-  pushableText: {fileID: 1609534683}
-  coverText: {fileID: 1928086683}
   colCenter: 0.85
   colHeight: 1.7
   colBoundsHeight: 0
-  healthVignette: {fileID: 1260587595}
-  healthMeter: {fileID: 181700634}
   groundCheckDistance: 0.1
 --- !u!143 &2020828170
 CharacterController:

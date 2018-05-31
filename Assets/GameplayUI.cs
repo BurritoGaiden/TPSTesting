@@ -1,0 +1,35 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class GameplayUI : MonoBehaviour {
+
+    public Image healthVignette;
+    public Image healthMeter;
+
+    public Text pushableText;
+    public Text coverText;
+
+    public Image buttonPromptImage;
+
+    void Awake() {
+        LevelScript.b_SetUIElementEnabled += SetElement;
+        EnemyAPC.HitPlayer += UpdateHealthMeter;
+    }
+
+    void UpdateHealthMeter() {
+        healthMeter.fillAmount = CharacterHealth.health / 100;
+    }
+
+    void SetElement(string desiredObject, bool desiredState) {
+        GameObject desiredO = GameObject.Find(desiredObject);
+        if (desiredO.GetComponent<Image>())
+        {
+            desiredO.GetComponent<Image>().enabled = desiredState;
+        }
+        else if (desiredO.GetComponent<Text>()) {
+            desiredO.GetComponent<Text>().enabled = desiredState;
+        }
+    }
+}

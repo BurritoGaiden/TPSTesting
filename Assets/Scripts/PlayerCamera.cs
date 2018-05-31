@@ -21,10 +21,7 @@ public class PlayerCamera : MonoBehaviour {
     float yaw;
     float pitch;
 
-    //testing
-    public Vector2 testYP;
     public static Transform camTar;
-
     public static camStates cameraState = camStates.STATE_NULL;
 
     //Sample received delegate string
@@ -68,20 +65,22 @@ public class PlayerCamera : MonoBehaviour {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
+        anim = GetComponent<Animator>();
         cam = Camera.main.transform;
 
-        LevelScript.EnableCameraInput += EnableCameraInput;
-        LevelScript.DisableCameraInput += DisableCameraInput;
-        LevelScript.SetCharCamTransform += SetCameraTransform;
+        LevelScript.b_SetCameraInput += SetInput;
         LevelScript.ResetCamPositionOnRig += ResetCameraOnRig;
-        LevelScript.EnableDirectorFocus += EnDirFocus;
-        LevelScript.DisableDirectorFocus += DisDirFocus;
+        LevelScript.st_SetCameraState += SetCameraState;    
+    }
 
-        anim = GetComponent<Animator>();
-    }    
-   
-	void LateUpdate () {
+    void SetInput(bool desiredBool) { camInput = desiredBool; }
 
+    void LateUpdate () {
+        CameraStateLogic();
+        
+	}
+
+    void CameraStateLogic() {
         switch (cameraState)
         {
             //State Case
@@ -100,7 +99,7 @@ public class PlayerCamera : MonoBehaviour {
                 else if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
                 break;
 
-                //Developer driven state. Can only be switched into and out of from the level script
+            //Developer driven state. Can only be switched into and out of from the level script
             case camStates.STATE_DIRFOCUS:
                 FocusBehavior();
                 CameraOffset();
@@ -176,8 +175,8 @@ public class PlayerCamera : MonoBehaviour {
                 transform.eulerAngles = currentAngle;
                 break;
 
-                //Needs to lerp away from regular player cam position to a new position
-                //Needs to also track the player position with it's rotation
+            //Needs to lerp away from regular player cam position to a new position
+            //Needs to also track the player position with it's rotation
             case camStates.STATE_PUZZLELERPDIRFOCUS:
                 //Set up placeholder to take data
                 puzzleDirPlaceholder = transform;
@@ -227,7 +226,7 @@ public class PlayerCamera : MonoBehaviour {
                     Mathf.LerpAngle(transform.rotation.eulerAngles.y, currentView.transform.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
                     Mathf.LerpAngle(transform.rotation.eulerAngles.z, currentView.transform.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
 
-               transform.eulerAngles = currentAngleL;
+                transform.eulerAngles = currentAngleL;
                 CameraOffset();
                 break;
 
@@ -276,9 +275,12 @@ public class PlayerCamera : MonoBehaviour {
 
             case camStates.STATE_DETACHED:
                 var savedPos = transform.position;
-                if (Quaternion.identity == detachedFixedRotation) {
+                if (Quaternion.identity == detachedFixedRotation)
+                {
                     FocusBehavior();
-                } else {
+                }
+                else
+                {
                     transform.rotation = Quaternion.Lerp(transform.rotation, detachedFixedRotation, Time.deltaTime * 5);
                 }
 
@@ -291,9 +293,12 @@ public class PlayerCamera : MonoBehaviour {
                 //transform.rotation = Quaternion.identity;
                 CameraOffset();
 
-                if (!anim.GetCurrentAnimatorStateInfo(0).IsName(playingAnim)) {
+                if (!anim.GetCurrentAnimatorStateInfo(0).IsName(playingAnim))
+                {
                     cameraState = camStates.STATE_PLAYERORBIT;
-                } else {
+                }
+                else
+                {
                     yaw = transform.rotation.eulerAngles.y;
                     pitch = transform.rotation.eulerAngles.x;
                     currentRotation = new Vector3(pitch, yaw);
@@ -301,7 +306,7 @@ public class PlayerCamera : MonoBehaviour {
                 }
                 break;
         }
-	}
+    }
 
     void CCTVPlayerBehavior()
     {
@@ -428,7 +433,7 @@ public class PlayerCamera : MonoBehaviour {
             return new Vector3(0,0,0);
         }
 
-        if (Killing.aiming)
+        if (CharacterUserControl.aimInput)
         {
             forwardOffset = 1f;
             horizontalOffset = .64f;
@@ -439,7 +444,7 @@ public class PlayerCamera : MonoBehaviour {
             //forwardOffset -= PlayerController.currentSpeed / 3;
             forwardOffset = .66f;
             horizontalOffset = .73f;
-            if (!PlayerController.crouchInput)
+            if (!CharacterUserControl.crouchInput)
                 verticalOffset = .36f;
             else
                 verticalOffset = -.15f;
@@ -467,7 +472,7 @@ public class PlayerCamera : MonoBehaviour {
             //forwardOffset -= PlayerController.currentSpeed / 3;
             forwardOffset = .66f;
             horizontalOffset = .73f;
-            if (!PlayerController.crouchInput)
+            if (!CharacterUserControl.crouchInput)
                 verticalOffset = .36f;
             else
                 verticalOffset = -.15f;
@@ -483,7 +488,7 @@ public class PlayerCamera : MonoBehaviour {
             return;
         }
 
-        if (Killing.aiming) {
+        if (CharacterUserControl.aimInput) {
             forwardOffset = 1f;
             horizontalOffset = .64f;
             verticalOffset = 0f;
@@ -492,7 +497,7 @@ public class PlayerCamera : MonoBehaviour {
             //forwardOffset -= PlayerController.currentSpeed / 3;
             forwardOffset = .66f;
             horizontalOffset = .73f;
-            if (!PlayerController.crouchInput)
+            if (!CharacterUserControl.crouchInput)
                 verticalOffset = .36f;
             else
                 verticalOffset = -.15f;
@@ -571,28 +576,14 @@ public class PlayerCamera : MonoBehaviour {
         Camera.main.transform.localRotation = Quaternion.Euler(rotation);
     }
 
-    void EnableCameraInput() {
-        camInput = true;
-    }
-
-    void DisableCameraInput() {
-        camInput = false;
-    }
-
     void ResetCameraOnRig()
     {
         Camera.main.transform.position = this.transform.position;
         Camera.main.transform.rotation = this.transform.rotation;
     }
 
-    void EnDirFocus()
-    {
-        cameraState = camStates.STATE_DIRFOCUS;
-    }
-
-    void DisDirFocus()
-    {
-        cameraState = camStates.STATE_PLAYERORBIT;
+    void SetCameraState(camStates desiredState) {
+        cameraState = desiredState;
     }
 
     public static void PlayAnim(string a)
@@ -603,8 +594,6 @@ public class PlayerCamera : MonoBehaviour {
         playingAnim = a;
     }
     #endregion
-
-
 }
 
 public enum camStates
