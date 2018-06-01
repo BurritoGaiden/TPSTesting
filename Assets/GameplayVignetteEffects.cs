@@ -6,6 +6,8 @@ using UnityEngine.UI;
 
 public class GameplayVignetteEffects : MonoBehaviour {
 
+    public bool run;
+
     public Image uiElement;
     public Image altElement;
     public enum fadeState { not, fading};
@@ -22,81 +24,92 @@ public class GameplayVignetteEffects : MonoBehaviour {
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.X)) {
-            
+        if (run)
+        {
+            if (Input.GetKeyDown(KeyCode.X))
+            {
+
                 StartCoroutine(Scaler(altElement, altElement.GetComponent<RectTransform>().localScale.x, 3));
-            
-        }
 
-        if (Input.GetKeyDown(KeyCode.C)) {
-            
+            }
+
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+
                 StartCoroutine(Scaler(altElement, altElement.GetComponent<RectTransform>().localScale.x, 2));
-            
-        }
 
-        if (altElement.GetComponent<RectTransform>().localScale.x == .62f)
-        {
-            if (boopScalingTo != 1)
+            }
+
+            if (altElement.GetComponent<RectTransform>().localScale.x == .62f)
             {
-                StartCoroutine(Scaler(altElement, altElement.GetComponent<RectTransform>().localScale.x, 1, .00001f));
-                boopScalingTo = 1;
+                if (boopScalingTo != 1)
+                {
+                    StartCoroutine(Scaler(altElement, altElement.GetComponent<RectTransform>().localScale.x, 1, .00001f));
+                    boopScalingTo = 1;
+                }
             }
-        }
-        else if (altElement.GetComponent<RectTransform>().localScale.x == 1) {
-            if (boopScalingTo != .62f) {
-                StartCoroutine(Scaler(altElement, altElement.GetComponent<RectTransform>().localScale.x, .62f, .00001f));
-                boopScalingTo = .62f;
-            }
-        }
-
-        if (PlayerController.thisMoveState == MoveState.STATE_REGULAR) {
-            if(fadingTo != .5f)
+            else if (altElement.GetComponent<RectTransform>().localScale.x == 1)
             {
-                StopCoroutine("FadeCanvasGroup");
-                FadeReg();
-                fadingTo = .5f;
+                if (boopScalingTo != .62f)
+                {
+                    StartCoroutine(Scaler(altElement, altElement.GetComponent<RectTransform>().localScale.x, .62f, .00001f));
+                    boopScalingTo = .62f;
+                }
             }
-        }
 
-        if (PlayerController.thisMoveState == MoveState.STATE_COVER)
-        {
-            if (fadingTo != 1f)
+            if (PlayerController.thisMoveState == MoveState.STATE_REGULAR)
             {
-                StopCoroutine("FadeCanvasGroup");
-                FadeIn();
-                fadingTo = 1f;
+                if (fadingTo != .5f)
+                {
+                    StopCoroutine("FadeCanvasGroup");
+                    FadeReg();
+                    fadingTo = .5f;
+                }
             }
-        }
 
-        if (timeSinceShotAt < 5)
-        {
-            if (scalingTo != 4.6f)
+            if (PlayerController.thisMoveState == MoveState.STATE_COVER)
             {
-                //StopCoroutine("Scaler");
-                ScaleIn();
-                scalingTo = 4.6f;
-                print("scaling in");
+                if (fadingTo != 1f)
+                {
+                    StopCoroutine("FadeCanvasGroup");
+                    FadeIn();
+                    fadingTo = 1f;
+                }
             }
-        }
-        else if(timeSinceShotAt == 5)
-        {
-            if (scalingTo != 6.4f)
+
+            if (timeSinceShotAt < 5)
             {
-               // StopCoroutine("Scaler");
-                ScaleOut();
-                scalingTo = 6.4f;
-                print("scaling out");
+                if (scalingTo != 4.6f)
+                {
+                    //StopCoroutine("Scaler");
+                    ScaleIn();
+                    scalingTo = 4.6f;
+                    print("scaling in");
+                }
             }
-        }
+            else if (timeSinceShotAt == 5)
+            {
+                if (scalingTo != 6.4f)
+                {
+                    // StopCoroutine("Scaler");
+                    ScaleOut();
+                    scalingTo = 6.4f;
+                    print("scaling out");
+                }
+            }
 
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            timeSinceShotAt = 0;
-        }
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                timeSinceShotAt = 0;
+            }
 
-        if (timeSinceShotAt < 5) {
-            timeSinceShotAt += Time.deltaTime;
-            if (timeSinceShotAt > 5) {
-                timeSinceShotAt = 5;
+            if (timeSinceShotAt < 5)
+            {
+                timeSinceShotAt += Time.deltaTime;
+                if (timeSinceShotAt > 5)
+                {
+                    timeSinceShotAt = 5;
+                }
             }
         }
     }

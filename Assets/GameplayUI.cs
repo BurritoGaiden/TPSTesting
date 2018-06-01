@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class GameplayUI : MonoBehaviour {
 
+    public bool run;
+
     public Text pushableText;
     public Text coverText;
 

@@ -108,6 +108,9 @@ public class LevelScript : MonoBehaviour {
                 case LevelRoutine.Truck:
                     StartCoroutine(TruckLevelCoroutine());
                     break;
+                case LevelRoutine.Quarantine:
+                    StartCoroutine(QuarantineLevelCoroutine());
+                    break;
             }
 	}
 
@@ -468,6 +471,92 @@ public class LevelScript : MonoBehaviour {
         print("ey");
     }
 
+    IEnumerator QuarantineLevelCoroutine() {
+        //Setting up camera and player character
+        st_SetCameraState(camStates.STATE_PLAYERORBIT);
+        ResetCamPositionOnRig();
+
+        b_SetCharacterInput(true);
+        b_SetCameraInput(true);
+
+        yield return new WaitForSeconds(1f);
+
+        //Setting up level objects
+        truck.transform.position = truckPositions[0].position;
+
+        AssignThisObjective("Hit this trigger", "", 3, "truckTrigger01");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        print("Switching Camera to Focus");
+        st_SetCameraState(camStates.STATE_DIRFOCUS);
+        PlayerCamera.cameraLookTarget = truck.transform;
+
+        yield return new WaitForSeconds(1f);
+
+        print("Moving Truck");
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[1].position, 5f));
+
+        yield return new WaitForSeconds(2f);
+
+        print("Switching Camera to Regular");
+        st_SetCameraState(camStates.STATE_PLAYERORBIT);
+
+        print("Waiting until specific trigger");
+        AssignThisObjective("Hit this trigger", "", 3, "truckTrigger02");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        print("Switching Camera to Focus");
+
+        print("Moving Truck");
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[2].position, 2f));
+
+        yield return new WaitForSeconds(2f);
+
+        print("Switching Camera to Regular");
+        st_SetCameraState(camStates.STATE_PLAYERORBIT);
+
+        print("Waiting until specific trigger");
+        AssignThisObjective("Hit this trigger", "", 3, "truckTrigger03");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        print("Waiting until specific trigger");
+        AssignThisObjective("Hit this trigger", "", 3, "truckTrigger04");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        //while()
+        //truck.transform.GetChild(3).GetChild(4).rotation = 
+        //    Quaternion.Lerp(truck.transform.GetChild(3).GetChild(4).rotation, Quaternion.LookRotation(player.transform.position - truck.transform.GetChild(3).GetChild(4).position), Time.time * 3);
+
+
+        //StartCoroutine(LerpObjectToFace(truck.transform.GetChild(3).GetChild(4).gameObject, player.transform.position, .2f));
+
+        yield return new WaitForSeconds(10f);
+        /*
+        ///Intro Sequence - PC moves automatically, being tracked by the cam and transitioning to gameplay camera
+        st_SetCameraState(camStates.STATE_DETACHED);
+        PlayerCamera.targetPosition = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
+        PlayerCamera.detachedPosition = GameObject.Find("cam_detached_intro").transform.position;
+        PlayerCamera.detachedFixedRotation = GameObject.Find("cam_detached_intro").transform.rotation;
+        PlayerCamera.setRotationInstantlyNextFrame = true;
+        */
+
+        /*
+        yield return MovePlayer("movement_target_intro");
+
+        print("Wait till hitting move trig");
+        AssignThisObjective("Hit this trigger", "", 3, "roomTrig1");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        st_SetCameraState(camStates.STATE_LERPDIRFOCUS);
+        PlayerCamera.targetPosition = introCameraTarget.transform;
+        */
+    }
+
     IEnumerator MovePlayer(string targetPosHelper)
     {
         var helper = GameObject.Find(targetPosHelper);
@@ -524,6 +613,61 @@ public class LevelScript : MonoBehaviour {
             truck.GetComponent<EnemyAPC>().FlipDirection();
         }
 
+    }
+
+    IEnumerator LerpObjectToPosition(GameObject desiredObject, Vector3 desiredPosition, float timeToLerp) {
+        float lerpStartTime = Time.time;
+        float lerpTimeSinceStarted = Time.time - lerpStartTime;
+        float lerpPercentageComplete = lerpTimeSinceStarted / timeToLerp;
+        while (true) {
+            lerpTimeSinceStarted = Time.time - lerpStartTime;
+            lerpPercentageComplete = lerpTimeSinceStarted / timeToLerp;
+
+            Vector3 currentPosition = Vector3.Lerp(desiredObject.transform.position, desiredPosition, lerpPercentageComplete);
+            desiredObject.transform.position = currentPosition;
+
+            if (lerpPercentageComplete >= 1) break;
+            yield return new WaitForEndOfFrame();
+        }
+        print("Done with Lerping: " + desiredObject);
+    }
+
+    IEnumerator LerpObjectToFace(GameObject desiredObject, Vector3 desiredTarget, float speed) {
+        Vector3 targetDir = desiredTarget - desiredObject.transform.position;
+        // The step size is equal to speed times frame time.
+        float step = speed * Time.deltaTime;
+        while (true)
+        {
+            Vector3 newDir = Vector3.RotateTowards(transform.forward, targetDir, step, 0.0f);
+            Debug.DrawRay(transform.position, newDir, Color.red);
+            // Move our position a step closer to the target.
+            desiredObject.transform.rotation = Quaternion.LookRotation(newDir);
+
+            if (desiredObject.transform.rotation == Quaternion.LookRotation(targetDir)) break;
+            yield return new WaitForEndOfFrame();
+        }
+    }
+
+    public IEnumerator FadeCanvasGroup(Image cg, float start, float end, float lerpTime = .5f)
+    {
+        float _timeStartedLerping = Time.time;
+        float timeSinceStarted = Time.time - _timeStartedLerping;
+        float percentageComplete = timeSinceStarted / lerpTime;
+
+        while (true)
+        {
+            timeSinceStarted = Time.time - _timeStartedLerping;
+            percentageComplete = timeSinceStarted / lerpTime;
+
+            float currentValue = Mathf.Lerp(start, end, percentageComplete);
+
+            cg.color = new Vector4(cg.color.r, cg.color.g, cg.color.b, currentValue);
+
+            if (percentageComplete >= 1) break;
+
+            yield return new WaitForEndOfFrame();
+        }
+        print("done with opacity adjust");
     }
 
     IEnumerator WaitForCoverDuration(float duration) {
@@ -619,5 +763,6 @@ public enum GamePlayState {
 
 public enum LevelRoutine {
     Truck,
-    CameraTesting
+    CameraTesting,
+    Quarantine
 }

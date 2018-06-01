@@ -83,7 +83,108 @@ public class PlayerCamera : MonoBehaviour {
         else if (PlayerController.thisMoveState == MoveState.STATE_COVER) cameraState = camStates.STATE_COVER;
         else if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
     }
+    void DirectorFocus() {
+        FocusBehavior();
+        CameraOffset();
+    }
+    void OnRail() {
+        FocusBehavior();
 
+        var pos = followRail.position + Vector3.Project(target.transform.position - followRail.position, followRail.forward);
+        transform.position = pos + (railOffset * followRail.forward);
+    }
+    void CameraCover() {
+        OrbitingBehavior();
+        UpdatePosition();
+        CameraOffset();
+        if (PlayerController.thisMoveState != MoveState.STATE_COVER) cameraState = camStates.STATE_PLAYERORBIT;
+    }
+    void Pushing() {
+        OrbitingBehavior();
+        UpdatePosition();
+        CameraOffset();
+        if (PlayerController.thisMoveState != MoveState.STATE_PUSHING) cameraState = camStates.STATE_PLAYERORBIT;
+    }
+    void PuzzleDirFocus() {
+        //Set up placeholder to take data
+        valuePlaceholder = transform;
+        //Establishing rotation
+        yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+        pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+        if (setRotationInstantlyNextFrame)
+        {
+            currentRotation.x = pitch;
+            currentRotation.y = yaw;
+            setRotationInstantlyNextFrame = false;
+        }
+        else
+        {
+            currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+            currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+        }
+
+        //---------------------------------------------------
+
+        //Assign rotation values to placeholder that'll make the angle lerp work
+        valuePlaceholder.eulerAngles = currentRotation;
+
+        //---------------------------------------------------
+
+        //Lerping to a position and rotation
+        transform.position = Vector3.Lerp(transform.position, targetPosition.position, Time.deltaTime * transitionSpeed);
+        cam.transform.localPosition = Vector3.Lerp(cam.transform.localPosition, CamOffset(), Time.deltaTime * transitionSpeed);
+
+        //Turn the rotation we got from the rot/pos establishment and set it in the current angle
+        Vector3 currentAnglePL = new Vector3(
+            Mathf.LerpAngle(transform.rotation.eulerAngles.x, valuePlaceholder.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
+            Mathf.LerpAngle(transform.rotation.eulerAngles.y, valuePlaceholder.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
+            Mathf.LerpAngle(transform.rotation.eulerAngles.z, valuePlaceholder.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
+
+        //Assign to our rig :)
+        transform.eulerAngles = currentAnglePL;
+    }
+    void LerpDirFocus() {
+        currentView = transform;
+        //Establishing position and rotation
+        yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+        pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+        if (setRotationInstantlyNextFrame)
+        {
+            currentRotation.x = pitch;
+            currentRotation.y = yaw;
+            setRotationInstantlyNextFrame = false;
+        }
+        else
+        {
+            currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+            currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+            //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        }
+
+        //---------------------------------------------------
+
+        //Assign rotation values to placeholder that'll make the angle lerp work
+        currentView.eulerAngles = currentRotation;
+
+        //---------------------------------------------------
+
+        //Lerping to a position and rotation
+        transform.position = LerpOrMoveTowardsPoisition(transform.position, target.position - transform.forward * dstFromTarget, transitionSpeed, transitionSpeed / 3f);
+        cam.transform.localPosition = LerpOrMoveTowardsPoisition(cam.transform.localPosition, CamOffset(), transitionSpeed, transitionSpeed / 3f);
+
+        //Turn the rotation we got from the rot/pos establishment and set it in the current angle
+        Vector3 currentAngle = new Vector3(
+            Mathf.LerpAngle(transform.rotation.eulerAngles.x, currentView.transform.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
+            Mathf.LerpAngle(transform.rotation.eulerAngles.y, currentView.transform.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
+            Mathf.LerpAngle(transform.rotation.eulerAngles.z, currentView.transform.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
+
+        //Assign to our rig :)
+        transform.eulerAngles = currentAngle;
+    }
     void CameraStateLogic() {
         switch (cameraState)
         {
@@ -91,29 +192,18 @@ public class PlayerCamera : MonoBehaviour {
             case camStates.STATE_PLAYERORBIT:
                 PlayerOrbit();
                 break;
-
             //Developer driven state. Can only be switched into and out of from the level script
             case camStates.STATE_DIRFOCUS:
-                FocusBehavior();
-                CameraOffset();
+                DirectorFocus();
                 break;
             case camStates.STATE_RAIL:
-                FocusBehavior();
-
-                var pos = followRail.position + Vector3.Project(target.transform.position - followRail.position, followRail.forward);
-                transform.position = pos + (railOffset * followRail.forward);
+                OnRail();
                 break;
             case camStates.STATE_COVER:
-                OrbitingBehavior();
-                UpdatePosition();
-                CameraOffset();
-                if (PlayerController.thisMoveState != MoveState.STATE_COVER) cameraState = camStates.STATE_PLAYERORBIT;
+                CameraCover();
                 break;
             case camStates.STATE_PUSHING:
-                OrbitingBehavior();
-                UpdatePosition();
-                CameraOffset();
-                if (PlayerController.thisMoveState != MoveState.STATE_PUSHING) cameraState = camStates.STATE_PLAYERORBIT;
+                Pushing();
                 break;
             case camStates.STATE_POIFOCUS:
                 FocusBehavior();
@@ -126,87 +216,12 @@ public class PlayerCamera : MonoBehaviour {
                 break;
 
             case camStates.STATE_LERPDIRFOCUS:
-                currentView = transform;
-                //Establishing position and rotation
-                yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
-                pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
-                pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
-
-                if (setRotationInstantlyNextFrame)
-                {
-                    currentRotation.x = pitch;
-                    currentRotation.y = yaw;
-                    setRotationInstantlyNextFrame = false;
-                }
-                else
-                {
-                    currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
-                    currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
-                    //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
-                }
-
-                //---------------------------------------------------
-
-                //Assign rotation values to placeholder that'll make the angle lerp work
-                currentView.eulerAngles = currentRotation;
-
-                //---------------------------------------------------
-
-                //Lerping to a position and rotation
-                transform.position = LerpOrMoveTowardsPoisition(transform.position, target.position - transform.forward * dstFromTarget, transitionSpeed, transitionSpeed / 3f);
-                cam.transform.localPosition = LerpOrMoveTowardsPoisition(cam.transform.localPosition, CamOffset(), transitionSpeed, transitionSpeed / 3f);
-
-                //Turn the rotation we got from the rot/pos establishment and set it in the current angle
-                Vector3 currentAngle = new Vector3(
-                    Mathf.LerpAngle(transform.rotation.eulerAngles.x, currentView.transform.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
-                    Mathf.LerpAngle(transform.rotation.eulerAngles.y, currentView.transform.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
-                    Mathf.LerpAngle(transform.rotation.eulerAngles.z, currentView.transform.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
-
-                //Assign to our rig :)
-                transform.eulerAngles = currentAngle;
+                LerpDirFocus();
                 break;
-
             //Needs to lerp away from regular player cam position to a new position
             //Needs to also track the player position with it's rotation
             case camStates.STATE_PUZZLELERPDIRFOCUS:
-                //Set up placeholder to take data
-                valuePlaceholder = transform;
-                //Establishing rotation
-                yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
-                pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
-                pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
-
-                if (setRotationInstantlyNextFrame)
-                {
-                    currentRotation.x = pitch;
-                    currentRotation.y = yaw;
-                    setRotationInstantlyNextFrame = false;
-                }
-                else
-                {
-                    currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
-                    currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
-                }
-
-                //---------------------------------------------------
-
-                //Assign rotation values to placeholder that'll make the angle lerp work
-                valuePlaceholder.eulerAngles = currentRotation;
-
-                //---------------------------------------------------
-
-                //Lerping to a position and rotation
-                transform.position = Vector3.Lerp(transform.position, targetPosition.position, Time.deltaTime * transitionSpeed);
-                cam.transform.localPosition = Vector3.Lerp(cam.transform.localPosition, CamOffset(), Time.deltaTime * transitionSpeed);
-
-                //Turn the rotation we got from the rot/pos establishment and set it in the current angle
-                Vector3 currentAnglePL = new Vector3(
-                    Mathf.LerpAngle(transform.rotation.eulerAngles.x, valuePlaceholder.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
-                    Mathf.LerpAngle(transform.rotation.eulerAngles.y, valuePlaceholder.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
-                    Mathf.LerpAngle(transform.rotation.eulerAngles.z, valuePlaceholder.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
-
-                //Assign to our rig :)
-                transform.eulerAngles = currentAnglePL;
+                PuzzleDirFocus();
                 break;
 
             case camStates.STATE_LERPING:
@@ -280,8 +295,6 @@ public class PlayerCamera : MonoBehaviour {
 
                 break;
             case camStates.STATE_PLAYINGANIM:
-                //transform.position = target.position;
-                //transform.rotation = Quaternion.identity;
                 CameraOffset();
 
                 if (!anim.GetCurrentAnimatorStateInfo(0).IsName(playingAnim))
