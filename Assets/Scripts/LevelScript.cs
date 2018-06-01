@@ -93,6 +93,7 @@ public class LevelScript : MonoBehaviour {
     public Playmode thisPlayMode = Playmode.Linear;
 
     public float truckSpeed = 3f;
+    public AudioClip[] truckDialogue;
 
     // Use this for initialization
     void Awake() {
@@ -495,9 +496,42 @@ public class LevelScript : MonoBehaviour {
         yield return new WaitForSeconds(1f);
 
         print("Moving Truck");
-        StartCoroutine(LerpObjectToPosition(truck, truckPositions[1].position, 5f));
+        truck.transform.position = truckPositions[1].position;
+        //StartCoroutine(LerpObjectToPosition(truck, truckPositions[1].position, 5f));
 
         yield return new WaitForSeconds(2f);
+
+        GetComponent<AudioSource>().PlayOneShot(truckDialogue[1], 4);
+
+        yield return new WaitForSeconds(2f);
+
+        truck.transform.position = truckPositions[2].position;
+
+        yield return new WaitForSeconds(2f);
+
+        truck.transform.position = truckPositions[3].position;
+        GetComponent<AudioSource>().PlayOneShot(truckDialogue[2], 4);
+
+        yield return new WaitForSeconds(2f);
+
+        truck.transform.position = truckPositions[4].position;
+        GetComponent<AudioSource>().PlayOneShot(truckDialogue[5], 4);
+
+        yield return new WaitForSeconds(8f);
+
+        truck.transform.position = truckPositions[5].position;
+        
+        yield return new WaitForSeconds(5f);
+
+        GetComponent<AudioSource>().PlayOneShot(truckDialogue[4], 4);
+
+        yield return new WaitForSeconds(5f);
+        GetComponent<AudioSource>().PlayOneShot(truckDialogue[3], 4);
+        truck.transform.position = truckPositions[6].position;
+
+        yield return new WaitForSeconds(5f);
+
+        truck.transform.position = truckPositions[7].position;
 
         print("Switching Camera to Regular");
         st_SetCameraState(camStates.STATE_PLAYERORBIT);
