@@ -496,23 +496,32 @@ public class LevelScript : MonoBehaviour {
         yield return new WaitForSeconds(1f);
 
         print("Moving Truck");
-        truck.transform.position = truckPositions[1].position;
-        //StartCoroutine(LerpObjectToPosition(truck, truckPositions[1].position, 5f));
+        //truck.transform.position = truckPositions[1].position;
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[1].position, 3f));
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart"); 
 
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(3f);
+
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStop");
+        StartCoroutine(LerpObjectToFace(truck.transform.GetChild(3).GetChild(0).gameObject, player.transform.position, 1f));
 
         GetComponent<AudioSource>().PlayOneShot(truckDialogue[1], 4);
 
         yield return new WaitForSeconds(2f);
 
-        truck.transform.position = truckPositions[2].position;
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[2].position, 8f));
+        //truck.transform.position = truckPositions[2].position;
 
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(4f);
 
-        truck.transform.position = truckPositions[3].position;
+        //truck.transform.position = truckPositions[3].position;
         GetComponent<AudioSource>().PlayOneShot(truckDialogue[2], 4);
 
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(4f);
+
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[3].position, 4f));
+
+        yield return new WaitForSeconds(4.1f);
 
         truck.transform.position = truckPositions[4].position;
         GetComponent<AudioSource>().PlayOneShot(truckDialogue[5], 4);
@@ -561,34 +570,7 @@ public class LevelScript : MonoBehaviour {
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
-        //while()
-        //truck.transform.GetChild(3).GetChild(4).rotation = 
-        //    Quaternion.Lerp(truck.transform.GetChild(3).GetChild(4).rotation, Quaternion.LookRotation(player.transform.position - truck.transform.GetChild(3).GetChild(4).position), Time.time * 3);
-
-
-        //StartCoroutine(LerpObjectToFace(truck.transform.GetChild(3).GetChild(4).gameObject, player.transform.position, .2f));
-
         yield return new WaitForSeconds(10f);
-        /*
-        ///Intro Sequence - PC moves automatically, being tracked by the cam and transitioning to gameplay camera
-        st_SetCameraState(camStates.STATE_DETACHED);
-        PlayerCamera.targetPosition = GameObject.FindWithTag("Player").transform.Find("CameraTarget");
-        PlayerCamera.detachedPosition = GameObject.Find("cam_detached_intro").transform.position;
-        PlayerCamera.detachedFixedRotation = GameObject.Find("cam_detached_intro").transform.rotation;
-        PlayerCamera.setRotationInstantlyNextFrame = true;
-        */
-
-        /*
-        yield return MovePlayer("movement_target_intro");
-
-        print("Wait till hitting move trig");
-        AssignThisObjective("Hit this trigger", "", 3, "roomTrig1");
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
-
-        st_SetCameraState(camStates.STATE_LERPDIRFOCUS);
-        PlayerCamera.targetPosition = introCameraTarget.transform;
-        */
     }
 
     IEnumerator MovePlayer(string targetPosHelper)
@@ -653,11 +635,13 @@ public class LevelScript : MonoBehaviour {
         float lerpStartTime = Time.time;
         float lerpTimeSinceStarted = Time.time - lerpStartTime;
         float lerpPercentageComplete = lerpTimeSinceStarted / timeToLerp;
+        Vector3 ObjectStartPosition = desiredObject.transform.position;
         while (true) {
             lerpTimeSinceStarted = Time.time - lerpStartTime;
             lerpPercentageComplete = lerpTimeSinceStarted / timeToLerp;
-
-            Vector3 currentPosition = Vector3.Lerp(desiredObject.transform.position, desiredPosition, lerpPercentageComplete);
+            print("Time since started: " + lerpTimeSinceStarted + " and Percent Complete" + lerpPercentageComplete);
+            Vector3 currentPosition = Vector3.Lerp(ObjectStartPosition, desiredPosition, lerpPercentageComplete);
+            //Vector3 currentPosition = desiredPosition - desiredObject.transform.position 
             desiredObject.transform.position = currentPosition;
 
             if (lerpPercentageComplete >= 1) break;
@@ -666,20 +650,35 @@ public class LevelScript : MonoBehaviour {
         print("Done with Lerping: " + desiredObject);
     }
 
-    IEnumerator LerpObjectToFace(GameObject desiredObject, Vector3 desiredTarget, float speed) {
-        Vector3 targetDir = desiredTarget - desiredObject.transform.position;
-        // The step size is equal to speed times frame time.
-        float step = speed * Time.deltaTime;
+    IEnumerator LerpObjectToFace(GameObject desiredObject, Vector3 desiredTarget, float timeToLerp) {
+        float lerpStartTime = Time.time;
+        float lerpTimeSinceStarted = Time.time - lerpStartTime;
+        float lerpPercentageComplete = lerpTimeSinceStarted / timeToLerp;
+
+        
+        Vector3 relativePos = desiredTarget - desiredObject.transform.position;
+        //relativePos.y = desiredObject.transform.position.y;
+        //relativePos.z = desiredObject.transform.position.z;
+
+        print(desiredObject.transform.position);
+        print(desiredTarget);
+        print(relativePos);
+
+        Quaternion startingRot = desiredObject.transform.rotation;
+        Quaternion desiredRotation = Quaternion.LookRotation(relativePos);
+
         while (true)
         {
-            Vector3 newDir = Vector3.RotateTowards(transform.forward, targetDir, step, 0.0f);
-            Debug.DrawRay(transform.position, newDir, Color.red);
-            // Move our position a step closer to the target.
-            desiredObject.transform.rotation = Quaternion.LookRotation(newDir);
+            lerpTimeSinceStarted = Time.time - lerpStartTime;
+            lerpPercentageComplete = lerpTimeSinceStarted / timeToLerp;
 
-            if (desiredObject.transform.rotation == Quaternion.LookRotation(targetDir)) break;
+            Quaternion currentRot = Quaternion.Lerp(startingRot, desiredRotation, lerpPercentageComplete);
+            desiredObject.transform.rotation = currentRot;
+
+            if (lerpPercentageComplete >= 1) break;
             yield return new WaitForEndOfFrame();
         }
+        print("Done lerping Quaternion");
     }
 
     public IEnumerator FadeCanvasGroup(Image cg, float start, float end, float lerpTime = .5f)
