@@ -266,6 +266,14 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.transform.tag == "Trigger") {
+
+        }
+        
+    }
+
     void OnTriggerStay(Collider col) {
         if (col.transform.tag == "Cover")
         {
