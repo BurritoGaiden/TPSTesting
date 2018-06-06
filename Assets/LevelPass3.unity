@@ -10687,15 +10687,22 @@ MonoBehaviour:
   - {fileID: 320937194}
   - {fileID: 512813043}
   spinWheels: 0
+  thisPerceptionState: 2
+  thisTurretState: 0
+  targetObject: {fileID: 1507481370}
   playerSpotted: 0
   playerSpotTime: 0
   playerPerceived: 0
+  lastKnownPlayerPosition: {x: 0, y: 0, z: 0}
+  timePlayerLastSeen: 0
   ammo: 0
   fireCooldownTimer: 0
   lr: {fileID: 0}
   turret: {fileID: 0}
   impactEffect: {fileID: 1851797940571184, guid: 7ae3216289670d24786fc2fbb9e25f4d,
     type: 2}
+  shootCooldown: 0
+  currentShootCooldown: 0
 --- !u!4 &366862610 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400000, guid: 5d2e4237b4429b34fae4c9eb3cd9efd5, type: 2}
