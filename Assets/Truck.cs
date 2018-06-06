@@ -10,6 +10,7 @@ public class Truck : MonoBehaviour {
     public bool spinWheels;
 
     public TruckPerceptionState thisPerceptionState = TruckPerceptionState.nothing;
+    public GameObject[] searchpoints;
 
     public GameObject targetObject;
     Vector3 targetObjectLastKnownPosition;
@@ -69,6 +70,8 @@ public class Truck : MonoBehaviour {
                 break;
             case TruckPerceptionState.searchingBetweenPoints:
                 turret.GetComponent<Turret>().spotlight.GetComponent<Light>().spotAngle = 30;
+                turret.GetComponent<Turret>().SearchBetweenTargets(searchpoints, 6);
+                turret.GetComponent<Turret>().RotationUpdate(1);
 
                 if (playerPerceived) {
                     thisPerceptionState = TruckPerceptionState.inomniscientPerceived;

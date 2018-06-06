@@ -18,6 +18,10 @@ public class Turret : MonoBehaviour {
     Quaternion from, to;
     float timeToFace = 0f;
 
+    public bool canSearch;
+    private int currentTargetInSearch;
+    private float currentTargetHoldTime;
+
     public delegate void DamageDelegate();
     public static event DamageDelegate HitPlayer;
 
@@ -165,6 +169,33 @@ public class Turret : MonoBehaviour {
         //Assign desired Rotation without other axes
         to = Quaternion.Euler(new Vector3(0, direction.y, 0));
         timeToFace = 0;
+    }
+
+
+    public void SearchBetweenTargets(GameObject[] targetArray, float searchHoldTime) {
+        //Get which target in the array is the closest to move to
+        if (canSearch)
+        {
+            if (currentTargetInSearch < targetArray.Length - 1)
+            {
+                currentTargetInSearch++;
+            }
+            else if (currentTargetInSearch == targetArray.Length - 1)
+            {
+                currentTargetInSearch = 0;
+            }
+            StartCoroutine(SearchHold(searchHoldTime));
+        }
+
+        FaceTarget(targetArray[currentTargetInSearch].transform.position);
+    }
+
+    IEnumerator SearchHold(float holdTime) {
+        print("Holding");
+        canSearch = false;
+        yield return new WaitForSeconds(holdTime);
+        canSearch = true;
+        print("Done holding");
     }
 
     public void RotationUpdate(float speed = 1)
