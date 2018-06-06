@@ -5,17 +5,14 @@ using UnityEngine;
 public class Truck : MonoBehaviour {
 
     public GameObject[] wheels;
+    public GameObject turret;
 
     public bool spinWheels;
 
     public TruckPerceptionState thisPerceptionState = TruckPerceptionState.nothing;
-    public TurretState thisTurretState = TurretState.nothing;
 
     public GameObject targetObject;
     Vector3 targetObjectLastKnownPosition;
-
-    Quaternion from, to;
-    float timeToFace = 0f;
 
     public bool playerSpotted;
     public float playerSpotTime;
@@ -24,180 +21,68 @@ public class Truck : MonoBehaviour {
     public Vector3 lastKnownPlayerPosition;
     public float timePlayerLastSeen;
 
-	// Update is called once per frame
-	void Update () {
+    void Start()
+    {
+        turret = transform.GetChild(3).GetChild(0).gameObject;
+    }
+
+    // Update is called once per frame
+    void Update () {
         WheelMovement();
 
         Perception(targetObject);
 
         switch (thisPerceptionState) {
             case TruckPerceptionState.nothing:
+                //Full control from level script
                 break;
 
             case TruckPerceptionState.inomniscientPerceived:
-                //If the player not within x of forward turret vector
-                if (!playerPerceived)
-                {
-                    TurretFaceTarget(lastKnownPlayerPosition); //Point turret to last "known" player position
-                    TurretRotationUpdate(2);
+                turret.GetComponent<Turret>().spotlight.GetComponent<Light>().spotAngle = 45;
 
-                    //This below might not be necessary
-                    //If z time has elapsed
-                    //if (Time.time - timePlayerLastSeen > 5)
-                    //{
-                    //    playerPerceived = false; //No longer in "perceived", leave all of this
-                    //}
+                if (!playerPerceived) //If the player not within x of forward turret vector
+                {
+                    turret.GetComponent<Turret>().FaceTarget(lastKnownPlayerPosition); //Point turret to last "known" player position
+                    turret.GetComponent<Turret>().RotationUpdate(2);
+
+                    if (!playerPerceived) {
+                        thisPerceptionState = TruckPerceptionState.trainedOnAPoint;
+                    }
                 }
 
                 //If the player is seen
                 else if (playerPerceived) {
-                    //Point the turret at the Player position
-                    TurretFaceTarget(targetObject.transform.position);
-                    TurretRotationUpdate(4);
-                    //If shoot Possible
-                    //Shoot
+                    turret.GetComponent<Turret>().FaceTarget(targetObject.transform.position); //Point the turret at the Player position
+                    turret.GetComponent<Turret>().RotationUpdate(4);
+                    turret.GetComponent<Turret>().Shoot(); //Let the turret know it can shoot
                 }
 
                 break;
 
             case TruckPerceptionState.omniscientPerceived:
-                //If turret spotlight not "all"
-                //"all" turret spotlight
-                //Point the turret at the player position
-                //If the Player within x of forward Turret vector
-                //If shoot possible
-                //shoot
+                turret.GetComponent<Turret>().spotlight.GetComponent<Light>().spotAngle = 180; //Truck can see everything. Reflect that in visuals
+
+                turret.GetComponent<Turret>().FaceTarget(targetObject.transform.position); //Point the turret at the Player position
+                turret.GetComponent<Turret>().RotationUpdate(4);
+                turret.GetComponent<Turret>().Shoot(); //Let the turret know it can shoot
 
                 break;
             case TruckPerceptionState.searchingBetweenPoints:
+                turret.GetComponent<Turret>().spotlight.GetComponent<Light>().spotAngle = 30;
+
+                if (playerPerceived) {
+                    thisPerceptionState = TruckPerceptionState.inomniscientPerceived;
+                }
                 break;
             case TruckPerceptionState.trainedOnAPoint:
+                turret.GetComponent<Turret>().spotlight.GetComponent<Light>().spotAngle = 30;
+
                 if (playerPerceived)
                     thisPerceptionState = TruckPerceptionState.inomniscientPerceived;
                 break;
         }
-
-        switch (thisTurretState) {
-            case TurretState.nothing:
-                break;
-
-            case TurretState.faceTarget:
-                
-                
-                break;
-
-            case TurretState.faceForward:
-                TurretFaceDirection(new Vector3(0,0,0));
-                TurretRotationUpdate();
-                break;
-        }
-    }
-
-    void TurretFaceTarget(Vector3 desiredTargetPosition) {
-        //Get current turret rotation
-        Quaternion temp = turret.transform.rotation;
-        from = Quaternion.Euler(new Vector3(0, temp.eulerAngles.y, 0));
-
-        //Get rotation based on desiredTarget position
-        Vector3 relativePos = desiredTargetPosition - turret.transform.position;
-        Quaternion desiredRotation = Quaternion.LookRotation(relativePos);
-
-        //Assign desired Rotation without other axes
-        to = Quaternion.Euler(new Vector3(0, desiredRotation.eulerAngles.y, 0));
-        timeToFace = 0;
-    }
-
-    void TurretFaceDirection(Vector3 direction)
-    {
-        //Get current turret rotation
-        Quaternion temp = turret.transform.rotation;
-        from = Quaternion.Euler(new Vector3(0, temp.eulerAngles.y, 0));
-
-        //Assign desired Rotation without other axes
-        to = Quaternion.Euler(new Vector3(0, direction.y, 0));
-        timeToFace = 0;
-    }
-
-    void TurretRotationUpdate(float speed = 1) {
-        //Apply turret changes
-        timeToFace += Time.deltaTime * speed;
-        
-        //This is what allows for the rotation changes
-        turret.transform.rotation = Quaternion.Lerp(from, to, timeToFace);
-    }
-
-    public int ammo;
-    public float fireCooldownTimer;
-
-    public LineRenderer lr;
-    public GameObject turret;
-    public GameObject impactEffect;
-
-    public delegate void DamageDelegate();
-    public static event DamageDelegate HitPlayer;
-
-    void Start() {
-        turret = transform.GetChild(3).GetChild(0).gameObject;
-        lr = GetComponent<LineRenderer>();
-    }
-
-    //Probably need to do this kind of stuff with multithreading
-    public float shootCooldown = 3;
-    public float currentShootCooldown;
-
-    void CheckForShoot() {
-        //if(currentShootCooldown)
-    }
-
-    void Shoot()
-    {
-        ammo--;
-
-        fireCooldownTimer = Random.Range(.1f, .2f);
-        //GetComponent<AudioSource>().PlayOneShot(truckSFX[0], .02f);
-
-        // Check what we hit
-        RaycastHit hit;
-
-        var distance = Vector3.Distance(turret.transform.position, turret.transform.forward);
-
-        var hitPoint = Vector3.zero;
-        if (!Physics.Linecast(turret.transform.position, turret.transform.position + turret.transform.forward * distance, out hit, Physics.AllLayers, QueryTriggerInteraction.Ignore))
-        {
-            hitPoint = turret.transform.position + turret.transform.forward * distance;
-        }
-        else
-        {
-            hitPoint = hit.point;
-        }
-
-        lr.SetPosition(0, turret.transform.position);
-        lr.SetPosition(1, hitPoint);
-        Invoke("TurnOffTrail", .1f);
-
-        if (hit.collider)
-        {
-            if (hit.transform.tag == "Player")
-            {
-                print("hit player");
-                HitPlayer();
-
-            }
-        }
-        else if (hit.collider != null)
-        {
-            // Hit something other than the player, like the map
-            GameObject impactObj = Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
-            Destroy(impactObj, 1.2f);
-
-            print("hit something else");
-        }
-    }
-
-    void TurnOffTrail() {
-        lr.SetPosition(1, turret.transform.position);
-    }
-
+    }   
+    
     //Whether the Player is seen or not
     void Perception(GameObject perceivedObject) {
         ///Perception
@@ -212,12 +97,11 @@ public class Truck : MonoBehaviour {
         var playerHitPoint = Vector3.zero;
         Physics.Linecast(turret.transform.position, perceivedObject.transform.position, out playerHit);
         
-        Debug.DrawLine(turret.transform.position, normalizedTargetPos, Color.red);
+        //Debug.DrawLine(turret.transform.position, normalizedTargetPos, Color.red);
         Debug.DrawLine(turret.transform.position, perceivedObject.transform.position, Color.magenta);
         
         //cast a line from the turret forward
         RaycastHit forwardHit;
-
         var fDistance = Vector3.Distance(turret.transform.position, turret.transform.forward);
         var forwardHitPoint = Vector3.zero;
         if (!Physics.Linecast(turret.transform.position, turret.transform.position + turret.transform.forward * fDistance, out forwardHit, Physics.AllLayers, QueryTriggerInteraction.Ignore))
@@ -227,21 +111,21 @@ public class Truck : MonoBehaviour {
 
         Debug.DrawLine(turret.transform.position, forwardHitPoint, Color.green);
 
-        //if that line is within x of the forward vector line for the mg
+        //Check if the targetObject is within X degrees of the forward turret vector, and is unobstructed
         float angle = Vector3.Angle(relativeNormalizedTargetPos, turret.transform.forward);
-        //If that line hits the player
+
         if (angle < 15 && playerHit.collider)
-        { playerSpotted = (playerHit.collider.name == perceivedObject.name);
-        }
-        else { playerSpotted = false; }
+            playerSpotted = (playerHit.collider.name == perceivedObject.name);
+        else
+            playerSpotted = false; 
         
 
-        // In/De-crement time spent with Player spotted
+        // Increment time spent with Player spotted
         if (playerSpotted)
         {
-            if(playerSpotTime < 6)
+            if(playerSpotTime < 4)
                 playerSpotTime += Time.deltaTime; 
-            if (playerSpotTime > 4) //If the player is spotted for x seconds
+            if (playerSpotTime > 2) //If the player is spotted for x seconds
             { 
                 playerPerceived = true; //The Player is perceived
                 lastKnownPlayerPosition = perceivedObject.transform.position;
@@ -257,52 +141,6 @@ public class Truck : MonoBehaviour {
             }
         }   
     }
-
-    //Slot this into a state machine, or the level script idc
-    //it should run until the player is seen
-    void TurretSearch(GameObject[] searchPositions) {
-        if (searchPositions != null)
-        {
-            //Put all that jazz from below in here
-        }
-        else {
-            print("Turret can't search, dummy");
-        }
-
-        //Maybe an entrance behavior below
-        //If not narrow spotlight
-            //Narrow Turret Spotlight
-
-        //Pass search positions to the function, x time to wait on each position, and y speed of turret rotation
-        //Start with position 0
-        //For each position
-            //If not facing that position
-                //rotate to face it
-                //return until facing
-            //If facing that position
-                //If x seconds haven't elapsed
-                    //Wait for x seconds
-                    //return
-                //If x seconds have elapsed
-                    //if at end of array
-                        //reset to start of array / 0
-                    //if not at end of array
-                        //continue
-    }
-
-    //You need to better separate out the behaviors in here and put em in a state
-    //This is for if the TurretSearch just got the Player
-    void Perceived(bool canLosePlayerPosition) {
-        //this is probably going to have to be multiple little sub states
-        //splitting them into a few pieces of behavior
-
-        //Maybe an entrance behavior below
-        //if turret spotlight not wide
-        //Wide turret spotlight
-
-        
-    }
-
 
     void WheelMovement()
     {
@@ -336,12 +174,6 @@ public class Truck : MonoBehaviour {
 
 }
 
-public enum TurretState {
-    nothing, //Turret should just do nothing, and be ready to take one off input
-    faceForward, //Turret should face forward, used while driving
-    faceTarget, //Turret should face a target
-    rotateContinuously //Does what it says
-};
 public enum TruckPerceptionState {
     nothing, //Truck not perceiving anything
     searchingBetweenPoints, //Truck searching between different points
