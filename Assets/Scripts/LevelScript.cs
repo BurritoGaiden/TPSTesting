@@ -716,7 +716,7 @@ public class LevelScript : MonoBehaviour {
 
         print("Switching Camera to Focus");
         st_SetCameraState(camStates.STATE_DIRFOCUS);
-        PlayerCamera.cameraLookTarget = GameObject.Find("part6GeneratorLookTarget").transform;
+        PlayerCamera.cameraLookTarget = GameObject.Find("part6CameraLookTarget01").transform;
 
         yield return new WaitForSeconds(2);
 
@@ -727,10 +727,21 @@ public class LevelScript : MonoBehaviour {
             yield return null;
         }
 
+        PlayerCamera.cameraLookTarget = GameObject.Find("part6CameraLookTarget02").transform;
+        StartCoroutine(LerpObjectToFace(GameObject.Find("DoorHolder"), GameObject.Find("DoorHolderTarget").transform.position, 3));
+
+        yield return new WaitForSeconds(3);
+
+        st_SetCameraState(camStates.STATE_PLAYERORBIT);
+        truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.nothing;
+
+        yield return new WaitForSeconds(5);
+
         //-------------------------------------------------------------------------
 
         print("Part 7 - Vehicle Crash into Wall");
-        truck.transform.position = truckPositions[4].position;
+
+        truck.transform.position = GameObject.Find("part7TruckTarget01").transform.position;
 
         truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeCrashIntoWall");
 
@@ -743,7 +754,9 @@ public class LevelScript : MonoBehaviour {
             crates[i].GetComponent<CrateDestroyer>().ExplodeCrate();
         }
 
-        AssignThisObjective("Hit this trigger", "", 3, "truckTrigger05");
+        truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.omniscientPerceived;
+
+        AssignThisObjective("Hit this trigger", "", 3, "part7Trigger01");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
