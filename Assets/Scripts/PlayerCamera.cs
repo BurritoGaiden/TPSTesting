@@ -192,6 +192,12 @@ public class PlayerCamera : MonoBehaviour {
             case camStates.STATE_PLAYERORBIT:
                 PlayerOrbit();
                 break;
+            case camStates.STATE_ORBITDISTANCED:
+                break;
+            case camStates.STATE_GENERATORMINIGAME:
+
+                break;
+
             //Developer driven state. Can only be switched into and out of from the level script
             case camStates.STATE_DIRFOCUS:
                 DirectorFocus();
@@ -620,5 +626,7 @@ public enum camStates
     STATE_CCTV,
     STATE_PUZZLELERPING,
     STATE_PUZZLECCTV,
-    STATE_PUZZLELERPDIRFOCUS
+    STATE_PUZZLELERPDIRFOCUS,
+    STATE_ORBITDISTANCED,
+    STATE_GENERATORMINIGAME
 };

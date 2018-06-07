@@ -190,6 +190,41 @@ public class Turret : MonoBehaviour {
         FaceTarget(targetArray[currentTargetInSearch].transform.position);
     }
 
+    public void FaceObject(Vector3 desiredTargetPosition, float timeToLerp) {
+        StartCoroutine(FaceObjectRoutine(desiredTargetPosition, timeToLerp));
+    }
+
+    public IEnumerator FaceObjectRoutine(Vector3 desiredTargetPosition, float timeToLerp)
+    {
+        float lerpStartTime = Time.time;
+        float lerpTimeSinceStarted = Time.time - lerpStartTime;
+        float lerpPercentageComplete = lerpTimeSinceStarted / timeToLerp;
+
+        //Get current turret rotation
+        Quaternion temp = transform.rotation;
+        from = Quaternion.Euler(new Vector3(0, temp.eulerAngles.y, 0));
+
+        //Get rotation based on desiredTarget position
+        Vector3 relativePos = desiredTargetPosition - transform.position;
+        Quaternion desiredRotation = Quaternion.LookRotation(relativePos);
+
+        //Assign desired Rotation without other axes
+        to = Quaternion.Euler(new Vector3(0, desiredRotation.eulerAngles.y, 0));
+
+        while (true)
+        {
+            lerpTimeSinceStarted = Time.time - lerpStartTime;
+            lerpPercentageComplete = lerpTimeSinceStarted / timeToLerp;
+
+            Quaternion currentRot = Quaternion.Lerp(from, to, lerpPercentageComplete);
+            transform.rotation = currentRot;
+
+            if (lerpPercentageComplete >= 1) break;
+            yield return new WaitForEndOfFrame();
+        }
+        print("Done lerping Turret");
+    }
+
     IEnumerator SearchHold(float holdTime) {
         print("Holding");
         canSearch = false;
