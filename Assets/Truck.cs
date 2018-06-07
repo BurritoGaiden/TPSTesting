@@ -29,6 +29,14 @@ public class Truck : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
+
+        if (Input.GetKeyDown(KeyCode.U)) {
+            if (thisPerceptionState == TruckPerceptionState.searchingBetweenPoints)
+                thisPerceptionState = TruckPerceptionState.nothing;
+            else if (thisPerceptionState == TruckPerceptionState.nothing)
+                thisPerceptionState = TruckPerceptionState.searchingBetweenPoints;
+        }
+
         WheelMovement();
 
         Perception(targetObject);

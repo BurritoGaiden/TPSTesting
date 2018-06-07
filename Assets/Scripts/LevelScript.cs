@@ -673,10 +673,10 @@ public class LevelScript : MonoBehaviour {
             yield return null;
         }
 
+        Time.timeScale = 1;
+
         StartCoroutine(LerpObjectToPosition(truck, GameObject.Find("part4TruckTarget04").transform.position, 2f));
-
-
-
+        
         //-------------------------------------------------------------------------
 
         print("Part 5 - Vehicle 'Search Mode'");
@@ -685,23 +685,20 @@ public class LevelScript : MonoBehaviour {
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
-        print("starting loop");
-        var searchModeRoutine = SearchMode();
-        StartCoroutine(searchModeRoutine);
+        StartCoroutine(LerpObjectToPosition(truck, GameObject.Find("part5TruckTarget01").transform.position, 2f));
+
+        truck.GetComponent<Truck>().searchpoints[0] = GameObject.Find("part5TurretTarget01");
+        truck.GetComponent<Truck>().searchpoints[1] = GameObject.Find("part5TurretTarget02");
+        truck.GetComponent<Truck>().searchpoints[2] = GameObject.Find("part5TurretTarget03");
+
+        print(truck.GetComponent<Truck>().searchpoints[0].name);
+        print(truck.GetComponent<Truck>().searchpoints[1].name);
+        print(truck.GetComponent<Truck>().searchpoints[2].name);
+        truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.searchingBetweenPoints;
 
         AssignThisObjective("Hit this trigger", "", 3, "part5Trigger02");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
-
-        print("Stopped Search Mode");
-        StopCoroutine(searchModeRoutine);
-
-        print("Waiting till the Player presses Q to advance to the next part");
-        while (true)
-        {
-            if (Input.GetKeyDown(KeyCode.Q)) break;
-            yield return null;
-        }
 
         //-------------------------------------------------------------------------
 
@@ -711,15 +708,17 @@ public class LevelScript : MonoBehaviour {
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
-        bool waitTillButtonPrompt = false;
-        while (waitTillButtonPrompt) {
-            if (Input.GetKeyDown(KeyCode.U)) break;
+        while (true)
+        {
+            if (Input.GetKeyDown(KeyCode.Q)) break;
             yield return null;
         }
 
         print("Switching Camera to Focus");
         st_SetCameraState(camStates.STATE_DIRFOCUS);
         PlayerCamera.cameraLookTarget = GameObject.Find("part6GeneratorLookTarget").transform;
+
+        yield return new WaitForSeconds(2);
 
         print("Waiting till the Player presses Q to advance to the next part");
         while (true)

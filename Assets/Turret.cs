@@ -13,6 +13,8 @@ public class Turret : MonoBehaviour {
     public GameObject impactEffect;
     public AudioClip[] turretSFX;
     public GameObject shotFlash;
+    public GameObject shotLight;
+    public GameObject shotCard;
 
     public GameObject spotlight;
     Quaternion from, to;
@@ -92,22 +94,22 @@ public class Turret : MonoBehaviour {
     }
 
     IEnumerator ShootCooldown(float cooldown) {
-        print("weapon recharging");
+        //print("weapon recharging");
         yield return new WaitForSeconds(cooldown);
         canShoot = true;
-        print("weapon recharged");
+        //print("weapon recharged");
     }
 
     IEnumerator Reload()
     {
         GetComponent<AudioSource>().pitch = 1;
         GetComponent<AudioSource>().PlayOneShot(turretSFX[1], 1);
-        print("reloading");
+        //print("reloading");
         reloading = true;
         yield return new WaitForSeconds(turretSFX[1].length);
         ammo = 20;
         canShoot = true;
-        print("reloaded");
+        //print("reloaded");
         reloading = false;
     }
 
@@ -118,18 +120,25 @@ public class Turret : MonoBehaviour {
         float lerpTimeSinceStarted = Time.time - lerpStartTime;
         float lerpPercentageComplete = lerpTimeSinceStarted / tracerAirTime;
         Vector3 ObjectStartPosition = start;
+
+        GameObject sLight = Instantiate(shotLight, transform.position, transform.rotation);
         
         while (true)
         {
             lr.SetPosition(0, start);
             lerpTimeSinceStarted = Time.time - lerpStartTime;
             lerpPercentageComplete = lerpTimeSinceStarted / tracerAirTime;
-            print("Time since started: " + lerpTimeSinceStarted + " and Percent Complete" + lerpPercentageComplete);
+            //print("Time since started: " + lerpTimeSinceStarted + " and Percent Complete" + lerpPercentageComplete);
             Vector3 currentPosition = Vector3.Lerp(start, end, lerpPercentageComplete);
             lr.SetPosition(1, currentPosition);
+            sLight.transform.position = currentPosition;
             if (lerpPercentageComplete >= tracerAirTime / tracerLength)
                 lr.SetPosition(0, Vector3.Lerp(start, end, lerpPercentageComplete - tracerAirTime / tracerLength));
-            if (lerpPercentageComplete >= 1) break;
+            if (lerpPercentageComplete >= 1)
+            {
+                Destroy(sLight);
+                break;
+            }
             yield return new WaitForEndOfFrame();
         }
     }
