@@ -112,6 +112,9 @@ public class LevelScript : MonoBehaviour {
                 case LevelRoutine.Quarantine:
                     StartCoroutine(QuarantineLevelCoroutine());
                     break;
+                case LevelRoutine.Pass34:
+                    StartCoroutine(Pass34LevelCoroutine());
+                    break;
             }
 	}
 
@@ -812,6 +815,343 @@ public class LevelScript : MonoBehaviour {
         yield return new WaitForSeconds(10f);
     }
 
+
+    IEnumerator Pass34LevelCoroutine()
+    {
+        //Setting up camera and player character
+        print("Set up camera and Player");
+
+        print("Part 0 - Intro");
+
+        st_SetCameraState(camStates.STATE_NOTHING);
+        GameObject.Find("CM_VirtualCamera_Handheld_wideangle_strong").transform.position = GameObject.Find("part0CameraTarget01").transform.position;
+        //camera.GetComponent<PlayerCamera>().cam.transform.position = GameObject.Find("part0CameraTarget01").transform.position;
+
+        yield return new WaitForSeconds(2);
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("Character"), GameObject.Find("part0CharacterTarget01").transform.position, 3));
+
+        //st_SetCameraState(camStates.STATE_DIRFOCUS);
+        //PlayerCamera.cameraLookTarget = GameObject.Find("Character").transform;
+
+        yield return new WaitForSeconds(6);
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("Character"), GameObject.Find("part0CharacterTarget02").transform.position, 3));
+
+
+        //st_SetCameraState(camStates.STATE_PLAYERORBIT);
+        //ResetCamPositionOnRig();
+
+        //b_SetCharacterInput(true);
+        //b_SetCameraInput(true);
+
+        truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.nothing;
+
+
+        yield return new WaitForSeconds(1f);
+
+        print("Part 1 - Tease vehicle");
+
+        truck.transform.position = truckPositions[0].position;
+
+        AssignThisObjective("Hit this trigger", "", 3, "part1Trigger01");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        print("Switching Camera to Focus");
+        st_SetCameraState(camStates.STATE_DIRFOCUS);
+        PlayerCamera.cameraLookTarget = GameObject.Find("part1LookTarget01").transform;
+
+        print("Moving Truck");
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[1].position, 4f));
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart");
+
+        yield return new WaitForSeconds(2f);
+
+        st_SetCameraState(camStates.STATE_PLAYERORBIT);
+
+        yield return new WaitForSeconds(2f);
+
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStop");
+
+        //-------------------------------------------------------------------------
+
+        print("Part 2 - Intro to Vehicle + Tease Vehicle Intention");
+
+        truck.transform.position = truckPositions[2].position;
+
+        AssignThisObjective("Hit this trigger", "", 3, "part2Trigger01");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        print("Moving Truck");
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[3].position, 2f));
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart");
+
+
+        yield return new WaitForSeconds(2f);
+
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStop");
+        GetComponent<AudioSource>().PlayOneShot(truckDialogue[1], 4);
+
+        yield return new WaitForSeconds(2f);
+
+        truck.GetComponent<Truck>().turret.GetComponent<Turret>().FaceObject(player.transform.position, 2f);
+
+        yield return new WaitForSeconds(2f);
+
+
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[4].position, 4f));
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart");
+
+        yield return new WaitForSeconds(2f);
+
+        //GetComponent<AudioSource>().PlayOneShot(truckDialogue[2], 4);
+
+        yield return new WaitForSeconds(2f);
+
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStop");
+        GetComponent<AudioSource>().PlayOneShot(truckDialogue[4], 4);
+
+        yield return new WaitForSeconds(2f);
+
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[5].position, 3f));
+
+        //-------------------------------------------------------------------------
+
+        print("Part 3 - Vehicle Intention / Player Danger / Goal : Observed");
+
+        //print("Switching Camera to Focus");
+        //st_SetCameraState(camStates.STATE_DIRFOCUS);
+        //PlayerCamera.cameraLookTarget = truck.transform;
+
+        AssignThisObjective("Hit this trigger", "", 3, "part3Trigger01");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[6].position, 2f));
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart");
+
+        yield return new WaitForSeconds(2f);
+
+        truck.GetComponent<Truck>().turret.GetComponent<Turret>().FaceObject(GameObject.Find("part3TurretTarget01").transform.position, 1.5f);
+
+        yield return new WaitForSeconds(1f);
+
+        GetComponent<AudioSource>().PlayOneShot(truckDialogue[5], 5);
+        float waiting = 0;
+        float waitingPlus = 10;
+        while (waiting < waitingPlus)
+        {
+            waiting += Time.deltaTime;
+            print(waiting + " and the limit" + waitingPlus);
+            truck.GetComponent<Truck>().turret.GetComponent<Turret>().Shoot();
+            yield return null;
+        }
+
+        print("finished that previous shoot bit");
+        yield return new WaitForSeconds(2f);
+
+        //shoot
+        //make the people die
+
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[7].position, 2f));
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart");
+
+        /*
+        print("Waiting till the Player presses Q to advance to the next part");
+        while (true)
+        {
+            if (Input.GetKeyDown(KeyCode.Q)) break;
+            yield return null;
+        }
+        */
+
+        yield return new WaitForSeconds(2);
+
+        //-------------------------------------------------------------------------
+
+        print("Part 4 - Vehicle pass with the Player having cover");
+
+        //Player walks through this section
+        //The player is in cover for part of this
+        //the vehicle can be seen double tapping shapes that look like people
+        //The player no longer has any cover
+        //when they get to a certain point, the vehicle starts coming in quick
+        //the player must run over to the cover
+        //When near the cover, the game will prompt the player to enter it
+        //Once entered, the vehicle passes by
+
+        AssignThisObjective("Hit this trigger", "", 3, "part4Trigger01");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        truck.transform.position = GameObject.Find("part4TruckTarget01").transform.position;
+        StartCoroutine(LerpObjectToPosition(truck, GameObject.Find("part4TruckTarget02").transform.position, 4f));
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart");
+
+        yield return new WaitForSeconds(4f);
+
+        AssignThisObjective("Hit this trigger", "", 3, "part4Trigger02");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        StartCoroutine(LerpObjectToPosition(truck, GameObject.Find("part4TruckTarget03").transform.position, 10f));
+
+        AssignThisObjective("Hit this trigger", "", 3, "part4Trigger03");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        //put button prompt here
+        //Pause until keypress
+        Time.timeScale = 0.00001f;
+
+        while (true)
+        {
+            if (Input.GetKeyDown(KeyCode.Q)) break;
+            yield return null;
+        }
+
+        Time.timeScale = 1;
+
+        StartCoroutine(LerpObjectToPosition(truck, GameObject.Find("part4TruckTarget04").transform.position, 2f));
+
+        //-------------------------------------------------------------------------
+
+        print("Part 5 - Vehicle 'Search Mode'");
+
+        AssignThisObjective("Hit this trigger", "", 3, "part5Trigger01");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        StartCoroutine(LerpObjectToPosition(truck, GameObject.Find("part5TruckTarget01").transform.position, 2f));
+
+        truck.GetComponent<Truck>().searchpoints[0] = GameObject.Find("part5TurretTarget01");
+        truck.GetComponent<Truck>().searchpoints[1] = GameObject.Find("part5TurretTarget02");
+        truck.GetComponent<Truck>().searchpoints[2] = GameObject.Find("part5TurretTarget03");
+
+        print(truck.GetComponent<Truck>().searchpoints[0].name);
+        print(truck.GetComponent<Truck>().searchpoints[1].name);
+        print(truck.GetComponent<Truck>().searchpoints[2].name);
+        truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.searchingBetweenPoints;
+
+        AssignThisObjective("Hit this trigger", "", 3, "part5Trigger02");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        //-------------------------------------------------------------------------
+
+        print("Part 6 - Generator Minigame");
+
+        AssignThisObjective("Hit this trigger", "", 3, "part6Trigger01");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        while (true)
+        {
+            if (Input.GetKeyDown(KeyCode.Q)) break;
+            yield return null;
+        }
+
+        print("Switching Camera to Focus");
+        st_SetCameraState(camStates.STATE_DIRFOCUS);
+        PlayerCamera.cameraLookTarget = GameObject.Find("part6CameraLookTarget01").transform;
+
+        yield return new WaitForSeconds(2);
+
+        print("Waiting till the Player presses Q to advance to the next part");
+        while (true)
+        {
+            if (Input.GetKeyDown(KeyCode.Q)) break;
+            yield return null;
+        }
+
+        PlayerCamera.cameraLookTarget = GameObject.Find("part6CameraLookTarget02").transform;
+        StartCoroutine(LerpObjectToFace(GameObject.Find("DoorHolder"), GameObject.Find("DoorHolderTarget").transform.position, 3));
+
+        yield return new WaitForSeconds(3);
+
+        st_SetCameraState(camStates.STATE_PLAYERORBIT);
+        truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.nothing;
+
+        yield return new WaitForSeconds(5);
+
+        //-------------------------------------------------------------------------
+
+        print("Part 7 - Vehicle Crash into Wall");
+
+        truck.transform.position = GameObject.Find("part7TruckTarget01").transform.position;
+
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeCrashIntoWall");
+
+        yield return new WaitForSeconds(4.7f);
+
+        //Destroy the crates here
+        GameObject[] crates = GameObject.FindGameObjectsWithTag("PuzzleCrates");
+        for (int i = 0; i < crates.Length; i++)
+        {
+            crates[i].GetComponent<CrateDestroyer>().ExplodeCrate();
+        }
+
+        truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.omniscientPerceived;
+
+        AssignThisObjective("Hit this trigger", "", 3, "part7Trigger01");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveePullOutOfWall");
+
+        truck.transform.position = truckPositions[4].position;
+        GetComponent<AudioSource>().PlayOneShot(truckDialogue[5], 4);
+
+        yield return new WaitForSeconds(8f);
+
+        truck.transform.position = truckPositions[5].position;
+
+        yield return new WaitForSeconds(5f);
+
+        GetComponent<AudioSource>().PlayOneShot(truckDialogue[4], 4);
+
+        yield return new WaitForSeconds(5f);
+        GetComponent<AudioSource>().PlayOneShot(truckDialogue[3], 4);
+        truck.transform.position = truckPositions[6].position;
+
+        yield return new WaitForSeconds(5f);
+
+        truck.transform.position = truckPositions[7].position;
+
+        print("Switching Camera to Regular");
+        st_SetCameraState(camStates.STATE_PLAYERORBIT);
+
+        print("Waiting until specific trigger");
+        AssignThisObjective("Hit this trigger", "", 3, "truckTrigger02");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        print("Switching Camera to Focus");
+
+        print("Moving Truck");
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[2].position, 2f));
+
+        yield return new WaitForSeconds(2f);
+
+        print("Switching Camera to Regular");
+        st_SetCameraState(camStates.STATE_PLAYERORBIT);
+
+        print("Waiting until specific trigger");
+        AssignThisObjective("Hit this trigger", "", 3, "truckTrigger03");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        print("Waiting until specific trigger");
+        AssignThisObjective("Hit this trigger", "", 3, "truckTrigger04");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        yield return new WaitForSeconds(10f);
+    }
+
+
     IEnumerator MovePlayer(string targetPosHelper)
     {
         var helper = GameObject.Find(targetPosHelper);
@@ -1036,5 +1376,6 @@ public enum GamePlayState {
 public enum LevelRoutine {
     Truck,
     CameraTesting,
-    Quarantine
+    Quarantine,
+    Pass34
 }

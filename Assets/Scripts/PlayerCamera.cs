@@ -60,7 +60,7 @@ public class PlayerCamera : MonoBehaviour {
         Cursor.visible = false;
         anim = GetComponent<Animator>();
         cam = Camera.main.transform;
-
+        
         LevelScript.b_SetCameraInput += SetInput;
         LevelScript.ResetCamPositionOnRig += ResetCameraOnRig;
         LevelScript.st_SetCameraState += SetCameraState;    
@@ -452,7 +452,7 @@ public class PlayerCamera : MonoBehaviour {
         if (PlayerController.thisMoveState == MoveState.STATE_REGULAR || PlayerController.thisMoveState == MoveState.STATE_SCRIPTEDMOVEMENT)
         {
             //forwardOffset -= PlayerController.currentSpeed / 3;
-            forwardOffset = .66f;
+            forwardOffset = 0f;
             horizontalOffset = .73f;
             if (!CharacterUserControl.crouchInput)
                 verticalOffset = .36f;
@@ -505,7 +505,7 @@ public class PlayerCamera : MonoBehaviour {
         }
         if (PlayerController.thisMoveState == MoveState.STATE_REGULAR) {
             //forwardOffset -= PlayerController.currentSpeed / 3;
-            forwardOffset = .66f;
+            forwardOffset = 0f;
             horizontalOffset = .73f;
             if (!CharacterUserControl.crouchInput)
                 verticalOffset = .36f;
@@ -628,5 +628,6 @@ public enum camStates
     STATE_PUZZLECCTV,
     STATE_PUZZLELERPDIRFOCUS,
     STATE_ORBITDISTANCED,
-    STATE_GENERATORMINIGAME
+    STATE_GENERATORMINIGAME,
+    STATE_NOTHING
 };
