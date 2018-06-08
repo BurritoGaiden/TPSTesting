@@ -4,11 +4,9 @@ using UnityEngine;
 
 public class CameraRig : MonoBehaviour
 {
-    /*
     //NOTE: THIS SCRIPT IS ON THE CAMERA RIG AT THIS TIME
     public Transform cam;
     public bool camInput;
-    public bool lockCursor;
     public float mouseSensitivity = 10;
     public Transform target;
     public float dstFromTarget = 2;
@@ -16,158 +14,396 @@ public class CameraRig : MonoBehaviour
 
     public float rotationSmoothTime = .12f;
     Vector3 rotationSmoothVelocity;
+    float rotationSmoothVelocityX, rotationSmoothVelocityY;
     Vector3 currentRotation;
 
     float yaw;
     float pitch;
 
-    //testing
-    public Vector2 testYP;
-    public Transform camTar;
+    public static Transform cameraLookTarget;
+    public static Transform targetPosition;
+    public static Transform valuePlaceholder;
 
-    //vars that are from other scripts not made yet
-    public bool aimInput;
-    public bool runInput;
-    public bool lookInput;
-    public bool coverInput;
+    public static camStates cameraState = camStates.STATE_NULL;
+    public static cameraStates camState = cameraStates.STATE_NOTHING;
 
-    float regularWalkOffset = .64f;
-    float camHorizontalOffset = 0f;
-    float camForwardOffset = 0f;
+    public float horizontalOffset = .64f;
+    public float forwardOffset = 0f;
+    public float verticalOffset = 0f;
 
-    enum camStates
-    {
-        STATE_PLAYERORBIT,
-        STATE_POIFOCUS,
-        STATE_AIMING,
-        STATE_COVER,
-        STATE_RUNNING
-    };
-    camStates cameraState;
+    public static bool setRotationInstantlyNextFrame;
 
-    //Sample received delegate string
-    public string lookingFor;
+    // Used to smoothly transition between different states like the rail state one
+    public static bool transitioning;
+
+    public static Vector3 detachedPosition;
+    public static Quaternion detachedFixedRotation = Quaternion.identity;
+
+    public LayerMask occlusionLayers = Physics.DefaultRaycastLayers;
+
+    public static string playingAnim;
+    Animator anim;
+
+    public Transform desiredView;
+    public static float transitionSpeed;
+    public static Transform currentView;
+    public bool lerpToPos;
 
     void Awake()
     {
-        if (lockCursor)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
         cam = transform.GetChild(0);
 
-        cameraState = camStates.STATE_PLAYERORBIT;
-
-        LevelScript.ECamInput += EnableCameraInput;
-        LevelScript.DCamInput += DisableCameraInput;
-        LevelScript.SetCharCamTransform += SetCameraTransform;
+        LevelScript.b_SetCameraInput += SetInput;
         LevelScript.ResetCamPositionOnRig += ResetCameraOnRig;
+        LevelScript.st_SetCameraState += SetCameraState;
     }
 
-    void Update()
+    void SetInput(bool desiredBool) { camInput = desiredBool; }
+
+    void LateUpdate()
     {
-        CheckInputs();
-        SetRigState();
-        CameraRigStateBehaviors();
+        CameraStateLogic();
+    }
+    void CameraCover()
+    {
+        OrbitingBehavior();
+        UpdatePosition();
         CameraOffset();
+        if (PlayerController.thisMoveState != MoveState.STATE_COVER) cameraState = camStates.STATE_PLAYERORBIT;
     }
-    #region loop
-    void CheckInputs()
+    void PuzzleDirFocus()
     {
-        runInput = Input.GetKey(KeyCode.LeftShift);
-        aimInput = Input.GetKey(KeyCode.Mouse1);
-        coverInput = Input.GetKey(KeyCode.K);
-        if (Interesting.canLook) lookInput = Input.GetKey(KeyCode.E);
-    }
+        //Set up placeholder to take data
+        valuePlaceholder = transform;
+        //Establishing rotation
+        yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+        pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
-    void SetRigState()
-    {
-        if (camInput)
+        if (setRotationInstantlyNextFrame)
         {
-            if (lookInput) cameraState = camStates.STATE_POIFOCUS;
-            else if (runInput) cameraState = camStates.STATE_RUNNING;
-            else if (aimInput) cameraState = camStates.STATE_AIMING;
-            else if (coverInput) cameraState = camStates.STATE_COVER;
-            else cameraState = camStates.STATE_PLAYERORBIT;
+            currentRotation.x = pitch;
+            currentRotation.y = yaw;
+            setRotationInstantlyNextFrame = false;
         }
-        else cameraState = camStates.STATE_PLAYERORBIT;
-    }
-
-    void CameraRigStateBehaviors()
-    {
-        switch (cameraState)
+        else
         {
-            case camStates.STATE_PLAYERORBIT:
+            currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+            currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+        }
+
+        //---------------------------------------------------
+
+        //Assign rotation values to placeholder that'll make the angle lerp work
+        valuePlaceholder.eulerAngles = currentRotation;
+
+        //---------------------------------------------------
+
+        //Lerping to a position and rotation
+        transform.position = Vector3.Lerp(transform.position, targetPosition.position, Time.deltaTime * transitionSpeed);
+        cam.transform.localPosition = Vector3.Lerp(cam.transform.localPosition, CamOffset(), Time.deltaTime * transitionSpeed);
+
+        //Turn the rotation we got from the rot/pos establishment and set it in the current angle
+        Vector3 currentAnglePL = new Vector3(
+            Mathf.LerpAngle(transform.rotation.eulerAngles.x, valuePlaceholder.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
+            Mathf.LerpAngle(transform.rotation.eulerAngles.y, valuePlaceholder.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
+            Mathf.LerpAngle(transform.rotation.eulerAngles.z, valuePlaceholder.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
+
+        //Assign to our rig :)
+        transform.eulerAngles = currentAnglePL;
+    }
+    void LerpDirFocus()
+    {
+        currentView = transform;
+        //Establishing position and rotation
+        yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+        pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+        if (setRotationInstantlyNextFrame)
+        {
+            currentRotation.x = pitch;
+            currentRotation.y = yaw;
+            setRotationInstantlyNextFrame = false;
+        }
+        else
+        {
+            currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+            currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+            //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        }
+
+        //---------------------------------------------------
+
+        //Assign rotation values to placeholder that'll make the angle lerp work
+        currentView.eulerAngles = currentRotation;
+
+        //---------------------------------------------------
+
+        //Lerping to a position and rotation
+        transform.position = LerpOrMoveTowardsPoisition(transform.position, target.position - transform.forward * dstFromTarget, transitionSpeed, transitionSpeed / 3f);
+        cam.transform.localPosition = LerpOrMoveTowardsPoisition(cam.transform.localPosition, CamOffset(), transitionSpeed, transitionSpeed / 3f);
+
+        //Turn the rotation we got from the rot/pos establishment and set it in the current angle
+        Vector3 currentAngle = new Vector3(
+            Mathf.LerpAngle(transform.rotation.eulerAngles.x, currentView.transform.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
+            Mathf.LerpAngle(transform.rotation.eulerAngles.y, currentView.transform.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
+            Mathf.LerpAngle(transform.rotation.eulerAngles.z, currentView.transform.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
+
+        //Assign to our rig :)
+        transform.eulerAngles = currentAngle;
+    }
+    void CameraStateLogic()
+    {
+        switch (camState)
+        {
+            //State Case
+            case cameraStates.STATE_PLAYERORBIT:
+                
                 OrbitingBehavior();
+                UpdatePosition();
+                CameraOffset();
+
+                //State Transitions
+                if (!camInput) cameraState = camStates.STATE_NULL;
+                else if (PlayerController.thisMoveState == MoveState.STATE_COVER) cameraState = camStates.STATE_COVER;
+                else if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
                 break;
-            case camStates.STATE_AIMING:
-                AimingBehavior();
+
+            case cameraStates.STATE_ROTATETOLOOKAT:
+                //CCTVBehavior();
+                //CCTVPlayerBehavior();
+                OrbitingBehavior();
+                LookAtBehavior(cam.gameObject);
+                //UpdatePosition();
+
                 break;
-            case camStates.STATE_POIFOCUS:
+
+
+            case cameraStates.STATE_POIFOCUS:
                 FocusBehavior();
+                CameraOffset();
+                if (!Interesting.looking) cameraState = camStates.STATE_PLAYERORBIT;
                 break;
-            case camStates.STATE_RUNNING:
-                OrbitingBehavior();
+
+            case cameraStates.STATE_COVER:
+                CameraCover();
                 break;
-            case camStates.STATE_COVER:
+
+            //--------------------------------------------
+
+            //Developer driven state. Can only be switched into and out of from the level script
+            case cameraStates.STATE_DIRFOCUS:
+                FocusBehavior();
+                CameraOffset();
+
+                break;
+
+            
+            
+            case cameraStates.STATE_LERPDIRFOCUS:
+                LerpDirFocus();
+                break;
+
+            //Needs to lerp away from regular player cam position to a new position
+            //Needs to also track the player position with it's rotation
+            case cameraStates.STATE_PUZZLELERPDIRFOCUS:
+                PuzzleDirFocus();
+                break;
+
+            case cameraStates.STATE_LERPING:
+                transform.position = Vector3.Lerp(transform.position, currentView.position, Time.deltaTime * transitionSpeed);
+
+                Vector3 currentAngleL = new Vector3(
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.x, currentView.transform.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.y, currentView.transform.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.z, currentView.transform.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
+
+                transform.eulerAngles = currentAngleL;
+                CameraOffset();
+                break;
+
+            case cameraStates.STATE_PUZZLELERPING:
+                transform.position = Vector3.Lerp(transform.position, currentView.position, Time.deltaTime * transitionSpeed);
+
+                Vector3 currentAngleP = new Vector3(
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.x, currentView.transform.rotation.eulerAngles.x, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.y, currentView.transform.rotation.eulerAngles.y, Time.deltaTime * transitionSpeed),
+                    Mathf.LerpAngle(transform.rotation.eulerAngles.z, currentView.transform.rotation.eulerAngles.z, Time.deltaTime * transitionSpeed));
+
+                transform.eulerAngles = currentAngleP;
+                CameraOffset();
+                break;
+
+            case cameraStates.STATE_JUSTORBIT:
                 OrbitingBehavior();
+
+                break;
+
+            case cameraStates.STATE_PUZZLECCTV:
+                yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+                pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
+                pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+                if (setRotationInstantlyNextFrame)
+                {
+                    currentRotation.x = pitch;
+                    currentRotation.y = yaw;
+                    setRotationInstantlyNextFrame = false;
+                }
+                else
+                {
+                    currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+                    currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+                    //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+                }
+
+                transform.eulerAngles = currentRotation;
+                CameraOffset();
+                break;
+
+            case cameraStates.STATE_DETACHED:
+                var savedPos = transform.position;
+                if (Quaternion.identity == detachedFixedRotation)
+                {
+                    FocusBehavior();
+                }
+                else
+                {
+                    transform.rotation = Quaternion.Lerp(transform.rotation, detachedFixedRotation, Time.deltaTime * 5);
+                }
+
+                //Debug.Log("Detached boi");
+                transform.position = Vector3.MoveTowards(savedPos, detachedPosition, Time.deltaTime * 15);
+
                 break;
         }
     }
-    #endregion
 
-    #region behaviors
+    void CCTVPlayerBehavior()
+    {
+        yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+        pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+        Vector3 targetRotation = new Vector3(pitch, yaw);
+        transform.eulerAngles = targetRotation;
+    }
+
+    void CCTVBehavior()
+    {
+        yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+        pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+        if (setRotationInstantlyNextFrame)
+        {
+            currentRotation.x = pitch;
+            currentRotation.y = yaw;
+            setRotationInstantlyNextFrame = false;
+        }
+        else
+        {
+            currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+            currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+            //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        }
+
+        transform.eulerAngles = currentRotation;
+    }
+
     void OrbitingBehavior()
     {
-
         //Mouse control of pitch and yaw
         yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
         pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
         pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
         //Applying control to camera rotation in a smoothed fashion
-        currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+        currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+        //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
         transform.eulerAngles = currentRotation;
+    }
 
-        transform.position = target.position - transform.forward * CameraDSTFromTarget();
-
-        CameraOffset();
+    void UpdatePosition()
+    {
+        var targetPosition = target.position - transform.forward * dstFromTarget;
+        if (!transitioning || Vector3.Distance(transform.position, targetPosition) < 0.1f)
+        {
+            transitioning = false;
+            transform.position = targetPosition;
+        }
+        else
+        {
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, Time.deltaTime * 10);
+        }
     }
 
     void AimingBehavior()
     {
-
         //Mouse control of pitch and yaw
-        yaw += Input.GetAxis("Mouse X") * (mouseSensitivity / 3);
-        pitch -= Input.GetAxis("Mouse Y") * (mouseSensitivity / 3);
+        yaw += Input.GetAxis("Mouse X") * mouseSensitivity / 3;
+        pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity / 3;
         pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
         //Applying control to camera rotation in a smoothed fashion
-        currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+        currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+        //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
         transform.eulerAngles = currentRotation;
 
         transform.position = target.position - transform.forward * dstFromTarget;
-
-        CameraOffset();
     }
 
-    void FocusBehavior()
+    public void LookAtBehavior(GameObject whateverObject)
     {
-        yaw = GetAngleBetween3PointsHor(this.transform.position, camTar.position);
-        pitch = GetAngleBetween3PointsVer(this.transform.position, camTar.position);
+        yaw = GetAngleBetween3PointsHor(whateverObject.transform.position, cameraLookTarget.position);
+        pitch = GetAngleBetween3PointsVer(whateverObject.transform.position, cameraLookTarget.position);
         pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
 
-        currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        if (setRotationInstantlyNextFrame)
+        {
+            currentRotation.x = pitch;
+            currentRotation.y = yaw;
+            setRotationInstantlyNextFrame = false;
+        }
+        else
+        {
+            currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+            currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+            //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        }
+
+        whateverObject.transform.eulerAngles = currentRotation;
+    }
+
+        void FocusBehavior()
+    {
+        yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+        pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+        if (setRotationInstantlyNextFrame)
+        {
+            currentRotation.x = pitch;
+            currentRotation.y = yaw;
+            setRotationInstantlyNextFrame = false;
+        }
+        else
+        {
+            currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+            currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+            //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        }
+
         transform.eulerAngles = currentRotation;
 
-        transform.position = target.position - transform.forward * CameraDSTFromTarget();
-
-        CameraOffset();
+        transform.position = target.position - transform.forward * dstFromTarget;
     }
-    #endregion
 
-    #region helpers
     float GetAngleBetween3PointsHor(Vector3 a, Vector3 b)
     {
         float theta = Mathf.Atan2(b.x - a.x, b.z - a.z);
@@ -183,33 +419,108 @@ public class CameraRig : MonoBehaviour
         float angle = theta * -180 / Mathf.PI;
         return angle;
     }
-    #endregion
 
-    #region Camera Behaviors
+    Vector3 CamOffset()
+    {
+        //Adding Camera offset
+        if (CharacterUserControl.aimInput)
+        {
+            forwardOffset = 1f;
+            horizontalOffset = .64f;
+            verticalOffset = 0f;
+        }
+        if (PlayerController.thisMoveState == MoveState.STATE_REGULAR || PlayerController.thisMoveState == MoveState.STATE_SCRIPTEDMOVEMENT)
+        {
+            //forwardOffset -= PlayerController.currentSpeed / 3;
+            forwardOffset = 0f;
+            horizontalOffset = .73f;
+            if (!CharacterUserControl.crouchInput)
+                verticalOffset = .36f;
+            else
+                verticalOffset = -.15f;
+        }
+        if (PlayerController.thisMoveState == MoveState.STATE_COVER)
+        {
+            verticalOffset = -.15f;
+            forwardOffset = .66f;
+            horizontalOffset = 0f;
+        }
+
+        Vector3 camOffset = new Vector3(horizontalOffset, verticalOffset, forwardOffset);
+        return camOffset;
+    }
+
     void CameraOffset()
     {
-        if (cameraState == camStates.STATE_AIMING)
+        //Adding Camera offset
+        if (cameraState == camStates.STATE_PUZZLECCTV || cameraState == camStates.STATE_PUZZLELERPING)
         {
-            camHorizontalOffset += .70f;
-            camForwardOffset += 1f;
+            //forwardOffset -= PlayerController.currentSpeed / 3;
+            forwardOffset = .66f;
+            horizontalOffset = .73f;
+            if (!CharacterUserControl.crouchInput)
+                verticalOffset = .36f;
+            else
+                verticalOffset = -.15f;
+
         }
-        else if (cameraState == camStates.STATE_RUNNING)
+        if (CharacterUserControl.aimInput)
         {
-            camForwardOffset -= 1f;
-            camHorizontalOffset += 0;
+            forwardOffset = 1f;
+            horizontalOffset = .64f;
+            verticalOffset = 0f;
         }
-        else if (cameraState == camStates.STATE_PLAYERORBIT)
+        if (PlayerController.thisMoveState == MoveState.STATE_REGULAR)
         {
-            camForwardOffset -= 0;
-            camHorizontalOffset += .64f;
+            //forwardOffset -= PlayerController.currentSpeed / 3;
+            forwardOffset = 0f;
+            horizontalOffset = .73f;
+            if (!CharacterUserControl.crouchInput)
+                verticalOffset = .36f;
+            else
+                verticalOffset = -.15f;
         }
-        else if (cameraState == camStates.STATE_POIFOCUS)
+        if (PlayerController.thisMoveState == MoveState.STATE_COVER)
         {
-            camForwardOffset += 1f;
-            camHorizontalOffset += .70f;
+            verticalOffset = -.15f;
+            forwardOffset = .66f;
+            horizontalOffset = 0f;
         }
 
-        cam.transform.localPosition = new Vector3(regularWalkOffset, 0, camForwardOffset);
+        Vector3 camOffset = new Vector3(horizontalOffset, verticalOffset, forwardOffset);
+
+        float distToKeepFromWall = 0.35f;
+
+        // make sure there are no walls between the camera and the player
+        // this dosnt catch the far away cases, which is why we also have a secondary check after this
+        RaycastHit hit;
+        if (Physics.Linecast(target.position, transform.TransformPoint(camOffset), out hit, occlusionLayers))
+        {
+            Debug.DrawLine(target.position, transform.TransformPoint(camOffset));
+            camOffset = transform.InverseTransformPoint(hit.point + hit.normal * distToKeepFromWall); // Keep a small distance from the wall so that we cant see through it
+        }
+
+        var dirs = new Vector3[] {
+            Vector3.right,
+            Vector3.left,
+            Vector3.forward,
+            Vector3.back,
+        };
+
+        // Secondary check which casts a ray out from the camera in call directions
+        foreach (var dir in dirs)
+        {
+            // Raycast to each side
+            var camPosWithOffset = transform.TransformPoint(camOffset);
+
+            if (Physics.Linecast(camPosWithOffset, camPosWithOffset + dir * distToKeepFromWall, out hit, occlusionLayers))
+            {
+                var dirAway = camPosWithOffset - hit.point;
+                camOffset = transform.InverseTransformPoint(hit.point + hit.normal * distToKeepFromWall);
+            }
+        }
+        cam.transform.localPosition = CamOffset();
+        //cam.transform.localPosition = Vector3.MoveTowards(cam.transform.localPosition, camOffset, Time.deltaTime * 5);
     }
 
     float CameraDSTFromTarget()
@@ -225,30 +536,58 @@ public class CameraRig : MonoBehaviour
         else DST = Mathf.Lerp(3, 5.5f, (pitch - 51) / 20);
         return DST;
     }
-    #endregion
 
-    #region static-ey callback functions
+    // Either lerps towards position, or if the distance lerped is lower than lowerSpeed, then uses Vector3.MoveTowards
+    Vector3 LerpOrMoveTowardsPoisition(Vector3 currentPos, Vector3 targetPos, float lerpSpeed, float lowestSpeed)
+    {
+        var newPos = Vector3.Lerp(currentPos, targetPos, Time.deltaTime * lerpSpeed);
+        if (Vector3.Distance(newPos, currentPos) < Time.deltaTime * lowestSpeed)
+        {
+            newPos = Vector3.MoveTowards(currentPos, targetPos, lowestSpeed * Time.deltaTime);
+        }
+
+        return newPos;
+    }
+
     void SetCameraTransform(Vector3 position, Vector3 rotation)
     {
-        Camera.main.transform.localPosition = position;
-        Camera.main.transform.localRotation = Quaternion.Euler(rotation);
+        cam.transform.localPosition = position;
+        cam.transform.localRotation = Quaternion.Euler(rotation);
     }
 
-    void EnableCameraInput()
+    public void ResetCameraOnRig()
     {
-        camInput = true;
+        cam.transform.position = this.transform.position;
+        cam.transform.rotation = this.transform.rotation;
     }
 
-    void DisableCameraInput()
+    void SetCameraState(camStates desiredState)
     {
-        camInput = false;
+        cameraState = desiredState;
     }
-
-    void ResetCameraOnRig()
-    {
-        Camera.main.transform.position = this.transform.position;
-        Camera.main.transform.rotation = this.transform.rotation;
-    }
-    #endregion
-    */
 }
+
+public enum cameraStates
+{
+    STATE_PLAYERORBIT,
+    STATE_DIRFOCUS,
+    STATE_POIFOCUS,
+    STATE_NULL,
+    STATE_COVER,
+    STATE_COVERAIM,
+    STATE_PLAYERAIM,
+    STATE_DETACHED,
+    STATE_PLAYINGANIM,
+    STATE_LERPING,
+    STATE_JUSTORBIT,
+    STATE_JUSTPOS,
+    STATE_LERPDIRFOCUS,
+    STATE_CCTV,
+    STATE_PUZZLELERPING,
+    STATE_PUZZLECCTV,
+    STATE_PUZZLELERPDIRFOCUS,
+    STATE_ORBITDISTANCED,
+    STATE_GENERATORMINIGAME,
+    STATE_NOTHING,
+    STATE_ROTATETOLOOKAT
+};

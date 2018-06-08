@@ -68,7 +68,8 @@ public class LevelScript : MonoBehaviour {
     //Level Objects + Data
     [Header("Level Objects")]
     public GameObject player;
-    public GameObject camera;
+    private GameObject camera;
+    public GameObject cameraRig;
 
     public GameObject truck;
     public Transform[] truckPositions;
@@ -503,16 +504,51 @@ public class LevelScript : MonoBehaviour {
         //Setting up camera and player character
         print("Set up camera and Player");
 
-        st_SetCameraState(camStates.STATE_PLAYERORBIT);
-        ResetCamPositionOnRig();
+        //st_SetCameraState(camStates.STATE_PLAYERORBIT);
+        CameraRig.camState = cameraStates.STATE_NOTHING;
+        cameraRig.GetComponent<CameraRig>().ResetCameraOnRig();
 
         b_SetCharacterInput(true);
         b_SetCameraInput(true);
 
         truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.nothing;
-        
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(4f);
+
+        print("Part 0// - Intro/Test");
+
+        CameraRig.camState = cameraStates.STATE_PLAYERORBIT;
+
+        yield return new WaitForSeconds(3f);
+
+        CameraRig.camState = cameraStates.STATE_ROTATETOLOOKAT;
+        CameraRig.cameraLookTarget = GameObject.Find("part0LookTarget01").transform;
+        //CameraRig.detachedPosition = GameObject.Find("Character").transform.position;
+        //cameraRig.GetComponent<CameraRig>().target = GameObject.Find("part0LookTarget01").transform;
+
+        yield return new WaitForSeconds(10);
+
+        /*
+
+        CameraRig.camState = cameraStates.STATE_DIRFOCUS;
+        CameraRig.cameraLookTarget = GameObject.Find("Character").transform;
+        cameraRig.GetComponent<CameraRig>().camInput = false;
+
+        yield return new WaitForSeconds(3f);
+
+        CameraRig.cameraLookTarget = GameObject.Find("part0LookTarget01").transform;
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("part0LookTarget01"), GameObject.Find("part0MoveTarget01").transform.position, 3f));
+
+        yield return new WaitForSeconds(4f);
+
+        */
+
+        yield return new WaitForSeconds(4f);
+
+        //CameraRig.camState = cameraStates.STATE_PUZZLECCTV;
+        //CameraRig.cameraLookTarget = GameObject.Find("part0LookTarget01").transform;
+
+        //-------------------------------------------------------------------------
 
         print("Part 1 - Tease vehicle");
 
@@ -524,7 +560,7 @@ public class LevelScript : MonoBehaviour {
 
         print("Switching Camera to Focus");
         st_SetCameraState(camStates.STATE_DIRFOCUS);
-        PlayerCamera.cameraLookTarget = GameObject.Find("part1LookTarget01").transform;
+        CameraRig.cameraLookTarget = GameObject.Find("part1LookTarget01").transform;
 
         print("Moving Truck");
         StartCoroutine(LerpObjectToPosition(truck, truckPositions[1].position, 4f));
