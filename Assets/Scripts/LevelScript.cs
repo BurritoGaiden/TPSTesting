@@ -513,20 +513,27 @@ public class LevelScript : MonoBehaviour {
 
         truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.nothing;
 
-        yield return new WaitForSeconds(4f);
+        yield return new WaitForSeconds(1f);
+
+        //----------------------------------------------------------
 
         print("Part 0// - Intro/Test");
 
-        CameraRig.camState = cameraStates.STATE_PLAYERORBIT;
+        //CameraRig.camState = cameraStates.STATE_PLAYERORBIT;
+        //CameraRig.camState = cameraStates.d_PlayerRigOrbit;
 
-        yield return new WaitForSeconds(3f);
+        //yield return new WaitForSeconds(10f);
 
-        CameraRig.camState = cameraStates.STATE_ROTATETOLOOKAT;
-        CameraRig.cameraLookTarget = GameObject.Find("part0LookTarget01").transform;
+        CameraRig.camState = cameraStates.d_PlayerRigOrbit_UpdatePosition;
+
+        //CameraRig.camState = cameraStates.STATE_ROTATETOLOOKAT;
+        //CameraRig.cameraLookTarget = GameObject.Find("part0LookTarget01").transform;
         //CameraRig.detachedPosition = GameObject.Find("Character").transform.position;
         //cameraRig.GetComponent<CameraRig>().target = GameObject.Find("part0LookTarget01").transform;
 
         yield return new WaitForSeconds(10);
+
+        //CameraRig.camState = cameraStates.d
 
         /*
 

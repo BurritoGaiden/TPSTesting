@@ -8,6 +8,7 @@ public class CameraRig : MonoBehaviour
     public Transform cam;
     public bool camInput;
     public float mouseSensitivity = 10;
+    public Transform orbitTarget;
     public Transform target;
     public float dstFromTarget = 2;
     public Vector2 pitchMinMax = new Vector2(-30, 60);
@@ -48,6 +49,7 @@ public class CameraRig : MonoBehaviour
     public static float transitionSpeed;
     public static Transform currentView;
     public bool lerpToPos;
+    public GameObject rigVisualMarker;
 
     void Awake()
     {
@@ -161,6 +163,15 @@ public class CameraRig : MonoBehaviour
         switch (camState)
         {
             //State Case
+            case cameraStates.d_PlayerRigOrbit:
+                PlayerControlledRigOrbit(orbitTarget.position);
+                break;
+            case cameraStates.d_PlayerRigOrbit_UpdatePosition:
+                PlayerControlledRigOrbit(orbitTarget.position);
+                //CameraLookAt(GameObject.Find("part1Trigger01"));
+
+                break;
+
             case cameraStates.STATE_PLAYERORBIT:
                 
                 OrbitingBehavior();
@@ -314,6 +325,50 @@ public class CameraRig : MonoBehaviour
         transform.eulerAngles = currentRotation;
     }
 
+    void PlayerControlledRigRotate(Vector3 pointToOrbit)
+    {
+        //Mouse control of pitch and yaw
+        yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+        pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+        //Applying control to rig rotation in a smoothed fashion
+        currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+        currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+
+        //Set the Rotation
+        transform.eulerAngles = currentRotation;
+    }
+
+    void PlayerControlledRigOrbit(Vector3 pointToOrbit)
+    {
+        //Mouse control of pitch and yaw
+        yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+        pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+        //Applying control to rig rotation in a smoothed fashion
+        currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+        currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+
+        //Set the Rotation
+        transform.eulerAngles = currentRotation;
+
+        //Set the position we'd like the camera to be at as dst from Orbit point, relative to the forward position of the Camera
+        var targetPosition = pointToOrbit - transform.forward * dstFromTarget;
+        if (!transitioning || Vector3.Distance(transform.position, targetPosition) < 0.1f)
+        {
+            transitioning = false;
+            //rigVisualmarker.transform.position = targetPosition;
+            transform.position = targetPosition;
+        }
+        else
+        {
+            //rigVisualmarker.transform.position = Vector3.MoveTowards(transform.position, targetPosition, Time.deltaTime * 10);
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, Time.deltaTime * 10);
+        }
+    }
+
     void OrbitingBehavior()
     {
         //Mouse control of pitch and yaw
@@ -356,6 +411,29 @@ public class CameraRig : MonoBehaviour
         transform.eulerAngles = currentRotation;
 
         transform.position = target.position - transform.forward * dstFromTarget;
+    }
+
+    public void CameraLookAt(GameObject lookTarget)
+    {
+        yaw = GetAngleBetween3PointsHor(cam.transform.position, lookTarget.transform.position);
+        pitch = GetAngleBetween3PointsVer(cam.transform.position, lookTarget.transform.position);
+        pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+        Vector3 currentCameraRotation = cam.transform.rotation.eulerAngles;
+
+        if (setRotationInstantlyNextFrame)
+        {
+            currentCameraRotation.x = pitch;
+            currentCameraRotation.y = yaw;
+            setRotationInstantlyNextFrame = false;
+        }
+        else
+        {
+            currentCameraRotation.x = Mathf.SmoothDampAngle(currentCameraRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+            currentCameraRotation.y = Mathf.SmoothDampAngle(currentCameraRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+            //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+        }
+
+        cam.transform.eulerAngles = currentCameraRotation;
     }
 
     public void LookAtBehavior(GameObject whateverObject)
@@ -589,5 +667,7 @@ public enum cameraStates
     STATE_ORBITDISTANCED,
     STATE_GENERATORMINIGAME,
     STATE_NOTHING,
-    STATE_ROTATETOLOOKAT
+    STATE_ROTATETOLOOKAT,
+    d_PlayerRigOrbit,
+    d_PlayerRigOrbit_UpdatePosition
 };
