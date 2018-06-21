@@ -87,6 +87,8 @@ public class LevelScript : MonoBehaviour {
 
     public Transform EntranceCameraTarget;
     public Transform dilapidatedPoint;
+
+    public GameObject test0Point;
     
     //Game-state Machine
     public static GamePlayState thisGameplayState = GamePlayState.Regular;
@@ -500,16 +502,24 @@ public class LevelScript : MonoBehaviour {
         //Setting up camera and player character
         print("Set up camera and Player");
 
-        st_SetCameraState(camStates.STATE_PLAYERORBIT);
-        ResetCamPositionOnRig();
+        st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
+        //ResetCamPositionOnRig();
 
         b_SetCharacterInput(true);
         b_SetCameraInput(true);
 
         truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.nothing;
-        
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(5f);
+
+        //LUIS Delete this later
+
+        st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_TARGETCAM);
+        //camera.GetComponent<PlayerCamera>().camTarget = test0Point.transform;
+        PlayerCamera.cameraLookTarget = test0Point.transform;
+        //PlayerCamera.cameraLookTarget = test0Point.transform;
+
+        yield return new WaitForSeconds(10f);
 
         print("Part 1 - Tease vehicle");
 

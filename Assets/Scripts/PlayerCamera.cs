@@ -55,6 +55,18 @@ public class PlayerCamera : MonoBehaviour {
     public static Transform currentView;
     public bool lerpToPos;
 
+    public GameObject BoomArm;
+    public Vector3 boomArmDisplacement;
+
+    public Transform rigTarget;
+    public Transform camTarget;
+    public float timeToFace;
+
+    public float camYaw;
+    public float rigYaw;
+    public float camPitch;
+    public float rigPitch;
+
     void Awake() {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -69,6 +81,9 @@ public class PlayerCamera : MonoBehaviour {
     void SetInput(bool desiredBool) { camInput = desiredBool; }
 
     void LateUpdate () {
+        if(cameraState != camStates.STATE_PLAYERCONTROLLEDRIG_TARGETCAM)
+            timeToFace = 0;
+
         CameraStateLogic();
 	}
 
@@ -82,6 +97,9 @@ public class PlayerCamera : MonoBehaviour {
         if (!camInput) cameraState = camStates.STATE_NULL;
         else if (PlayerController.thisMoveState == MoveState.STATE_COVER) cameraState = camStates.STATE_COVER;
         else if (Interesting.looking) cameraState = camStates.STATE_POIFOCUS;
+    }
+    void CameraOrbit() {
+
     }
     void DirectorFocus() {
         FocusBehavior();
@@ -191,10 +209,120 @@ public class PlayerCamera : MonoBehaviour {
             //State Case
             case camStates.STATE_PLAYERORBIT:
                 PlayerOrbit();
+                //CameraOrbit();
                 break;
             case camStates.STATE_ORBITDISTANCED:
                 break;
             case camStates.STATE_GENERATORMINIGAME:
+
+                break;
+            case camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM:
+                //These make the rig orbit according to the Player
+                OrbitingBehavior();
+                UpdatePosition();
+
+                //Update the Boom Arm position depending on how much it needs to be displaced
+                BoomArm.transform.localPosition = boomArmDisplacement;
+
+                //Set the Camera position and rotation to the boom transform
+                cam.transform.position = BoomArm.transform.position;
+                cam.transform.rotation = BoomArm.transform.rotation;
+                break;
+
+            case camStates.STATE_PLAYERCONTROLLEDRIG_TARGETCAM:
+                //These make the rig orbit according to the Player
+                OrbitingBehavior();
+                UpdatePosition();
+
+                //Update the Boom Arm position depending on how much it needs to be displaced
+                BoomArm.transform.localPosition = boomArmDisplacement;
+
+                //Set the Camera position to the boom position
+                cam.transform.position = BoomArm.transform.position;
+
+                //Set the Camera to rotate toward target
+                float yaw = GetAngleBetween3PointsHor(cam.transform.position, camTarget.position);
+                float pitch = GetAngleBetween3PointsVer(cam.transform.position, camTarget.position);
+
+                Vector3 newRot = new Vector3(pitch, yaw);
+
+                newRot.x = Mathf.SmoothDampAngle(newRot.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+                newRot.y = Mathf.SmoothDampAngle(newRot.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+
+
+                cam.transform.eulerAngles = newRot;
+
+                break;
+
+            case camStates.STATE_PLAYERCONTROLLEDRIG_NULLCAM:
+                //These make the rig orbit according to the Player
+                OrbitingBehavior();
+                UpdatePosition();
+
+                //This makes the camera just act as if it was a child of the rig
+                cam.transform.position = transform.position;
+                break;
+
+            case camStates.STATE_REGULARRIG_PLAYERCONTROLLEDCAM:
+                //These make the rig orbit according to the Player
+                OrbitingBehavior();
+                UpdatePosition();
+
+                //Update the Boom Arm position depending on how much it needs to be displaced
+                BoomArm.transform.localPosition = boomArmDisplacement;
+
+                //Set the Camera position and rotation to the boom transform
+                cam.transform.position = BoomArm.transform.position;
+
+                //---------------
+
+                camYaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+                camPitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+                Vector3 tarRot = new Vector3(camPitch, camYaw);
+                cam.transform.eulerAngles = tarRot;
+
+                break;
+
+                //Decently done
+            case camStates.STATE_TARGETRIG_PLAYERCONTROLLEDCAM:
+                //These make the rig orbit according to the Player
+                yaw = GetAngleBetween3PointsHor(this.transform.position, cameraLookTarget.position);
+                pitch = GetAngleBetween3PointsVer(this.transform.position, cameraLookTarget.position);
+                pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
+
+                if (setRotationInstantlyNextFrame)
+                {
+                    currentRotation.x = pitch;
+                    currentRotation.y = yaw;
+                    setRotationInstantlyNextFrame = false;
+                }
+                else
+                {
+                    currentRotation.x = Mathf.SmoothDampAngle(currentRotation.x, pitch, ref rotationSmoothVelocityX, rotationSmoothTime);
+                    currentRotation.y = Mathf.SmoothDampAngle(currentRotation.y, yaw, ref rotationSmoothVelocityY, rotationSmoothTime);
+                    //currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
+                }
+
+                transform.eulerAngles = currentRotation;
+
+                transform.position = target.position - transform.forward * dstFromTarget;
+
+                //---------------
+
+                //Update the Boom Arm position depending on how much it needs to be displaced
+                BoomArm.transform.localPosition = boomArmDisplacement;
+
+                //Set the Camera position to the boom position
+                cam.transform.position = BoomArm.transform.position;
+
+                //---------------
+
+                camYaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+                camPitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+                Vector3 tarRo = new Vector3(camPitch, camYaw);
+                cam.transform.eulerAngles = tarRo;
 
                 break;
 
@@ -628,5 +756,10 @@ public enum camStates
     STATE_PUZZLECCTV,
     STATE_PUZZLELERPDIRFOCUS,
     STATE_ORBITDISTANCED,
-    STATE_GENERATORMINIGAME
+    STATE_GENERATORMINIGAME,
+    STATE_PLAYERCONTROLLEDRIG_REGULARCAM,
+    STATE_PLAYERCONTROLLEDRIG_TARGETCAM,
+    STATE_PLAYERCONTROLLEDRIG_NULLCAM,
+    STATE_REGULARRIG_PLAYERCONTROLLEDCAM,
+    STATE_TARGETRIG_PLAYERCONTROLLEDCAM
 };
