@@ -511,60 +511,50 @@ public class LevelScript : MonoBehaviour {
 
         truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.nothing;
 
-        //yield return new WaitForSeconds(5f);
-
-        //LUIS Delete this later
-
-        //st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
-        //yield return new WaitForSeconds(10f);
-
-        //st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_TARGETCAM);
-        //camera.GetComponent<PlayerCamera>().camTarget = test0Point.transform;
-        //camera.GetComponent<PlayerCamera>().rigTarget = null;
-        //yield return new WaitForSeconds(10f);
-
-        //st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_NULLCAM);
-        //yield return new WaitForSeconds(10f);
-
-        //st_SetCameraState(camStates.STATE_TARGETRIG_PLAYERCONTROLLEDCAM);
-        //camera.GetComponent<PlayerCamera>().rigTarget = test0Point.transform;
-        //camera.GetComponent<PlayerCamera>().camTarget = null;
-        //yield return new WaitForSeconds(10f);
-
-        //st_SetCameraState(camStates.STATE_REGULARRIG_PLAYERCONTROLLEDCAM);
-        //camera.GetComponent<PlayerCamera>().rigTarget = null;
-
-        // yield return new WaitForSeconds(10f);
-
-        //st_SetCameraState(camStates.STATE_NULLRIG_PLAYERCONTROLLEDCAM);
-        //camera.GetComponent<PlayerCamera>().rigTarget = null;
-
-        //yield return new WaitForSeconds(10f);
-
-        st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
-        camera.GetComponent<PlayerCamera>().boomArmDisplacement = new Vector3(1, 0, 0);
-        camera.GetComponent<PlayerCamera>().rigTarget = test0Point.transform;
-        camera.GetComponent<PlayerCamera>().RigTargetTheRigTargetRightNow();
-
-        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(.43f, .18f, 1.4f), 2f));
+        st_SetCameraState(camStates.STATE_TARGETRIG_REGULARCAM);
+        camera.GetComponent<PlayerCamera>().boomArmDisplacement = new Vector3(0, 0, -3);
+        camera.GetComponent<PlayerCamera>().rigTarget = GameObject.Find("part0CameraTarget00").transform;
+        camera.GetComponent<PlayerCamera>().camTarget = null;
 
         yield return new WaitForSeconds(1f);
 
-        StartCoroutine(LerpObjectToPosition(truck, truckPositions[0].position, 2f));
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part0CharPosition06").transform.position, 3f));
 
-        //camera.GetComponent<PlayerCamera>().boomArmDisplacement = new Vector3(.43f, .18f, 1.4f);
+        yield return new WaitForSeconds(4f);
+
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(1, 0, 0), 1f));
+        camera.GetComponent<PlayerCamera>().rigTarget = GameObject.Find("CharB").transform;
+
+        yield return new WaitForSeconds(1f);
+        
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(.43f, .18f, 1.4f), 2f));
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part0CharPosition01").transform.position, 2f));
+
+        yield return new WaitForSeconds(2.5f);
+
+        StartCoroutine(LerpObjectToPosition(truck, GameObject.Find("part0TruckPosition01").transform.position, 1.5f));
+
+        yield return new WaitForSeconds(.5f);
 
         st_SetCameraState(camStates.STATE_TARGETRIG_REGULARCAM);
         camera.GetComponent<PlayerCamera>().rigTarget = truck.transform;
         camera.GetComponent<PlayerCamera>().camTarget = null;
 
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(.25f);
 
         st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_TARGETCAM);
-        camera.GetComponent<PlayerCamera>().rigTarget = null;
         camera.GetComponent<PlayerCamera>().camTarget = truck.transform;
 
-        yield return new WaitForSeconds(2f);
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part0CharPosition02").transform.position, 3.5f));
+
+        yield return new WaitForSeconds(.75f);
+
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[0].position, 1f));
+        
+
+        yield return new WaitForSeconds(1f);
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(1, 0, 0), 2f));
 
         st_SetCameraState(camStates.STATE_TARGETRIG_TARGETCAM);
         camera.GetComponent<PlayerCamera>().rigTarget = truck.transform;
@@ -572,32 +562,43 @@ public class LevelScript : MonoBehaviour {
 
         yield return new WaitForSeconds(1f);
 
+        
         st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
         camera.GetComponent<PlayerCamera>().rigTarget = null;
         camera.GetComponent<PlayerCamera>().camTarget = null;
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part0CharPosition03").transform.position, 2f));
+
 
         yield return new WaitForSeconds(2f);
 
-        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(1, 0, 0), 2f));
-
+        
         //-------------------------------------------------------------
 
         print("Part 1 - Tease vehicle");
+
+        AssignThisObjective("Hit this trigger", "", 3, "part1Trigger00");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part1CharPosition01").transform.position, 3f));
 
         AssignThisObjective("Hit this trigger", "", 3, "part1Trigger01");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
+
+
         print("Switching Camera to Focus");
         camera.GetComponent<PlayerCamera>().rigTarget = GameObject.Find("part1LookTarget01").transform;
         st_SetCameraState(camStates.STATE_TARGETRIG_REGULARCAM);
-        //PlayerCamera.cameraLookTarget = GameObject.Find("part1LookTarget01").transform;
 
         print("Moving Truck");
         StartCoroutine(LerpObjectToPosition(truck, truckPositions[1].position, 4f));
         truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart");
 
         yield return new WaitForSeconds(2f);
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part1CharPosition02").transform.position, 3f));
 
         st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
 
@@ -656,9 +657,15 @@ public class LevelScript : MonoBehaviour {
         //st_SetCameraState(camStates.STATE_DIRFOCUS);
         //PlayerCamera.cameraLookTarget = truck.transform;
 
-        AssignThisObjective("Hit this trigger", "", 3, "part3Trigger01");
+        AssignThisObjective("Hit this trigger", "", 3, "part3Trigger00");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
+
+        print("Switching Camera to Focus");
+        camera.GetComponent<PlayerCamera>().rigTarget = truck.transform;
+        st_SetCameraState(camStates.STATE_TARGETRIG_REGULARCAM);
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part3CharPosition00").transform.position, 3f));
 
         StartCoroutine(LerpObjectToPosition(truck, truckPositions[6].position, 2f));
         truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart");
@@ -667,9 +674,12 @@ public class LevelScript : MonoBehaviour {
 
         truck.GetComponent<Truck>().turret.GetComponent<Turret>().FaceObject(GameObject.Find("part3TurretTarget01").transform.position, 1.5f);
 
-        yield return new WaitForSeconds(1f);
-
         GetComponent<AudioSource>().PlayOneShot(truckDialogue[5], 5);
+
+        AssignThisObjective("Hit this trigger", "", 3, "part3Trigger01");
+        waitTillObjectiveDone = true;
+        while (waitTillObjectiveDone) { yield return null; }
+
         float waiting = 0;
         float waitingPlus = 10;
         while (waiting < waitingPlus)
@@ -681,23 +691,18 @@ public class LevelScript : MonoBehaviour {
         }
 
         print("finished that previous shoot bit");
-        yield return new WaitForSeconds(2f);
 
-        //shoot
-        //make the people die
-        
+        print("Switching Camera to Regular");
+        //camera.GetComponent<PlayerCamera>().rigTarget = truck.transform;
+        st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
+
+        yield return new WaitForSeconds(1f);
+
         StartCoroutine(LerpObjectToPosition(truck, truckPositions[7].position, 2f));
         truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart");
 
-        /*
-        print("Waiting till the Player presses Q to advance to the next part");
-        while (true)
-        {
-            if (Input.GetKeyDown(KeyCode.Q)) break;
-            yield return null;
-        }
-        */
-
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part3CharPosition01").transform.position, 3f));
+        
         yield return new WaitForSeconds(2);
 
         //-------------------------------------------------------------------------
@@ -781,6 +786,7 @@ public class LevelScript : MonoBehaviour {
         while (true)
         {
             if (Input.GetKeyDown(KeyCode.Q)) break;
+            player.GetComponent<PlayerController>().takeInput = false;
             yield return null;
         }
 
@@ -788,8 +794,7 @@ public class LevelScript : MonoBehaviour {
         camera.GetComponent<PlayerCamera>().rigTarget = GameObject.Find("part6CameraLookTarget01").transform;
         st_SetCameraState(camStates.STATE_TARGETRIG_REGULARCAM);
 
-        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(-.43f, .18f, 1.4f), 2f));
-
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(-.5f, .18f, 1.1f), 2f));
 
         yield return new WaitForSeconds(2);
 
@@ -805,7 +810,11 @@ public class LevelScript : MonoBehaviour {
         camera.GetComponent<PlayerCamera>().rigTarget = GameObject.Find("part6CameraLookTarget02").transform;
         StartCoroutine(LerpObjectToFace(GameObject.Find("DoorHolder"), GameObject.Find("DoorHolderTarget").transform.position, 3));
 
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(.3f);
+
+        player.GetComponent<PlayerController>().takeInput = true;
+
+        yield return new WaitForSeconds(2.5f);
 
         st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
         truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.nothing;
@@ -816,6 +825,7 @@ public class LevelScript : MonoBehaviour {
 
         print("Part 7 - Vehicle Crash into Wall");
 
+        print("The Truck is about to crash into the wall");
         truck.transform.position = GameObject.Find("part7TruckTarget01").transform.position;
 
         truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeCrashIntoWall");
@@ -831,61 +841,41 @@ public class LevelScript : MonoBehaviour {
 
         truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.omniscientPerceived;
 
+        print("The Player must get to the other side of the room, between bursts of bullets");
         AssignThisObjective("Hit this trigger", "", 3, "part7Trigger01");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
+        print("The player has made it to the other side");
+
         truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveePullOutOfWall");
 
-        truck.transform.position = truckPositions[4].position;
+        //truck.transform.position = truckPositions[4].position;
         GetComponent<AudioSource>().PlayOneShot(truckDialogue[5], 4);
 
-        yield return new WaitForSeconds(8f);
+        yield return new WaitForSeconds(3f);
 
-        truck.transform.position = truckPositions[5].position;
+        print("it has pulled out");
+
+        while (true)
+        {
+            Vector3 tempTruckVector = player.transform.position;
+            tempTruckVector.y = truck.transform.position.y;
+            tempTruckVector.x = truck.transform.position.x;
+            tempTruckVector.z = player.transform.position.z;
+            truck.transform.position = tempTruckVector;
+            if(Mathf.Abs(player.transform.position.z) - Mathf.Abs(truck.transform.position.z) > 10)
+            yield return null;
+            break;
+        }
         
-        yield return new WaitForSeconds(5f);
 
-        GetComponent<AudioSource>().PlayOneShot(truckDialogue[4], 4);
-
-        yield return new WaitForSeconds(5f);
-        GetComponent<AudioSource>().PlayOneShot(truckDialogue[3], 4);
-        truck.transform.position = truckPositions[6].position;
-
-        yield return new WaitForSeconds(5f);
-
-        truck.transform.position = truckPositions[7].position;
-
-        print("Switching Camera to Regular");
-        st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
-
-        print("Waiting until specific trigger");
-        AssignThisObjective("Hit this trigger", "", 3, "truckTrigger02");
+        print("The Player must get to the end of the corridor while getting shot at");
+        AssignThisObjective("Hit this trigger", "", 3, "part7Trigger02");
         waitTillObjectiveDone = true;
         while (waitTillObjectiveDone) { yield return null; }
 
-        print("Switching Camera to Focus");
-        //DO THE THING HERE, READ
-
-        print("Moving Truck");
-        StartCoroutine(LerpObjectToPosition(truck, truckPositions[2].position, 2f));
-
-        yield return new WaitForSeconds(2f);
-
-        print("Switching Camera to Regular");
-        st_SetCameraState(camStates.STATE_PLAYERORBIT);
-
-        print("Waiting until specific trigger");
-        AssignThisObjective("Hit this trigger", "", 3, "truckTrigger03");
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
-
-        print("Waiting until specific trigger");
-        AssignThisObjective("Hit this trigger", "", 3, "truckTrigger04");
-        waitTillObjectiveDone = true;
-        while (waitTillObjectiveDone) { yield return null; }
-
-        yield return new WaitForSeconds(10f);
+        
     }
 
     IEnumerator VectorLerper(Vector3 theVector, Vector3 targetVector, float TimeToLerp) {
