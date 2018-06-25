@@ -514,16 +514,23 @@ public class LevelScript : MonoBehaviour {
         st_SetCameraState(camStates.STATE_TARGETRIG_REGULARCAM);
         camera.GetComponent<PlayerCamera>().boomArmDisplacement = new Vector3(0, 0, -3);
         camera.GetComponent<PlayerCamera>().rigTarget = GameObject.Find("part0CameraTarget00").transform;
+        
         camera.GetComponent<PlayerCamera>().camTarget = null;
 
         yield return new WaitForSeconds(1f);
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("part0CameraTarget00"), GameObject.Find("part0CameraTarget01").transform.position, 3f));
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(1, 0, 0), 6f));
+
+        yield return new WaitForSeconds(2f);
 
         StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part0CharPosition06").transform.position, 3f));
 
         yield return new WaitForSeconds(4f);
 
-        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(1, 0, 0), 1f));
+        
         camera.GetComponent<PlayerCamera>().rigTarget = GameObject.Find("CharB").transform;
+        player.GetComponent<PlayerController>().takeInput = false;
 
         yield return new WaitForSeconds(1f);
         
@@ -556,6 +563,7 @@ public class LevelScript : MonoBehaviour {
         yield return new WaitForSeconds(1f);
         StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(1, 0, 0), 2f));
 
+        player.GetComponent<PlayerController>().takeInput = true;
         st_SetCameraState(camStates.STATE_TARGETRIG_TARGETCAM);
         camera.GetComponent<PlayerCamera>().rigTarget = truck.transform;
         camera.GetComponent<PlayerCamera>().camTarget = truck.transform;
@@ -589,8 +597,11 @@ public class LevelScript : MonoBehaviour {
 
 
         print("Switching Camera to Focus");
-        camera.GetComponent<PlayerCamera>().rigTarget = GameObject.Find("part1LookTarget01").transform;
+        camera.GetComponent<PlayerCamera>().rigTarget = GameObject.Find("truckForwardTarget00").transform;
         st_SetCameraState(camStates.STATE_TARGETRIG_REGULARCAM);
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part1CharPosition02").transform.position, 3f));
+        yield return new WaitForSeconds(.3f);
 
         print("Moving Truck");
         StartCoroutine(LerpObjectToPosition(truck, truckPositions[1].position, 4f));
@@ -598,8 +609,7 @@ public class LevelScript : MonoBehaviour {
 
         yield return new WaitForSeconds(2f);
 
-        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part1CharPosition02").transform.position, 3f));
-
+        
         st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
 
         yield return new WaitForSeconds(2f);
@@ -664,11 +674,18 @@ public class LevelScript : MonoBehaviour {
         print("Switching Camera to Focus");
         camera.GetComponent<PlayerCamera>().rigTarget = truck.transform;
         st_SetCameraState(camStates.STATE_TARGETRIG_REGULARCAM);
+        truck.transform.position = GameObject.Find("part3TruckPosition00").transform.position;
 
-        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part3CharPosition00").transform.position, 3f));
 
-        StartCoroutine(LerpObjectToPosition(truck, truckPositions[6].position, 2f));
-        truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart");
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(-.43f, .18f, 1.4f), 3f));
+
+
+        //StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part3CharPosition00").transform.position, 3f));
+
+        //StartCoroutine(LerpObjectToPosition(truck, truckPositions[6].position, 2f));
+        //truck.transform.GetChild(3).GetComponent<Animation>().Play("HumveeStart");
+
+        
 
         yield return new WaitForSeconds(2f);
 
@@ -693,7 +710,8 @@ public class LevelScript : MonoBehaviour {
         print("finished that previous shoot bit");
 
         print("Switching Camera to Regular");
-        //camera.GetComponent<PlayerCamera>().rigTarget = truck.transform;
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(1, 0, 0), 3f));
+
         st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
 
         yield return new WaitForSeconds(1f);
