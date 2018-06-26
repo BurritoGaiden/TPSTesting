@@ -508,6 +508,7 @@ public class LevelScript : MonoBehaviour {
 
         b_SetCharacterInput(true);
         b_SetCameraInput(true);
+        player.GetComponent<PlayerController>().takeInput = false;
 
         truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.nothing;
 
@@ -524,23 +525,49 @@ public class LevelScript : MonoBehaviour {
 
         yield return new WaitForSeconds(2f);
 
-        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part0CharPosition06").transform.position, 3f));
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part0CharPosition01").transform.position, 3f));
 
         yield return new WaitForSeconds(4f);
 
-        
+        player.GetComponent<PlayerController>().takeInput = true;        
         camera.GetComponent<PlayerCamera>().rigTarget = GameObject.Find("CharB").transform;
+
+        //This is where the Game will let the Player walk up to the target
+        Vector3 playerStartingPosition = player.transform.position + new Vector3(0.1f,.1f,.1f);
+        Vector3 playerEndingPosition = GameObject.Find("CharB").transform.position;
+        float pStartEndDist = Vector3.Distance(playerStartingPosition, playerEndingPosition);
+        print("this is the distance: " + pStartEndDist);
+        float currentPStartEndDist = Vector3.Distance(player.transform.position, playerEndingPosition);
+        print("This is how far the Player is: " + currentPStartEndDist);
+        float pStartEndProgress = pStartEndDist / (pStartEndDist - currentPStartEndDist);
+        print("this is the percentage of distance completed: " + pStartEndProgress);
+        
+        while (true)
+        {
+            currentPStartEndDist = Vector3.Distance(player.transform.position, playerEndingPosition);
+            pStartEndProgress = pStartEndDist / (pStartEndDist - currentPStartEndDist);
+            print(pStartEndProgress);
+            camera.GetComponent<PlayerCamera>().boomArmDisplacement = Vector3.Lerp(new Vector3(1, 0, 0), new Vector3(.43f, .18f, 1.4f), pStartEndProgress);
+            print(pStartEndProgress);
+            if (pStartEndProgress >= 1f)
+            {
+                break;
+            }
+
+            yield return null;
+        }
+
         player.GetComponent<PlayerController>().takeInput = false;
 
         yield return new WaitForSeconds(1f);
-        
+
         StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(.43f, .18f, 1.4f), 2f));
 
         StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part0CharPosition01").transform.position, 2f));
 
         yield return new WaitForSeconds(2.5f);
 
-        StartCoroutine(LerpObjectToPosition(truck, GameObject.Find("part0TruckPosition01").transform.position, 1.5f));
+        StartCoroutine(LerpObjectToPosition(truck, truckPositions[0].position, 2.5f));
 
         yield return new WaitForSeconds(.5f);
 
@@ -555,20 +582,39 @@ public class LevelScript : MonoBehaviour {
 
         StartCoroutine(LerpObjectToPosition(GameObject.Find("CharB"), GameObject.Find("part0CharPosition02").transform.position, 3.5f));
 
-        yield return new WaitForSeconds(.75f);
-
-        StartCoroutine(LerpObjectToPosition(truck, truckPositions[0].position, 1f));
-        
-
+        yield return new WaitForSeconds(.75f);    
         yield return new WaitForSeconds(1f);
-        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(1, 0, 0), 2f));
+
+        /*
+        Vector3 playerStartingPosition = player.transform.position;
+        Vector3 playerEndingPosition = GameObject.Find("part0CharPosition06").transform.position;
+        float pStartEndDist = Vector3.Distance(playerStartingPosition, playerEndingPosition);
+        float currentPStartEndDist = Vector3.Distance(player.transform.position, playerEndingPosition);
+        float pStartEndProgress = pStartEndDist - currentPStartEndDist;
+
+        while (true)
+        {
+            currentPStartEndDist = Vector3.Distance(player.transform.position, playerEndingPosition);
+            pStartEndProgress = pStartEndDist - currentPStartEndDist;
+            camera.GetComponent<PlayerCamera>().boomArmDisplacement = Vector3.Lerp(new Vector3(1, 0, 0), new Vector3(.43f, .18f, 1.4f), pStartEndProgress);
+            print(pStartEndProgress);
+            if (pStartEndProgress >= 1f)
+            {
+                break;
+            }
+
+            yield return null;
+        }
+        */
+
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(1, 0, 0), 2.5f));
 
         player.GetComponent<PlayerController>().takeInput = true;
         st_SetCameraState(camStates.STATE_TARGETRIG_TARGETCAM);
         camera.GetComponent<PlayerCamera>().rigTarget = truck.transform;
         camera.GetComponent<PlayerCamera>().camTarget = truck.transform;
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(1.2f);
 
         
         st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
@@ -905,14 +951,14 @@ public class LevelScript : MonoBehaviour {
         {
             lerpTimeSinceStarted = Time.time - lerpStartTime;
             lerpPercentageComplete = lerpTimeSinceStarted / TimeToLerp;
-            print("Time since started: " + lerpTimeSinceStarted + " and Percent Complete" + lerpPercentageComplete);
+            //print("Time since started: " + lerpTimeSinceStarted + " and Percent Complete" + lerpPercentageComplete);
             Vector3 currentVector = Vector3.Lerp(vectorStart, targetVector, lerpPercentageComplete); 
             camera.GetComponent<PlayerCamera>().boomArmDisplacement = currentVector;
 
             if (lerpPercentageComplete >= 1) break;
             yield return new WaitForEndOfFrame();
         }
-        print("Done with Lerping: " + theVector);
+        //print("Done with Lerping: " + theVector);
     }
 
     IEnumerator MovePlayer(string targetPosHelper)
@@ -981,7 +1027,7 @@ public class LevelScript : MonoBehaviour {
         while (true) {
             lerpTimeSinceStarted = Time.time - lerpStartTime;
             lerpPercentageComplete = lerpTimeSinceStarted / timeToLerp;
-            print("Time since started: " + lerpTimeSinceStarted + " and Percent Complete" + lerpPercentageComplete);
+            //print("Time since started: " + lerpTimeSinceStarted + " and Percent Complete" + lerpPercentageComplete);
             Vector3 currentPosition = Vector3.Lerp(ObjectStartPosition, desiredPosition, lerpPercentageComplete);
             //Vector3 currentPosition = desiredPosition - desiredObject.transform.position 
             desiredObject.transform.position = currentPosition;
@@ -989,7 +1035,7 @@ public class LevelScript : MonoBehaviour {
             if (lerpPercentageComplete >= 1) break;
             yield return new WaitForEndOfFrame();
         }
-        print("Done with Lerping: " + desiredObject);
+        //print("Done with Lerping: " + desiredObject);
     }
 
     IEnumerator LerpObjectToFace(GameObject desiredObject, Vector3 desiredTarget, float timeToLerp) {
@@ -1002,9 +1048,9 @@ public class LevelScript : MonoBehaviour {
         //relativePos.y = desiredObject.transform.position.y;
         //relativePos.z = desiredObject.transform.position.z;
 
-        print(desiredObject.transform.position);
-        print(desiredTarget);
-        print(relativePos);
+        //print(desiredObject.transform.position);
+        //print(desiredTarget);
+        //print(relativePos);
 
         Quaternion startingRot = desiredObject.transform.rotation;
         Quaternion desiredRotation = Quaternion.LookRotation(relativePos);
@@ -1020,7 +1066,7 @@ public class LevelScript : MonoBehaviour {
             if (lerpPercentageComplete >= 1) break;
             yield return new WaitForEndOfFrame();
         }
-        print("Done lerping Quaternion");
+        //print("Done lerping Quaternion");
     }
 
     public IEnumerator FadeCanvasGroup(Image cg, float start, float end, float lerpTime = .5f)
@@ -1042,7 +1088,7 @@ public class LevelScript : MonoBehaviour {
 
             yield return new WaitForEndOfFrame();
         }
-        print("done with opacity adjust");
+        //print("done with opacity adjust");
     }
 
     IEnumerator WaitForCoverDuration(float duration) {
