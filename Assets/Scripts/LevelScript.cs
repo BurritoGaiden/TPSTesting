@@ -115,6 +115,9 @@ public class LevelScript : MonoBehaviour {
                 case LevelRoutine.Quarantine:
                     StartCoroutine(QuarantineLevelCoroutine());
                     break;
+                case LevelRoutine.GodOfWarDeerStatue:
+                    StartCoroutine(GodOfWarCoroutine());
+                    break;
             }
 	}
 
@@ -157,6 +160,182 @@ public class LevelScript : MonoBehaviour {
         print("done");
 
         PlayerCamera.cameraState = camStates.STATE_PLAYERORBIT;
+    }
+
+    IEnumerator GodOfWarCoroutine() {
+
+        b_SetCharacterInput(true);
+        b_SetCameraInput(true);
+        player.GetComponent<PlayerController>().takeInput = true;
+
+        st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
+
+        truck.GetComponent<Truck>().thisPerceptionState = TruckPerceptionState.nothing;
+
+        //Regular walking cam new Vector3(.36f, .15f, .81f);
+        //Pulling lever cam new Vector3(-.65f, .1f, .88f);
+        //Finished pulling lever viewing statue cam new Vector3(-.65f, .22f, 1.3f);
+        //Viewing deer no lever cam new Vector3(-.36, .12f, 1.34f);
+        //zoomed into deer cam new Vector3(-.36, .12f, 1.49f);
+
+        camera.GetComponent<PlayerCamera>().boomArmDisplacement = new Vector3(.36f, .15f, .81f);
+
+        GameObject.Find("DrippingFlames00").GetComponent<ParticleSystem>().Stop();
+        GameObject.Find("DrippingFlames01").GetComponent<ParticleSystem>().Stop();
+
+        player.GetComponent<PlayerController>().takeInput = false;
+
+        //-------------------------------------------------
+
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(-.65f, .1f, .88f), 3f));
+        camera.GetComponent<PlayerCamera>().rigTarget = GameObject.Find("DeerHeadLaserCharTarget").transform;
+        st_SetCameraState(camStates.STATE_TARGETRIG_REGULARCAM);
+
+        yield return new WaitForSeconds(2f);
+
+        //------------------------------
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("Character"), GameObject.Find("CubeBackMarker").transform.position + new Vector3(-.8f,0,0), 2));
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("PullBar"), GameObject.Find("CubeBackMarker").transform.position, 2));
+
+        yield return new WaitForSeconds(2f);
+
+        while (true) {
+
+            if (Input.GetKey(KeyCode.Q)) break;
+            yield return new WaitForEndOfFrame();
+        }
+
+        print("Kratos: Is it the answer?");
+        yield return new WaitForSeconds(1f);
+        print("Atreus: 'Freedom'");
+        yield return new WaitForSeconds(.8f);
+        print("Atreus: Sure, that works!");
+        yield return new WaitForSeconds(.8f);
+        print("Kratos: Go ahead.");
+        yield return new WaitForSeconds(.8f);
+        print("Atreus: Sure.");
+        yield return new WaitForSeconds(.6f);
+        print("Atreus: Frelsa.");
+
+        yield return new WaitForSeconds(2f);
+
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(-.65f, .22f, 1.3f), 3f));
+
+        print("Atreus: What's it doing?");
+        //--------------------------------
+
+        yield return new WaitForSeconds(5f);
+
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(-.36f, .12f, 1.34f), 1.2f));
+
+        yield return new WaitForSeconds(2.5f);
+
+        GameObject.Find("Hammer").GetComponent<Animator>().Play("HammerPounding");
+
+        yield return new WaitForSeconds(3.5f);
+
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(-.36f, .12f, 1.49f), .6f));
+
+        StartCoroutine(LerpObjectToFace(GameObject.Find("DeerHead"), GameObject.Find("TopDoorMarker").transform.position, .6f));
+        GameObject.Find("Hammer").GetComponent<Animator>().Play("HammerTurn");
+
+        //---------------------
+
+        yield return new WaitForSeconds(.8f);
+
+        StartCoroutine(VectorLerper(camera.GetComponent<PlayerCamera>().boomArmDisplacement, new Vector3(.36f, .15f, .81f), 2f));
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("DeerHeadLaserCharTarget"), GameObject.Find("DeerHeadLaserCharDest").transform.position, 1.8f));
+
+        GameObject.Find("DeerHead").GetComponent<LineRenderer>().SetPosition(0, GameObject.Find("DeerHead").transform.position);
+
+        float startCounter = Time.time;
+        float timeSinceStart = Time.time - startCounter;
+        float timeToFinish = .8f;
+        float linePercentage = timeSinceStart / timeToFinish;
+        Vector3 lineStart = GameObject.Find("DeerHead").transform.position;
+        Vector3 lineEnd = GameObject.Find("TopDoorMarker").transform.position;
+        
+        while (true) {
+            timeSinceStart = Time.time - startCounter;
+            linePercentage = timeSinceStart / timeToFinish;
+            GameObject.Find("DeerHead").GetComponent<LineRenderer>().SetPosition(1, 
+                Vector3.Lerp(lineStart,lineEnd, linePercentage));
+
+            if (linePercentage >= 1) {
+                break;
+            }
+            yield return new WaitForEndOfFrame();
+        }
+
+        //-------------------------------
+
+        GameObject.Find("DrippingFlames00").GetComponent<ParticleSystem>().Play();
+        GameObject.Find("DrippingFlames01").GetComponent<ParticleSystem>().Play();
+
+        print("Atreus: Oh! Thought maybe there'd be a bridge.");
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("DrippingFlames00"), GameObject.Find("BottomDoorsMarker").transform.position, 2));
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("DrippingFlames01"), GameObject.Find("BottomDoorsMarker").transform.position, 2));
+
+        yield return new WaitForSeconds(2f);
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("DrippingFlames00"), GameObject.Find("BottomLeftDoorMarker").transform.position, 2));
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("DrippingFlames01"), GameObject.Find("BottomRightDoorMarker").transform.position, 2));
+
+        yield return new WaitForSeconds(2f);
+
+        print("Kratos: Rrrn. Your Giants mean to test us further");
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("DrippingFlames00"), GameObject.Find("TopLeftDoorMarker").transform.position, 2));
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("DrippingFlames01"), GameObject.Find("TopRightDoorMarker").transform.position, 2));
+
+        yield return new WaitForSeconds(2f);
+
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("DrippingFlames00"), GameObject.Find("TopDoorMarker").transform.position, 2));
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("DrippingFlames01"), GameObject.Find("TopDoorMarker").transform.position, 2));
+
+        yield return new WaitForSeconds(1f);
+
+        GameObject.Find("DrippingFlames00").GetComponent<ParticleSystem>().Stop();
+        GameObject.Find("DrippingFlames01").GetComponent<ParticleSystem>().Stop();
+
+        yield return new WaitForSeconds(1f);
+
+        //-------------------------
+
+        startCounter = Time.time;
+        timeSinceStart = Time.time - startCounter;
+        timeToFinish = 1.5f;
+        linePercentage = timeSinceStart / timeToFinish;
+        lineStart = GameObject.Find("TopDoorMarker").transform.position;
+        lineEnd = GameObject.Find("DeerHead").transform.position;
+
+        while (true)
+        {
+            timeSinceStart = Time.time - startCounter;
+            linePercentage = timeSinceStart / timeToFinish;
+            GameObject.Find("DeerHead").GetComponent<LineRenderer>().SetPosition(1,
+                Vector3.Lerp(lineStart, lineEnd, linePercentage));
+
+            if (linePercentage >= 1)
+            {
+                break;
+            }
+            yield return new WaitForEndOfFrame();
+        }
+
+        yield return new WaitForSeconds(2f);
+
+        //-------------
+
+        player.GetComponent<PlayerController>().takeInput = true;
+        st_SetCameraState(camStates.STATE_PLAYERCONTROLLEDRIG_REGULARCAM);
+
+
+        //StartCoroutine(LerpObjectToFace(GameObject.Find("RightDoorPivot"), GameObject.Find("DoorsOpenMarker").transform.position, 3));
+        //StartCoroutine(LerpObjectToFace(GameObject.Find("LeftDoorPivot"), GameObject.Find("DoorsOpenMarker").transform.position, 3));
+        print("done with script");
     }
 
     //Script for the level
@@ -1185,5 +1364,6 @@ public enum GamePlayState {
 public enum LevelRoutine {
     Truck,
     CameraTesting,
-    Quarantine
+    Quarantine,
+    GodOfWarDeerStatue
 }
