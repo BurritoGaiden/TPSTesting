@@ -195,8 +195,14 @@ public class LevelScript : MonoBehaviour {
 
         //------------------------------
 
-        StartCoroutine(LerpObjectToPosition(GameObject.Find("Character"), GameObject.Find("CubeBackMarker").transform.position + new Vector3(-.8f,0,0), 2));
+        StartCoroutine(LerpObjectToPosition(GameObject.Find("Character"), GameObject.Find("CubeBackMarker").transform.position + new Vector3(-1f,0,0), 2));
         StartCoroutine(LerpObjectToPosition(GameObject.Find("PullBar"), GameObject.Find("CubeBackMarker").transform.position, 2));
+        StartCoroutine(LerpObjectToFace(GameObject.Find("Dial1"), GameObject.Find("CubeBackMarker").transform.position, 2));
+        StartCoroutine(LerpObjectToFace(GameObject.Find("Dial1 (1)"), GameObject.Find("CubeBackMarker").transform.position, 2));
+        StartCoroutine(LerpObjectToFace(GameObject.Find("Dial2"), GameObject.Find("CubeBackMarker (1)").transform.position, 2));
+        StartCoroutine(LerpObjectToFace(GameObject.Find("Dial2 (1)"), GameObject.Find("CubeBackMarker (2)").transform.position, 2));
+        StartCoroutine(LerpObjectToFace(GameObject.Find("Dial3"), GameObject.Find("CubeBackMarker (4)").transform.position, 2));
+        StartCoroutine(LerpObjectToFace(GameObject.Find("Dial3 (1)"), GameObject.Find("CubeBackMarker (3)").transform.position, 2));
 
         yield return new WaitForSeconds(2f);
 
